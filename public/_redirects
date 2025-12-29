@@ -1,10 +1,5 @@
-# Render Static Site Proxy Configuration
+# Render Static Site Configuration
 # https://render.com/docs/redirects-rewrites
-
-# TODO: AI 서버에 CORS 설정 후 아래 /ai-api 라인 삭제
-# AI Service Proxy (CORS bypass)
-# /ai-api/api/v1/schedules/generate -> https://runthek-api.onrender.com/api/v1/schedules/generate
-/ai-api/*  https://runthek-api.onrender.com/:splat  200
 
 # SPA Fallback - Handle client-side routing
 /*  /index.html  200

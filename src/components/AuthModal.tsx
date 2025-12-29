@@ -102,7 +102,18 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Google authentication failed');
+        // Extract error message from BE response structure
+        let errorMessage = 'Google authentication failed';
+        if (data.error) {
+          if (data.error.details && Array.isArray(data.error.details) && data.error.details.length > 0) {
+            errorMessage = data.error.details.map((d: { field: string; message: string }) => d.message).join('. ');
+          } else if (data.error.message) {
+            errorMessage = data.error.message;
+          }
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+        throw new Error(errorMessage);
       }
 
       // Store tokens
@@ -289,7 +300,18 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Login failed');
+        // Extract error message from BE response structure
+        let errorMessage = 'Login failed';
+        if (data.error) {
+          if (data.error.details && Array.isArray(data.error.details) && data.error.details.length > 0) {
+            errorMessage = data.error.details.map((d: { field: string; message: string }) => d.message).join('. ');
+          } else if (data.error.message) {
+            errorMessage = data.error.message;
+          }
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+        throw new Error(errorMessage);
       }
 
       // Store tokens
@@ -349,7 +371,19 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Signup failed');
+        // Extract error message from BE response structure
+        let errorMessage = 'Signup failed';
+        if (data.error) {
+          // Check for field-specific validation errors
+          if (data.error.details && Array.isArray(data.error.details) && data.error.details.length > 0) {
+            errorMessage = data.error.details.map((d: { field: string; message: string }) => d.message).join('. ');
+          } else if (data.error.message) {
+            errorMessage = data.error.message;
+          }
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+        throw new Error(errorMessage);
       }
 
       setEmailSent(true);
