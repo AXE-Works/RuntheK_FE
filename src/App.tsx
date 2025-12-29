@@ -25,7 +25,7 @@
  * - Popular activities dashboard with real-time analytics and ranking system
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TravelPlanForm } from './components/TravelPlanForm';
 import { ItineraryDisplay } from './components/ItineraryDisplay';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -140,6 +140,52 @@ export default function App() {
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
   const [confirmedTrips, setConfirmedTrips] = useState<any[]>([]);
   const [events, setEvents] = useState(mockEvents);
+  const [isRestoringSession, setIsRestoringSession] = useState(true);
+
+  // Restore session on app start
+  useEffect(() => {
+    const restoreSession = async () => {
+      const accessToken = localStorage.getItem('accessToken');
+
+      if (!accessToken) {
+        setIsRestoringSession(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/users/profile`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error('Session expired');
+        }
+
+        const data = await res.json();
+        setCurrentUser({
+          id: data.data.id,
+          name: data.data.name,
+          email: data.data.email,
+          country: data.data.country || '',
+          avatar: data.data.avatarUrl,
+          role: data.data.role,
+          provider: data.data.provider || 'email',
+        });
+        setShowHero(false); // Skip landing page for logged-in users
+        console.log('[Session] Restored user session');
+      } catch (error) {
+        console.log('[Session] Token expired or invalid, clearing...');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      } finally {
+        setIsRestoringSession(false);
+      }
+    };
+
+    restoreSession();
+  }, []);
 
   const handleItineraryGenerated = (itinerary: ItineraryData) => {
     setCurrentItinerary(itinerary);
@@ -388,6 +434,18 @@ export default function App() {
     setShowHero(false);
     setActiveTab("my-trips");
   };
+
+  // Show loading while restoring session
+  if (isRestoringSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-black rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500 text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (showHero && !currentItinerary) {
     return <HeroSection onStartPlanning={handleStartPlanning} />;
