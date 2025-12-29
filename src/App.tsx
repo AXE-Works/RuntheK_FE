@@ -40,8 +40,7 @@ import { Badge } from './components/ui/badge';
 import { MapPin, Users, BarChart, ArrowLeft, LogIn, User, LogOut, Settings } from 'lucide-react';
 import { motion } from 'motion/react';
 import logo from 'figma:asset/ade16fc310679880d8b27a51a4119372559298ac.png';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+import { fetchWithAuth, API_BASE_URL } from './utils/api';
 
 const mockEvents = [
   {
@@ -153,11 +152,8 @@ export default function App() {
       }
 
       try {
-        const res = await fetch(`${API_BASE_URL}/users/profile`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        });
+        // Use fetchWithAuth for automatic token refresh on 401
+        const res = await fetchWithAuth(`${API_BASE_URL}/users/profile`);
 
         if (!res.ok) {
           throw new Error('Session expired');
@@ -185,6 +181,21 @@ export default function App() {
     };
 
     restoreSession();
+  }, []);
+
+  // Listen for auth:logout event (triggered when token refresh fails)
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      setCurrentUser(null);
+      setShowHero(true);
+      setCurrentItinerary(null);
+      setActiveTab("plan");
+      setSelectedDestination(null);
+      console.log('[Auth] Session expired, logged out automatically');
+    };
+
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => window.removeEventListener('auth:logout', handleAuthLogout);
   }, []);
 
   const handleItineraryGenerated = (itinerary: ItineraryData) => {
@@ -380,18 +391,13 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    const accessToken = localStorage.getItem('accessToken');
     const refreshToken = localStorage.getItem('refreshToken');
 
     // Call backend logout API to invalidate refresh token
-    if (accessToken && refreshToken) {
+    if (refreshToken) {
       try {
-        await fetch(`${API_BASE_URL}/auth/logout`, {
+        await fetchWithAuth(`${API_BASE_URL}/auth/logout`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-          },
           body: JSON.stringify({ refreshToken }),
         });
         console.log('[Logout] Backend logout successful');

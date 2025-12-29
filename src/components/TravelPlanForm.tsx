@@ -798,7 +798,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
       >
         <Button
           onClick={handleGenerate}
-          disabled={isGenerating || !currentUser || userInput.interests.length === 0 || !userInput.startDate}
+          disabled={isGenerating || !currentUser || !userInput.duration || userInput.interests.length === 0 || !userInput.startDate}
           size="lg"
           className="h-14 px-[24px] bg-black hover:bg-gray-900 text-white text-lg font-bold rounded-full shadow-[0px_4px_15px_rgba(0,0,0,0.3)] transition-all duration-300 hover:scale-105 hover:shadow-[0px_6px_20px_rgba(0,0,0,0.4)] disabled:opacity-50 disabled:hover:scale-100 text-[16px] py-[0px] mx-[12px] my-[0px]"
         >
@@ -826,12 +826,17 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
             * Please login to generate itinerary
           </p>
         )}
-        {currentUser && userInput.interests.length === 0 && (
+        {currentUser && !userInput.duration && (
+          <p className="text-sm text-red-600 font-medium mt-3 animate-pulse">
+            * Please select a duration to continue
+          </p>
+        )}
+        {currentUser && userInput.duration && userInput.interests.length === 0 && (
           <p className="text-sm text-red-600 font-medium mt-3 animate-pulse">
             * Please select at least one interest to continue
           </p>
         )}
-        {currentUser && userInput.interests.length > 0 && !userInput.startDate && (
+        {currentUser && userInput.duration && userInput.interests.length > 0 && !userInput.startDate && (
           <p className="text-sm text-red-600 font-medium mt-3 animate-pulse">
             * Please select a start date to continue
           </p>
