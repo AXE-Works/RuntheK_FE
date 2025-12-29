@@ -242,18 +242,45 @@ export async function saveTripWithItinerary(
 
 // ===== Trip List & Detail APIs =====
 
+/**
+ * Trip list item matching BE TripListResponse
+ */
 export interface TripListItem {
   id: string;
   title: string;
-  status: 'UPCOMING' | 'ONGOING' | 'COMPLETED';
+  duration: string;                  // "5 days" format from BE
+  interests: string[];
+  budget: string;                    // "budget" | "mid-range" | "luxury"
+  status: string;                    // "upcoming" | "ongoing" | "completed" (lowercase from BE)
   startDate: string;
   endDate: string;
-  duration: number;
-  cities: string[];
+  confirmedAt: string;
   thumbnail?: string;
-  createdAt: string;
+  cities: string[];
+  daysCount: number;
+  activitiesCount: number;
+  averageRating?: number;
 }
 
+/**
+ * BE API response structure for trip list
+ */
+export interface TripListApiResponse {
+  success: boolean;
+  data: TripListItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+/**
+ * FE internal response structure
+ */
 export interface TripListResponse {
   items: TripListItem[];
   pagination: {
@@ -261,6 +288,8 @@ export interface TripListResponse {
     limit: number;
     total: number;
     totalPages: number;
+    hasNext?: boolean;
+    hasPrev?: boolean;
   };
 }
 
@@ -268,6 +297,8 @@ export interface TripListResponse {
  * Get user's trip list
  *
  * GET /api/v1/trips
+ *
+ * Maps BE response { success, data, pagination } to FE format { items, pagination }
  */
 export async function getTrips(
   page = 1,
@@ -290,7 +321,13 @@ export async function getTrips(
     throw new Error(errorData.error?.message || 'Failed to fetch trips');
   }
 
-  return response.json();
+  const apiResponse: TripListApiResponse = await response.json();
+
+  // Map BE response structure to FE format
+  return {
+    items: apiResponse.data ?? [],
+    pagination: apiResponse.pagination,
+  };
 }
 
 /**
@@ -322,5 +359,91 @@ export async function deleteTrip(id: string): Promise<void> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error?.message || 'Failed to delete trip');
+  }
+}
+
+// ===== Bookmark APIs =====
+
+export interface BookmarkItem {
+  id: string;
+  tripId: string;
+  title: string;
+  duration: number;
+  cities: string[];
+  interests: string[];
+  budgetLevel: string;
+  creator: {
+    name: string;
+    country: string;
+  };
+  rating?: number;
+  totalCost?: string;
+  createdAt: string;
+  bookmarkedAt: string;
+}
+
+export interface BookmarkListResponse {
+  items: BookmarkItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+/**
+ * Get user's bookmarked trips
+ *
+ * GET /api/v1/bookmarks
+ */
+export async function getBookmarks(
+  page = 1,
+  limit = 10
+): Promise<BookmarkListResponse> {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+
+  const response = await fetchWithAuth(`${API_BASE_URL}/bookmarks?${params}`);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || 'Failed to fetch bookmarks');
+  }
+
+  return response.json();
+}
+
+/**
+ * Add bookmark
+ *
+ * POST /api/v1/bookmarks/:tripId
+ */
+export async function addBookmark(tripId: string): Promise<void> {
+  const response = await fetchWithAuth(`${API_BASE_URL}/bookmarks/${tripId}`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || 'Failed to add bookmark');
+  }
+}
+
+/**
+ * Remove bookmark
+ *
+ * DELETE /api/v1/bookmarks/:tripId
+ */
+export async function removeBookmark(tripId: string): Promise<void> {
+  const response = await fetchWithAuth(`${API_BASE_URL}/bookmarks/${tripId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || 'Failed to remove bookmark');
   }
 }

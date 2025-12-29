@@ -7,14 +7,16 @@ import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Separator } from './ui/separator';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { motion } from 'motion/react';
-import { User, MapPin, Calendar, DollarSign, Heart, Eye, Edit, Trash2, Star, Bookmark, Clock, Users, ArrowRight, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
-import { ItineraryData } from '../App';
+import { User, MapPin, Calendar, DollarSign, Heart, Eye, Edit, Star, Bookmark, Clock, ArrowRight, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { TripDetailView } from './TripDetailView';
-import { getProfile, updateProfile, UserProfile, UpdateProfileRequest } from '../utils/api';
+import { getProfile, updateProfile, UpdateProfileRequest } from '../utils/api';
+import { getTrips, getBookmarks, TripListItem, BookmarkItem } from '../services/tripApi';
 import { toast } from 'sonner';
+
+// ===== Types =====
 
 interface MyTripProps {
   currentUser: any;
@@ -25,70 +27,18 @@ interface MyTripProps {
   onTabChange?: (tab: string) => void;
 }
 
-// Mock data for user trips and bookmarked trips
-const mockUserTrips = [
-  {
-    id: '1',
-    title: 'Seoul & Busan Adventure',
-    duration: '5 days',
-    cities: ['Seoul', 'Busan'],
-    budget: 'Medium ($1000-2000)',
-    interests: ['Culture', 'Food', 'Shopping'],
-    createdAt: '2024-01-15',
-    status: '완료',
-    totalCost: '$1,450',
-    rating: 4.8,
-    views: 234,
-    likes: 12
-  },
-  {
-    id: '2',
-    title: 'Jeju Island Nature Trip',
-    duration: '3 days',
-    cities: ['Jeju'],
-    budget: 'Budget (Under $1000)',
-    interests: ['Nature', 'Adventure'],
-    createdAt: '2024-01-08',
-    status: '진행중',
-    totalCost: '$780',
-    rating: null,
-    views: 156,
-    likes: 8
-  }
-];
+// Extended trip type for UI display
+// Note: TripListItem now includes budget, interests, daysCount, activitiesCount, averageRating from BE
+interface TripDisplayItem extends TripListItem {
+  totalCost?: string;       // Optional UI-specific field
+  rating?: number;          // Alias for averageRating
+  confirmed?: boolean;      // Derived from status
+}
 
-const mockBookmarkedTrips = [
-  {
-    id: '3',
-    title: 'Traditional Korea Experience',
-    duration: '7 days',
-    cities: ['Seoul', 'Gyeongju', 'Jeonju'],
-    budget: 'Luxury ($2000+)',
-    interests: ['Culture', 'History', 'Food'],
-    creator: 'Sarah Johnson',
-    creatorCountry: 'USA',
-    createdAt: '2024-01-20',
-    rating: 4.9,
-    totalCost: '$2,350',
-    views: 892,
-    likes: 47
-  },
-  {
-    id: '4',
-    title: 'K-Pop & Modern Seoul',
-    duration: '4 days',
-    cities: ['Seoul'],
-    budget: 'Medium ($1000-2000)',
-    interests: ['Entertainment', 'Shopping', 'Food'],
-    creator: 'Yuki Tanaka',
-    creatorCountry: 'Japan',
-    createdAt: '2024-01-18',
-    rating: 4.7,
-    totalCost: '$1,200',
-    views: 567,
-    likes: 23
-  }
-];
+// Extended bookmark type for UI display
+interface BookmarkDisplayItem extends BookmarkItem {
+  budget?: string;
+}
 
 const countries = [
   'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
@@ -114,6 +64,20 @@ const countries = [
   'Venezuela', 'Vietnam',
   'Other'
 ];
+
+// ===== Budget Level Display Mapping (BE returns lowercase) =====
+const BUDGET_LEVEL_DISPLAY: Record<string, string> = {
+  'budget': 'Budget (Under $1000)',
+  'mid-range': 'Mid-range ($1000-2000)',
+  'luxury': 'Luxury ($2000+)',
+};
+
+// ===== Status Display Mapping (BE returns lowercase) =====
+const STATUS_DISPLAY: Record<string, string> = {
+  'upcoming': 'Upcoming',
+  'ongoing': 'In Progress',
+  'completed': 'Completed',
+};
 
 export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthModal, defaultTab, onTabChange }: MyTripProps) {
   const [activeTab, setActiveTab] = useState(defaultTab || 'my-trips');
@@ -141,39 +105,91 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
-  // Get confirmed trips from localStorage
-  const getConfirmedTrips = () => {
+  // ===== Trip API States =====
+  const [trips, setTrips] = useState<TripDisplayItem[]>([]);
+  const [tripsLoading, setTripsLoading] = useState(false);
+  const [tripsError, setTripsError] = useState<string | null>(null);
+  const [tripsFetched, setTripsFetched] = useState(false);
+
+  // ===== Bookmark API States =====
+  const [bookmarks, setBookmarks] = useState<BookmarkDisplayItem[]>([]);
+  const [bookmarksLoading, setBookmarksLoading] = useState(false);
+  const [bookmarksError, setBookmarksError] = useState<string | null>(null);
+  const [bookmarksFetched, setBookmarksFetched] = useState(false);
+
+  // ===== Fetch Trips from API =====
+  const fetchTrips = useCallback(async () => {
+    if (!currentUser) return;
+
+    setTripsLoading(true);
+    setTripsError(null);
+
     try {
-      const confirmed = localStorage.getItem('confirmedTrips');
-      const confirmedTrips = confirmed ? JSON.parse(confirmed) : [];
-      // Filter trips for current user
-      if (currentUser) {
-        return confirmedTrips.filter((trip: any) => trip.userEmail === currentUser.email);
-      }
-      return [];
-    } catch {
-      return [];
+      const response = await getTrips(1, 50); // Fetch up to 50 trips
+      const items = response?.items ?? [];
+      const displayTrips: TripDisplayItem[] = items.map(trip => ({
+        ...trip,
+        // BE already returns budget field, just add display version if needed
+        confirmed: trip.status === 'upcoming' || trip.status === 'ongoing',
+      }));
+      setTrips(displayTrips);
+      console.log('[MyTrip] Fetched trips:', displayTrips);
+    } catch (error) {
+      console.error('[MyTrip] Failed to fetch trips:', error);
+      setTripsError(error instanceof Error ? error.message : 'Failed to load trips');
+    } finally {
+      setTripsLoading(false);
     }
-  };
+  }, [currentUser]);
 
-  // Combine mock trips with confirmed trips from localStorage
-  const getAllUserTrips = () => {
-    const confirmedTrips = getConfirmedTrips().map((trip: any) => ({
-      ...trip,
-      duration: trip.duration || '5 days',
-      cities: trip.cities || ['Seoul'],
-      budget: trip.budget || 'Medium ($1000-2000)',
-      interests: trip.interests || ['Culture'],
-      status: trip.status || '확정됨',
-      totalCost: trip.totalCost || trip.totalEstimatedCost || '$1,000',
-      views: Math.floor(Math.random() * 200) + 50,
-      likes: Math.floor(Math.random() * 20) + 1
-    }));
-    
-    return [...confirmedTrips, ...mockUserTrips];
-  };
+  // ===== Fetch Bookmarks from API =====
+  const fetchBookmarks = useCallback(async () => {
+    if (!currentUser) return;
 
-  const userTrips = getAllUserTrips();
+    setBookmarksLoading(true);
+    setBookmarksError(null);
+
+    try {
+      const response = await getBookmarks(1, 50); // Fetch up to 50 bookmarks
+      const items = response?.items ?? [];
+      const displayBookmarks: BookmarkDisplayItem[] = items.map(bookmark => ({
+        ...bookmark,
+        budget: BUDGET_LEVEL_DISPLAY[bookmark.budgetLevel] || 'Mid-range',
+      }));
+      setBookmarks(displayBookmarks);
+      console.log('[MyTrip] Fetched bookmarks:', displayBookmarks);
+    } catch (error) {
+      console.error('[MyTrip] Failed to fetch bookmarks:', error);
+      setBookmarksError(error instanceof Error ? error.message : 'Failed to load bookmarks');
+    } finally {
+      setBookmarksLoading(false);
+    }
+  }, [currentUser]);
+
+  // ===== Fetch trips when entering my-trips tab =====
+  useEffect(() => {
+    if (currentUser && activeTab === 'my-trips' && !tripsFetched) {
+      fetchTrips();
+      setTripsFetched(true);
+    }
+  }, [currentUser?.id, activeTab, tripsFetched, fetchTrips]);
+
+  // ===== Fetch bookmarks when entering bookmarks tab =====
+  useEffect(() => {
+    if (currentUser && activeTab === 'bookmarks' && !bookmarksFetched) {
+      fetchBookmarks();
+      setBookmarksFetched(true);
+    }
+  }, [currentUser?.id, activeTab, bookmarksFetched, fetchBookmarks]);
+
+  // ===== Reset fetch flags when user changes =====
+  useEffect(() => {
+    setTripsFetched(false);
+    setBookmarksFetched(false);
+  }, [currentUser?.id]);
+
+  // Get confirmed trips (upcoming or ongoing status - BE returns lowercase)
+  const confirmedTrips = trips.filter(trip => trip.status === 'upcoming' || trip.status === 'ongoing');
 
   // Update editedUser when currentUser changes
   React.useEffect(() => {
@@ -315,7 +331,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
   };
 
   // Confirmed Trip Banner Component
-  const ConfirmedTripBanner = ({ trip }: { trip: any }) => (
+  const ConfirmedTripBanner = ({ trip }: { trip: TripDisplayItem }) => (
     <motion.div
       className="relative overflow-hidden rounded-lg bg-gradient-to-r from-black to-gray-800 p-6 text-white cursor-pointer hover:shadow-xl transition-all duration-300 group"
       onClick={() => handleViewTripDetail(trip)}
@@ -327,7 +343,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
           <div className="flex items-center space-x-2">
             <Badge className="bg-green-600 text-white">Confirmed</Badge>
             <Badge variant="outline" className="border-white/30 text-white">
-              {trip.status}
+              {STATUS_DISPLAY[trip.status] || trip.status}
             </Badge>
           </div>
           <h3 className="text-xl font-bold group-hover:text-blue-300 transition-colors">
@@ -336,29 +352,33 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
           <div className="flex items-center space-x-4 text-gray-300">
             <div className="flex items-center space-x-1">
               <Calendar className="h-4 w-4" />
-              <span>{trip.duration}</span>
+              <span>{trip.duration} days</span>
             </div>
             <div className="flex items-center space-x-1">
               <MapPin className="h-4 w-4" />
-              <span>{trip.cities?.join(', ') || 'Seoul'}</span>
+              <span>{trip.cities?.join(', ') || 'Korea'}</span>
             </div>
-            <div className="flex items-center space-x-1">
-              <DollarSign className="h-4 w-4" />
-              <span>{trip.totalCost}</span>
+            {trip.startDate && (
+              <div className="flex items-center space-x-1">
+                <Clock className="h-4 w-4" />
+                <span>{new Date(trip.startDate).toLocaleDateString()}</span>
+              </div>
+            )}
+          </div>
+          {trip.interests && trip.interests.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {trip.interests.map((interest: string) => (
+                <Badge key={interest} variant="secondary" className="bg-white/20 text-white border-white/20">
+                  {interest}
+                </Badge>
+              ))}
             </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {trip.interests?.map((interest: string) => (
-              <Badge key={interest} variant="secondary" className="bg-white/20 text-white border-white/20">
-                {interest}
-              </Badge>
-            ))}
-          </div>
+          )}
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-right space-y-1">
             <div className="text-sm text-gray-300">Created</div>
-            <div className="font-medium">{trip.createdAt}</div>
+            <div className="font-medium">{new Date(trip.confirmedAt).toLocaleDateString()}</div>
           </div>
           <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
         </div>
@@ -367,101 +387,101 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
     </motion.div>
   );
 
-  const TripCard = ({ trip, isBookmarked = false }: { trip: any; isBookmarked?: boolean }) => (
-    <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer" onClick={() => setSelectedTrip(trip)}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg mb-1 group-hover:text-blue-600 transition-colors">
-              {trip.title}
-            </CardTitle>
-            <CardDescription className="flex items-center gap-4 text-sm">
-              <span className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                {trip.duration}
-              </span>
-              <span className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {trip.cities?.join(', ') || 'Seoul'}
-              </span>
-            </CardDescription>
-          </div>
-          {isBookmarked ? (
-            <Bookmark className="h-5 w-5 text-yellow-500 fill-current" />
-          ) : (
-            <Badge variant={trip.status === '완료' ? 'default' : 'secondary'}>
-              {trip.status}
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-1">
-            {trip.interests?.map((interest: string) => (
-              <Badge key={interest} variant="outline" className="text-xs">
-                {interest}
-              </Badge>
-            ))}
-          </div>
-          
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span className="flex items-center gap-1">
-              <DollarSign className="h-4 w-4" />
-              {trip.totalCost}
-            </span>
-            <span className="text-xs">{trip.createdAt}</span>
-          </div>
+  // Trip Card Component
+  const TripCard = ({ trip, isBookmarked = false }: { trip: TripDisplayItem | BookmarkDisplayItem; isBookmarked?: boolean }) => {
+    const bookmarkTrip = trip as BookmarkDisplayItem;
+    const displayTrip = trip as TripDisplayItem;
 
-          {isBookmarked && (
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-              <span className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                {trip.creator}
-              </span>
-              <Badge variant="outline" className="text-xs">
-                {trip.creatorCountry}
-              </Badge>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              {trip.rating && (
+    return (
+      <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer" onClick={() => setSelectedTrip(trip)}>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <CardTitle className="text-lg mb-1 group-hover:text-blue-600 transition-colors">
+                {trip.title}
+              </CardTitle>
+              <CardDescription className="flex items-center gap-4 text-sm">
                 <span className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  {trip.rating}
+                  <Calendar className="h-4 w-4" />
+                  {trip.duration} days
                 </span>
-              )}
-              <span className="flex items-center gap-1">
-                <Eye className="h-4 w-4" />
-                {trip.views}
-              </span>
-              <span className="flex items-center gap-1">
-                <Heart className="h-4 w-4" />
-                {trip.likes}
-              </span>
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  {trip.cities?.join(', ') || 'Korea'}
+                </span>
+              </CardDescription>
             </div>
-            
-            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-              {trip.confirmed ? (
-                <Button variant="outline" size="sm" onClick={() => handleViewTripDetail(trip)}>
-                  <Eye className="h-4 w-4 mr-1" />
-                  View Details
-                </Button>
-              ) : (
-                <Button variant="outline" size="sm" onClick={() => setSelectedTrip(trip)}>
-                  <Eye className="h-4 w-4 mr-1" />
-                  View
-                </Button>
-              )}
+            {isBookmarked ? (
+              <Bookmark className="h-5 w-5 text-yellow-500 fill-current" />
+            ) : (
+              <Badge variant={displayTrip.status === 'completed' ? 'default' : 'secondary'}>
+                {STATUS_DISPLAY[displayTrip.status] || displayTrip.status}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+
+        <CardContent className="pt-0">
+          <div className="space-y-3">
+            {trip.interests && trip.interests.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {trip.interests.map((interest: string) => (
+                  <Badge key={interest} variant="outline" className="text-xs">
+                    {interest}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <span className="flex items-center gap-1">
+                <DollarSign className="h-4 w-4" />
+                {trip.budget || BUDGET_LEVEL_DISPLAY[bookmarkTrip.budgetLevel] || 'Mid-range'}
+              </span>
+              <span className="text-xs">{new Date(trip.confirmedAt).toLocaleDateString()}</span>
+            </div>
+
+            {isBookmarked && bookmarkTrip.creator && (
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span className="flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  {bookmarkTrip.creator.name}
+                </span>
+                <Badge variant="outline" className="text-xs">
+                  {bookmarkTrip.creator.country}
+                </Badge>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                {trip.rating && (
+                  <span className="flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    {trip.rating}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                {displayTrip.confirmed ? (
+                  <Button variant="outline" size="sm" onClick={() => handleViewTripDetail(trip)}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    View Details
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setSelectedTrip(trip)}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    View
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   if (showDetailView && detailViewTrip) {
     return <TripDetailView trip={detailViewTrip} onBack={handleBackFromDetail} />;
@@ -492,81 +512,147 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
 
           {/* My Trips Tab - Now first */}
           <TabsContent value="my-trips" className="space-y-6">
-            {/* Confirmed Trips Banner Section */}
-            {getConfirmedTrips().length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Confirmed Trips</h2>
-                    <p className="text-gray-600">Your finalized travel plans ready for adventure</p>
-                  </div>
-                </div>
-                <div className="grid gap-4">
-                  {getConfirmedTrips().map((trip) => (
-                    <ConfirmedTripBanner key={trip.id} trip={trip} />
-                  ))}
-                </div>
+            {/* Loading State */}
+            {tripsLoading && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-4" />
+                <p className="text-gray-600">Loading your trips...</p>
               </div>
             )}
 
-            {/* All Trips Section */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {getConfirmedTrips().length > 0 ? 'All Travel Plans' : 'My Travel Plans'}
-                </h2>
-                <p className="text-gray-600">
-                  {getConfirmedTrips().length > 0 ? 'Complete overview of all your trips' : 'Trips you\'ve created and planned'}
-                </p>
-              </div>
-              <Button onClick={onCreateNewTrip}>
-                <MapPin className="h-4 w-4 mr-2" />
-                Create New Trip
-              </Button>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2">
-              {userTrips.map((trip) => (
-                <TripCard key={trip.id} trip={trip} />
-              ))}
-            </div>
-
-            {userTrips.length === 0 && (
-              <div className="text-center py-12">
-                <div className="bg-gray-100 rounded-full p-6 mb-4 mx-auto w-fit">
-                  <MapPin className="h-8 w-8 text-gray-400" />
+            {/* Error State */}
+            {tripsError && !tripsLoading && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="bg-red-50 rounded-full p-4 mb-4">
+                  <AlertCircle className="h-8 w-8 text-red-500" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No trips yet</h3>
-                <p className="text-gray-600 mb-4">Start planning your first Korea adventure!</p>
-                <Button onClick={onCreateNewTrip}>Plan Your First Trip</Button>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load trips</h3>
+                <p className="text-gray-600 mb-4">{tripsError}</p>
+                <Button onClick={() => { setTripsFetched(false); fetchTrips(); }} variant="outline">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
               </div>
+            )}
+
+            {/* Content (only show when not loading and no error) */}
+            {!tripsLoading && !tripsError && (
+              <>
+                {/* Confirmed Trips Banner Section */}
+                {confirmedTrips.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-900">Confirmed Trips</h2>
+                        <p className="text-gray-600">Your finalized travel plans ready for adventure</p>
+                      </div>
+                    </div>
+                    <div className="grid gap-4">
+                      {confirmedTrips.map((trip) => (
+                        <ConfirmedTripBanner key={trip.id} trip={trip} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* All Trips Section */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      {confirmedTrips.length > 0 ? 'All Travel Plans' : 'My Travel Plans'}
+                    </h2>
+                    <p className="text-gray-600">
+                      {confirmedTrips.length > 0 ? 'Complete overview of all your trips' : 'Trips you\'ve created and planned'}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => { setTripsFetched(false); fetchTrips(); }}>
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                    <Button onClick={onCreateNewTrip}>
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Create New Trip
+                    </Button>
+                  </div>
+                </div>
+
+                {trips.length > 0 ? (
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {trips.map((trip) => (
+                      <TripCard key={trip.id} trip={trip} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="bg-gray-100 rounded-full p-6 mb-4 mx-auto w-fit">
+                      <MapPin className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No trips yet</h3>
+                    <p className="text-gray-600 mb-4">Start planning your first Korea adventure!</p>
+                    <Button onClick={onCreateNewTrip}>Plan Your First Trip</Button>
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
 
           {/* Bookmarks Tab - Now second */}
           <TabsContent value="bookmarks" className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Saved Trips</h2>
-              <p className="text-gray-600">Travel plans you've bookmarked from other users</p>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2">
-              {mockBookmarkedTrips.map((trip) => (
-                <TripCard key={trip.id} trip={trip} isBookmarked={true} />
-              ))}
-            </div>
-
-            {mockBookmarkedTrips.length === 0 && (
-              <div className="text-center py-12">
-                <div className="bg-gray-100 rounded-full p-6 mb-4 mx-auto w-fit">
-                  <Bookmark className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookmarks yet</h3>
-                <p className="text-gray-600 mb-4">
-                  Discover and save inspiring travel plans from other users
-                </p>
-                <Button variant="outline">Explore Public Trips</Button>
+            {/* Loading State */}
+            {bookmarksLoading && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-4" />
+                <p className="text-gray-600">Loading your bookmarks...</p>
               </div>
+            )}
+
+            {/* Error State */}
+            {bookmarksError && !bookmarksLoading && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="bg-red-50 rounded-full p-4 mb-4">
+                  <AlertCircle className="h-8 w-8 text-red-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load bookmarks</h3>
+                <p className="text-gray-600 mb-4">{bookmarksError}</p>
+                <Button onClick={() => { setBookmarksFetched(false); fetchBookmarks(); }} variant="outline">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+              </div>
+            )}
+
+            {/* Content */}
+            {!bookmarksLoading && !bookmarksError && (
+              <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">Saved Trips</h2>
+                    <p className="text-gray-600">Travel plans you've bookmarked from other users</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => { setBookmarksFetched(false); fetchBookmarks(); }}>
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {bookmarks.length > 0 ? (
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {bookmarks.map((bookmark) => (
+                      <TripCard key={bookmark.id} trip={bookmark} isBookmarked={true} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="bg-gray-100 rounded-full p-6 mb-4 mx-auto w-fit">
+                      <Bookmark className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookmarks yet</h3>
+                    <p className="text-gray-600 mb-4">
+                      Discover and save inspiring travel plans from other users
+                    </p>
+                    <Button variant="outline">Explore Public Trips</Button>
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
 
@@ -743,23 +829,29 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                   <div className="space-y-1">
                     <div className="text-2xl font-bold text-gray-900">
-                      {userTrips.length}
+                      {trips.length}
                     </div>
                     <div className="text-sm text-gray-600 text-[12px]">Trips Created</div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-2xl font-bold text-gray-900">
-                      {mockBookmarkedTrips.length}
+                      {bookmarks.length}
                     </div>
-                    <div className="text-sm text-gray-600 text-[12px] text-[13px]">Bookmarks</div>
+                    <div className="text-sm text-gray-600 text-[12px]">Bookmarks</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-gray-900">4.8</div>
+                    <div className="text-2xl font-bold text-gray-900">
+                      {trips.length > 0
+                        ? (trips.reduce((acc, t) => acc + (t.rating || 0), 0) / trips.filter(t => t.rating).length || 0).toFixed(1)
+                        : '-'}
+                    </div>
                     <div className="text-sm text-gray-600 text-[12px]">Avg Rating</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-gray-900">390</div>
-                    <div className="text-sm text-gray-600 text-[12px]">Total Views</div>
+                    <div className="text-2xl font-bold text-gray-900">
+                      {confirmedTrips.length}
+                    </div>
+                    <div className="text-sm text-gray-600 text-[12px]">Active Trips</div>
                   </div>
                 </div>
               </CardContent>
@@ -823,7 +915,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                   <div className="flex items-center justify-center mb-2">
                     <Clock className="h-5 w-5 text-gray-600" />
                   </div>
-                  <div className="text-lg font-bold">{selectedTrip.createdAt}</div>
+                  <div className="text-lg font-bold">{selectedTrip.confirmedAt ? new Date(selectedTrip.confirmedAt).toLocaleDateString() : '-'}</div>
                   <div className="text-sm text-gray-600">Created</div>
                 </div>
               </div>
