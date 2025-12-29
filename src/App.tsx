@@ -41,6 +41,8 @@ import { MapPin, Users, BarChart, ArrowLeft, LogIn, User, LogOut, Settings } fro
 import { motion } from 'motion/react';
 import logo from 'figma:asset/ade16fc310679880d8b27a51a4119372559298ac.png';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+
 const mockEvents = [
   {
     id: 1,
@@ -331,8 +333,42 @@ export default function App() {
     setShowAuthModal(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    // Call backend logout API to invalidate refresh token
+    if (accessToken && refreshToken) {
+      try {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+        console.log('[Logout] Backend logout successful');
+      } catch (error) {
+        console.error('[Logout] API error:', error);
+        // Continue with local logout even if API fails
+      }
+    }
+
+    // Clear local storage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+
+    // Clear user state
     setCurrentUser(null);
+
+    // Redirect to landing page
+    setShowHero(true);
+    setCurrentItinerary(null);
+    setActiveTab("plan");
+    setSelectedDestination(null);
+
+    console.log('[Logout] User logged out successfully');
   };
 
   const handleDestinationSelect = (destination: any) => {
