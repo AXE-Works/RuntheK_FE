@@ -138,4 +138,81 @@ export async function fetchWithAuth(
   return response;
 }
 
+/**
+ * Profile API Response Types
+ */
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  country?: string;
+  bio?: string;
+  phoneCountryCode?: string;
+  phone?: string;
+  tripCount: number;
+  totalCountriesVisited: number;
+  preferences: {
+    interests: string[];
+    budgetPreference: 'budget' | 'mid-range' | 'luxury';
+  };
+  createdAt: string;
+}
+
+export interface UpdateProfileRequest {
+  name?: string;
+  country?: string;
+  bio?: string;
+  avatar?: string;
+  phoneCountryCode?: string;
+  phone?: string;
+  preferences?: {
+    interests?: string[];
+    budgetPreference?: 'budget' | 'mid-range' | 'luxury';
+  };
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+/**
+ * Get current user's profile
+ * @returns User profile data
+ */
+export async function getProfile(): Promise<ApiResponse<UserProfile>> {
+  const response = await fetchWithAuth(`${API_BASE_URL}/users/profile`);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || 'Failed to fetch profile');
+  }
+
+  return response.json();
+}
+
+/**
+ * Update current user's profile
+ * @param data - Profile data to update
+ * @returns Updated user profile
+ */
+export async function updateProfile(data: UpdateProfileRequest): Promise<ApiResponse<UserProfile>> {
+  const response = await fetchWithAuth(`${API_BASE_URL}/users/profile`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || 'Failed to update profile');
+  }
+
+  return response.json();
+}
+
 export { API_BASE_URL };

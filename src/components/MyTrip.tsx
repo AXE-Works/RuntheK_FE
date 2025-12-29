@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -10,15 +10,19 @@ import { Separator } from './ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { motion } from 'motion/react';
-import { User, MapPin, Calendar, DollarSign, Heart, Eye, Edit, Trash2, Star, Bookmark, Clock, Users, ArrowRight } from 'lucide-react';
+import { User, MapPin, Calendar, DollarSign, Heart, Eye, Edit, Trash2, Star, Bookmark, Clock, Users, ArrowRight, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { ItineraryData } from '../App';
 import { TripDetailView } from './TripDetailView';
+import { getProfile, updateProfile, UserProfile, UpdateProfileRequest } from '../utils/api';
+import { toast } from 'sonner';
 
 interface MyTripProps {
   currentUser: any;
   onUpdateUser: (user: any) => void;
   onCreateNewTrip?: () => void;
   onOpenAuthModal?: () => void;
+  defaultTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 // Mock data for user trips and bookmarked trips
@@ -111,13 +115,31 @@ const countries = [
   'Other'
 ];
 
-export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthModal }: MyTripProps) {
-  const [activeTab, setActiveTab] = useState('my-trips'); // Changed default tab to 'my-trips'
+export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthModal, defaultTab, onTabChange }: MyTripProps) {
+  const [activeTab, setActiveTab] = useState(defaultTab || 'my-trips');
+
+  // Sync with defaultTab from parent
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
+
+  // Notify parent of tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(currentUser || {});
   const [selectedTrip, setSelectedTrip] = useState<any>(null);
   const [showDetailView, setShowDetailView] = useState(false);
   const [detailViewTrip, setDetailViewTrip] = useState<any>(null);
+
+  // Profile API states
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   // Get confirmed trips from localStorage
   const getConfirmedTrips = () => {
@@ -178,9 +200,103 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
     );
   }
 
-  const handleSaveProfile = () => {
-    onUpdateUser(editedUser);
-    setIsEditing(false);
+  // Fetch profile from API
+  const fetchProfile = useCallback(async () => {
+    if (!currentUser) return;
+
+    setProfileLoading(true);
+    setProfileError(null);
+
+    try {
+      const response = await getProfile();
+      if (response.success && response.data) {
+        // Update both local state and parent state
+        // Map BE phoneCountryCode → FE countryCode
+        const profileData = {
+          ...currentUser,
+          ...response.data,
+          countryCode: response.data.phoneCountryCode || currentUser.countryCode,
+        };
+        onUpdateUser(profileData);
+        setEditedUser(profileData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+      // Don't show error on initial load if user data exists from auth
+      if (!currentUser.name) {
+        setProfileError(error instanceof Error ? error.message : 'Failed to load profile');
+      }
+    } finally {
+      setProfileLoading(false);
+    }
+  }, [currentUser, onUpdateUser]);
+
+  // Fetch profile only when first entering profile tab (not after save)
+  const [profileFetched, setProfileFetched] = useState(false);
+
+  useEffect(() => {
+    if (currentUser && activeTab === 'profile' && !profileFetched) {
+      fetchProfile();
+      setProfileFetched(true);
+    }
+  }, [currentUser?.id, activeTab, profileFetched]);
+
+  // Reset profileFetched when leaving profile tab
+  useEffect(() => {
+    if (activeTab !== 'profile') {
+      setProfileFetched(false);
+    }
+  }, [activeTab]);
+
+  const handleSaveProfile = async () => {
+    setProfileSaving(true);
+    setProfileError(null);
+
+    try {
+      // Prepare update request with all editable fields
+      const updateData: UpdateProfileRequest = {
+        name: editedUser.name,
+        country: editedUser.country,
+        bio: editedUser.bio,
+        avatar: editedUser.avatar,
+        phoneCountryCode: editedUser.countryCode,  // FE countryCode → BE phoneCountryCode
+        phone: editedUser.phone,
+      };
+
+      // Remove undefined/null values
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key as keyof UpdateProfileRequest] === undefined ||
+            updateData[key as keyof UpdateProfileRequest] === null) {
+          delete updateData[key as keyof UpdateProfileRequest];
+        }
+      });
+
+      console.log('[Profile] Updating with data:', updateData);
+
+      const response = await updateProfile(updateData);
+      console.log('[Profile] Update response:', response);
+
+      if (response.success && response.data) {
+        // Map BE phoneCountryCode → FE countryCode
+        const updatedUser = {
+          ...currentUser,
+          ...response.data,
+          countryCode: response.data.phoneCountryCode || currentUser.countryCode,
+        };
+        onUpdateUser(updatedUser);
+        setEditedUser(updatedUser);
+        toast.success('Profile updated successfully');
+      }
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error('[Profile] Failed to update:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
+      setProfileError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -367,7 +483,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto mb-8">
             <TabsTrigger value="my-trips">My Trips</TabsTrigger>
             <TabsTrigger value="bookmarks">Bookmarks</TabsTrigger>
@@ -465,12 +581,19 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                       Manage your personal information and travel preferences
                     </CardDescription>
                   </div>
-                  <Button
-                    variant={isEditing ? "destructive" : "outline"}
-                    onClick={isEditing ? handleCancelEdit : () => setIsEditing(true)} className="text-[13px]"
-                  >
-                    {isEditing ? 'Cancel' : 'Edit Profile'}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {profileLoading && (
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                    )}
+                    <Button
+                      variant={isEditing ? "destructive" : "outline"}
+                      onClick={isEditing ? handleCancelEdit : () => setIsEditing(true)}
+                      className="text-[13px]"
+                      disabled={profileLoading || profileSaving}
+                    >
+                      {isEditing ? 'Cancel' : 'Edit Profile'}
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               
@@ -581,13 +704,36 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                   </div>
                 </div>
 
+                {/* Error message */}
+                {profileError && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm">{profileError}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto text-red-700 hover:text-red-800 hover:bg-red-100"
+                      onClick={() => setProfileError(null)}
+                    >
+                      Dismiss
+                    </Button>
+                  </div>
+                )}
+
                 {isEditing && (
                   <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={handleCancelEdit}>
+                    <Button variant="outline" onClick={handleCancelEdit} disabled={profileSaving}>
                       Cancel
                     </Button>
-                    <Button onClick={handleSaveProfile}>
-                      Save Changes
+                    <Button onClick={handleSaveProfile} disabled={profileSaving}>
+                      {profileSaving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Changes'
+                      )}
                     </Button>
                   </div>
                 )}
