@@ -402,6 +402,15 @@ export class ScheduleApiError extends Error {
   }
 }
 
+/**
+ * Result type that includes both converted itinerary and raw AI response
+ */
+export interface GenerateScheduleResult {
+  itinerary: ItineraryData;
+  rawAIResponse: ScheduleGenerateResponse;
+  userBudget: string;  // Store user's budget selection for BE API
+}
+
 export async function generateSchedule(
   userInput: {
     startDate?: Date;
@@ -412,13 +421,62 @@ export async function generateSchedule(
     additionalNotes?: string;
     language?: 'ko' | 'en' | 'ja' | 'zh';
   }
-): Promise<ItineraryData> {
+): Promise<GenerateScheduleResult> {
   // Use mock data for testing
   if (USE_MOCK_DATA) {
     console.log('[Schedule API] Using mock data for testing');
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    return generateMockItinerary(userInput);
+    const mockItinerary = generateMockItinerary(userInput);
+    // Create mock raw response for testing
+    const mockRawResponse: ScheduleGenerateResponse = {
+      id: Date.now(),
+      itinerary: mockItinerary.days.map(day => ({
+        day: day.day,
+        date: new Date().toISOString().split('T')[0],
+        day_title: day.title,
+        total_travel_time: 0,
+        total_distance_km: 0,
+        items: day.activities.map(act => ({
+          place_name: act.activity,
+          address: act.location,
+          time: act.time,
+          description: act.description,
+          recommendation_reason: null,
+          image_url: null,
+          rating: 4.0,
+          review_count: 100,
+          google_maps_url: act.googleMapsUrl || null,
+          price_range: null,
+          item_type: 'place',
+          opening_hours: '09:00 - 18:00',
+          is_open_on_date: true,
+          transport_from_prev: act.transportMode ? {
+            from_place: '',
+            to_place: act.activity,
+            duration_minutes: act.transportDuration || 0,
+            distance_km: act.transportDistance || 0,
+            transport_mode: act.transportMode,
+            transit_details: act.transportDetails || null,
+            cost_estimate: act.transportCost || null,
+          } : null,
+        })),
+      })),
+      warnings: [],
+      meta: {
+        cities: userInput.cities,
+        interests: userInput.interests,
+        budget_level: userInput.budget === 'budget' ? 'LOW' : userInput.budget === 'luxury' ? 'HIGH' : 'MEDIUM',
+        duration_days: parseDurationToDays(userInput.duration || '5 days'),
+        generated_at: new Date().toISOString(),
+      },
+      travel_tips: mockItinerary.travelTips || [],
+    };
+    return {
+      itinerary: mockItinerary,
+      rawAIResponse: mockRawResponse,
+      userBudget: userInput.budget,
+    };
   }
 
   const request = convertToApiRequest(userInput);
@@ -458,7 +516,12 @@ export async function generateSchedule(
 
     const data: ScheduleGenerateResponse = await response.json();
     console.log('[Schedule API] Schedule generated successfully');
-    return convertToItineraryData(data);
+
+    return {
+      itinerary: convertToItineraryData(data),
+      rawAIResponse: data,
+      userBudget: userInput.budget,
+    };
   } catch (error) {
     clearTimeout(timeoutId);
 

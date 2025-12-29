@@ -42,6 +42,9 @@ import { MapPin, Users, BarChart, ArrowLeft, LogIn, User, LogOut, Settings, Glob
 import { motion } from 'motion/react';
 import logo from 'figma:asset/ade16fc310679880d8b27a51a4119372559298ac.png';
 import { fetchWithAuth, API_BASE_URL } from './utils/api';
+import { saveTripWithItinerary } from './services/tripApi';
+import { ScheduleGenerateResponse } from './services/scheduleApi';
+import { toast } from 'sonner';
 
 const mockEvents = [
   {
@@ -139,7 +142,10 @@ export interface UserInput {
 
 export default function App() {
   const [currentItinerary, setCurrentItinerary] = useState<ItineraryData | null>(null);
+  const [rawAIResponse, setRawAIResponse] = useState<ScheduleGenerateResponse | null>(null);
+  const [userBudget, setUserBudget] = useState<string>('mid-range');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [activeTab, setActiveTab] = useState("plan");
   const [showHero, setShowHero] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -222,8 +228,18 @@ export default function App() {
     return () => window.removeEventListener('auth:logout', handleAuthLogout);
   }, []);
 
-  const handleItineraryGenerated = (itinerary: ItineraryData) => {
+  const handleItineraryGenerated = (
+    itinerary: ItineraryData,
+    rawResponse?: ScheduleGenerateResponse,
+    budget?: string
+  ) => {
     setCurrentItinerary(itinerary);
+    if (rawResponse) {
+      setRawAIResponse(rawResponse);
+    }
+    if (budget) {
+      setUserBudget(budget);
+    }
   };
 
   const handleRegenerateItinerary = async (additionalNotes: string) => {
@@ -357,8 +373,95 @@ export default function App() {
     };
   };
 
-  const handleConfirmItinerary = (itinerary: ItineraryData) => {
-    if (currentUser) {
+  const handleConfirmItinerary = async (itinerary: ItineraryData) => {
+    if (!currentUser) {
+      toast.error('Please login to save your trip');
+      setShowAuthModal(true);
+      return;
+    }
+
+    // If we have the raw AI response, save to BE
+    if (rawAIResponse) {
+      setIsSavingTrip(true);
+      try {
+        const response = await saveTripWithItinerary(
+          rawAIResponse,
+          userBudget,
+          itinerary.title
+        );
+
+        console.log('Trip saved to BE:', response);
+        toast.success('Trip saved successfully!');
+
+        // Create local trip record with BE response data
+        const confirmedTrip = {
+          id: response.data.tripId,
+          tripId: response.data.tripId,
+          itineraryId: response.data.itineraryId,
+          userId: currentUser.id,
+          userName: currentUser.name,
+          userEmail: currentUser.email,
+          userCountry: currentUser.country,
+          title: response.data.title || itinerary.title,
+          duration: itinerary.duration,
+          interests: itinerary.interests,
+          budget: itinerary.budget,
+          cities: response.data.cities || [],
+          createdAt: response.data.createdAt || new Date().toISOString().split('T')[0],
+          status: response.data.status || 'UPCOMING',
+          totalCost: itinerary.totalEstimatedCost,
+          itineraryData: itinerary,
+          confirmed: true
+        };
+
+        setConfirmedTrips(prev => [...prev, confirmedTrip]);
+
+        // Also save to localStorage for offline access
+        const existingTrips = JSON.parse(localStorage.getItem('confirmedTrips') || '[]');
+        existingTrips.push(confirmedTrip);
+        localStorage.setItem('confirmedTrips', JSON.stringify(existingTrips));
+
+        // Clear the raw response after saving
+        setRawAIResponse(null);
+
+        // Navigate to My Trips
+        setActiveTab("my-trips");
+      } catch (error) {
+        console.error('Failed to save trip to BE:', error);
+        toast.error(error instanceof Error ? error.message : 'Failed to save trip. Please try again.');
+
+        // Fallback: Save locally only
+        const confirmedTrip = {
+          id: Date.now(),
+          userId: currentUser.id,
+          userName: currentUser.name,
+          userEmail: currentUser.email,
+          userCountry: currentUser.country,
+          title: itinerary.title,
+          duration: itinerary.duration,
+          interests: itinerary.interests,
+          budget: itinerary.budget,
+          cities: [],
+          createdAt: new Date().toISOString().split('T')[0],
+          status: 'UPCOMING',
+          totalCost: itinerary.totalEstimatedCost,
+          itineraryData: itinerary,
+          confirmed: true,
+          savedLocally: true // Flag for local-only trips
+        };
+
+        setConfirmedTrips(prev => [...prev, confirmedTrip]);
+        const existingTrips = JSON.parse(localStorage.getItem('confirmedTrips') || '[]');
+        existingTrips.push(confirmedTrip);
+        localStorage.setItem('confirmedTrips', JSON.stringify(existingTrips));
+
+        toast.info('Trip saved locally. Will sync when online.');
+        setActiveTab("my-trips");
+      } finally {
+        setIsSavingTrip(false);
+      }
+    } else {
+      // Fallback for regenerated itineraries or when raw response is not available
       const confirmedTrip = {
         id: Date.now(),
         userId: currentUser.id,
@@ -369,22 +472,22 @@ export default function App() {
         duration: itinerary.duration,
         interests: itinerary.interests,
         budget: itinerary.budget,
-        cities: [], // Extract from itinerary
+        cities: [],
         createdAt: new Date().toISOString().split('T')[0],
-        status: '확정됨',
+        status: 'UPCOMING',
         totalCost: itinerary.totalEstimatedCost,
         itineraryData: itinerary,
         confirmed: true
       };
-      
+
       setConfirmedTrips(prev => [...prev, confirmedTrip]);
-      console.log('Confirmed trip saved:', confirmedTrip);
-      
+      console.log('Confirmed trip saved locally:', confirmedTrip);
+
       // Save to localStorage for persistence
       const existingTrips = JSON.parse(localStorage.getItem('confirmedTrips') || '[]');
       existingTrips.push(confirmedTrip);
       localStorage.setItem('confirmedTrips', JSON.stringify(existingTrips));
-      
+
       // Navigate to My Trips
       setActiveTab("my-trips");
     }

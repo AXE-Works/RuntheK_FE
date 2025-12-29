@@ -18,10 +18,14 @@ import { PopularDestinations } from './PopularDestinations';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { generateSchedule, ScheduleApiError } from '../services/scheduleApi';
+import { generateSchedule, ScheduleApiError, ScheduleGenerateResponse } from '../services/scheduleApi';
 
 interface TravelPlanFormProps {
-  onItineraryGenerated: (itinerary: ItineraryData) => void;
+  onItineraryGenerated: (
+    itinerary: ItineraryData,
+    rawResponse?: ScheduleGenerateResponse,
+    budget?: string
+  ) => void;
   isGenerating: boolean;
   setIsGenerating: (generating: boolean) => void;
   selectedDestination?: any;
@@ -499,7 +503,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
     setIsGenerating(true);
 
     try {
-      const itinerary = await generateSchedule({
+      const result = await generateSchedule({
         startDate: userInput.startDate,
         duration: userInput.duration,
         cities: userInput.cities,
@@ -508,7 +512,8 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
         additionalNotes: additionalNotes,
         language: language,
       });
-      onItineraryGenerated(itinerary);
+      // Pass itinerary, raw AI response, and user budget to parent
+      onItineraryGenerated(result.itinerary, result.rawAIResponse, result.userBudget);
       toast.success(t('common:messages.itineraryGenerated'));
     } catch (error) {
       if (error instanceof ScheduleApiError) {
