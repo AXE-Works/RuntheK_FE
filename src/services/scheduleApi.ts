@@ -2,12 +2,11 @@ import { format } from 'date-fns';
 import { ItineraryData } from '../App';
 
 // AI Schedule Generation Service (별도 서비스)
-// TODO: AI 서버에 CORS 설정 후 프록시 우회 코드 삭제 필요
-// 현재: 개발 모드에서 Vite 프록시로 CORS 우회 중
-// 삭제 후: const AI_API_BASE_URL = import.meta.env.VITE_AI_API_BASE_URL || 'http://localhost:8081/api/v1';
-const AI_API_BASE_URL = import.meta.env.DEV
-  ? '/ai-api/api/v1'
-  : (import.meta.env.VITE_AI_API_BASE_URL || 'http://localhost:8081/api/v1');
+// TODO: AI 서버에 CORS 설정 후 프록시 우회 제거 필요
+// - 개발: Vite 프록시 사용 (vite.config.ts 의 /ai-api 프록시 블록 삭제)
+// - 배포: Render _redirects 의 /ai-api 라인 삭제
+// - 이 파일: const AI_API_BASE_URL = import.meta.env.VITE_AI_API_BASE_URL || 'https://runthek-api.onrender.com/api/v1';
+const AI_API_BASE_URL = '/ai-api/api/v1';
 
 // Enable mock mode for testing (set to true to use mock data)
 const USE_MOCK_DATA = false;
