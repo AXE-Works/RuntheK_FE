@@ -114,6 +114,8 @@ export interface ItineraryData {
       estimatedCost: string;
       isEvent?: boolean;
       eventType?: string;
+      googleMapsUrl?: string;
+      transportMode?: 'walking' | 'transit' | 'driving';
     }[];
   }[];
   totalEstimatedCost: string;
@@ -138,6 +140,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
   const [confirmedTrips, setConfirmedTrips] = useState<any[]>([]);
+  const [myTripsDefaultTab, setMyTripsDefaultTab] = useState<string>("my-trips");
   const [events, setEvents] = useState(mockEvents);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
 
@@ -439,6 +442,13 @@ export default function App() {
   const handleGoToMyTrips = () => {
     setShowHero(false);
     setActiveTab("my-trips");
+    setMyTripsDefaultTab("my-trips");
+  };
+
+  const handleGoToProfile = () => {
+    setShowHero(false);
+    setActiveTab("my-trips");
+    setMyTripsDefaultTab("profile");
   };
 
   // Show loading while restoring session
@@ -535,7 +545,7 @@ export default function App() {
                       </div>
                     </div>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleGoToProfile}>
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </DropdownMenuItem>
@@ -647,11 +657,13 @@ export default function App() {
           </TabsContent>
 
           <TabsContent value="my-trips">
-            <MyTrip 
-              currentUser={currentUser} 
+            <MyTrip
+              currentUser={currentUser}
               onUpdateUser={handleUpdateUser}
               onCreateNewTrip={handleNewPlan}
               onOpenAuthModal={() => setShowAuthModal(true)}
+              defaultTab={myTripsDefaultTab}
+              onTabChange={setMyTripsDefaultTab}
             />
           </TabsContent>
 
@@ -670,7 +682,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center space-y-4">
             <div className="flex justify-center space-x-6 text-sm text-gray-600">
-              <span className="text-[11px]" className="text-[12px]">• Powered by AI</span>
+              <span className="text-[11px]">• Powered by AI</span>
               <span className="text-[11px]">• Real-time Updates</span>
               <span className="text-[11px]">• 24/7 Support</span>
             </div>

@@ -5,10 +5,11 @@ import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
-import { MapPin, Clock, DollarSign, Calendar, Star, ExternalLink, CheckCircle, Edit2, RotateCcw, Info, MessageSquare, Sparkles, Mail, Save, Share2 } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Calendar, Star, ExternalLink, CheckCircle, Edit2, RotateCcw, Info, MessageSquare, Sparkles, Mail, Save, Share2, Footprints, Train, Car } from 'lucide-react';
 import { ItineraryData } from '../App';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ItineraryMap } from './ItineraryMap';
 
 interface ItineraryDisplayProps {
   itinerary: ItineraryData;
@@ -23,7 +24,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
   const [editNotes, setEditNotes] = useState('');
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
-  const [activeMapState, setActiveMapState] = useState<{ dayIndex: number; location: string } | null>(null);
+  const [activeMapState, setActiveMapState] = useState<{ dayIndex: number; activityIndex: number; location: string } | null>(null);
 
   const generateGoogleMapsUrl = (location: string) => {
     const query = encodeURIComponent(`${location}, South Korea`);
@@ -312,21 +313,17 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                 <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
                     {/* Map Section (Desktop: Sticky Right, Mobile: Top) */}
                     <div className="relative w-full h-[300px] lg:h-auto lg:min-h-[600px] border-b-2 lg:border-b-0 lg:border-r-2 border-black bg-gray-100 order-first lg:order-last">
-                        <iframe 
-                            width="100%" 
-                            height="100%" 
-                            frameBorder="0" 
-                            scrolling="no" 
-                            marginHeight={0} 
-                            marginWidth={0} 
-                            src={
-                                day.activities.length > 1
-                                ? `https://maps.google.com/maps?saddr=${encodeURIComponent(day.activities[0].location)}&daddr=${day.activities.slice(1).map((a: any) => encodeURIComponent(a.location)).join('+to:')}&output=embed`
-                                : `https://maps.google.com/maps?q=${encodeURIComponent(day.activities[0]?.location || 'Seoul')}&t=&z=15&ie=UTF8&iwloc=&output=embed`
-                            }
-                            className="absolute inset-0 w-full h-full transition-all duration-500"
-                            title="Day Route Map"
-                        ></iframe>
+                        <ItineraryMap
+                            activities={day.activities}
+                            activeIndex={activeMapState?.dayIndex === dayIndex ? activeMapState.activityIndex : null}
+                            onMarkerClick={(index) => {
+                                setActiveMapState({
+                                    dayIndex,
+                                    activityIndex: index,
+                                    location: day.activities[index].location
+                                });
+                            }}
+                        />
                         <div className="absolute bottom-4 right-4 z-10">
                             <a
                                 href={`https://www.google.com/maps/dir/${day.activities.map((a: any) => encodeURIComponent(a.location)).join('/')}`}
@@ -348,24 +345,54 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                             
                             <div className="space-y-4">
                                 {day.activities.map((activity: any, activityIndex: number) => (
-                                <motion.div 
-                                    key={activityIndex} 
+                                <React.Fragment key={activityIndex}>
+                                    {/* Transport Mode Indicator (between activities) */}
+                                    {activityIndex > 0 && activity.transportMode && (
+                                        <div className="relative flex gap-4 pl-[3px]">
+                                            <div className="flex-none w-10 flex justify-center">
+                                                <div
+                                                    className="flex items-center justify-center w-8 h-8 rounded-full border-2"
+                                                    style={{
+                                                        borderColor: activity.transportMode === 'walking' ? '#3B82F6' : activity.transportMode === 'transit' ? '#10B981' : '#EF4444',
+                                                        backgroundColor: activity.transportMode === 'walking' ? '#EFF6FF' : activity.transportMode === 'transit' ? '#ECFDF5' : '#FEF2F2',
+                                                    }}
+                                                >
+                                                    {activity.transportMode === 'walking' && <Footprints className="h-4 w-4 text-blue-500" />}
+                                                    {activity.transportMode === 'transit' && <Train className="h-4 w-4 text-green-500" />}
+                                                    {activity.transportMode === 'driving' && <Car className="h-4 w-4 text-red-500" />}
+                                                </div>
+                                            </div>
+                                            <div
+                                                className="flex-1 flex items-center px-3 py-1.5 rounded text-xs font-medium"
+                                                style={{
+                                                    backgroundColor: activity.transportMode === 'walking' ? '#EFF6FF' : activity.transportMode === 'transit' ? '#ECFDF5' : '#FEF2F2',
+                                                    color: activity.transportMode === 'walking' ? '#1D4ED8' : activity.transportMode === 'transit' ? '#059669' : '#DC2626',
+                                                }}
+                                            >
+                                                {activity.transportMode === 'walking' && '🚶 Walk to next destination'}
+                                                {activity.transportMode === 'transit' && '🚇 Take transit to next destination'}
+                                                {activity.transportMode === 'driving' && '🚗 Drive to next destination'}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                <motion.div
                                     className="relative flex gap-4 group"
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: activityIndex * 0.1 }}
-                                    onMouseEnter={() => setActiveMapState({ dayIndex, location: activity.location })}
+                                    onMouseEnter={() => setActiveMapState({ dayIndex, activityIndex, location: activity.location })}
                                     onMouseLeave={() => setActiveMapState(null)}
                                 >
                                     {/* Timeline Marker */}
                                     <div className="relative z-10 flex-none pt-1">
-                                    <div className={`flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-black text-sm font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 ${activity.isEvent ? 'bg-black text-white' : 'bg-white group-hover:bg-black group-hover:text-white'}`}>
+                                    <div className={`flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-black text-sm font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 ${activity.isEvent ? 'bg-black text-white' : activeMapState?.dayIndex === dayIndex && activeMapState?.activityIndex === activityIndex ? 'bg-yellow-400 text-black' : 'bg-white group-hover:bg-black group-hover:text-white'}`}>
                                         {activityIndex + 1}
                                     </div>
                                     </div>
 
                                     {/* Compact Activity Card */}
-                                    <div className={`flex-1 border-2 border-black p-3 md:p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 relative cursor-pointer ${activity.isEvent ? 'bg-yellow-100' : 'bg-white'}`} onClick={() => setActiveMapState({ dayIndex, location: activity.location })}>
+                                    <div className={`flex-1 border-2 border-black p-3 md:p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 relative cursor-pointer ${activity.isEvent ? 'bg-yellow-100' : activeMapState?.dayIndex === dayIndex && activeMapState?.activityIndex === activityIndex ? 'bg-yellow-50' : 'bg-white'}`} onClick={() => setActiveMapState({ dayIndex, activityIndex, location: activity.location })}>
                                         {/* Connector */}
                                         <div className="absolute top-4 left-[-10px] w-0 h-0 border-t-[6px] border-t-transparent border-r-[10px] border-r-black border-b-[6px] border-b-transparent" />
                                         <div className={`absolute top-4 left-[-7px] w-0 h-0 border-t-[6px] border-t-transparent border-r-[10px] border-b-[6px] border-b-transparent ${activity.isEvent ? 'border-r-yellow-100' : 'border-r-white'}`} />
@@ -401,7 +428,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                                         {/* Ultra Compact Actions */}
                                         <div className="flex gap-2">
                                             <a
-                                                href={generateGoogleMapsUrl(activity.location)}
+                                                href={activity.googleMapsUrl || generateGoogleMapsUrl(activity.location)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="flex-1 inline-flex items-center justify-center px-2 py-1.5 text-[10px] font-bold border border-black bg-white hover:bg-gray-50"
@@ -419,6 +446,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                                         </div>
                                     </div>
                                 </motion.div>
+                                </React.Fragment>
                                 ))}
                             </div>
                         </div>
