@@ -13,7 +13,7 @@ import { motion } from 'motion/react';
 import { User, MapPin, Calendar, DollarSign, Heart, Eye, Edit, Star, Bookmark, Clock, ArrowRight, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { TripDetailView } from './TripDetailView';
 import { getProfile, updateProfile, UpdateProfileRequest } from '../utils/api';
-import { getTrips, getBookmarks, TripListItem, BookmarkItem } from '../services/tripApi';
+import { getTrips, getBookmarks, getTripById, TripListItem, BookmarkItem, TripDetailResponse } from '../services/tripApi';
 import { toast } from 'sonner';
 
 // ===== Types =====
@@ -116,6 +116,33 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
   const [bookmarksLoading, setBookmarksLoading] = useState(false);
   const [bookmarksError, setBookmarksError] = useState<string | null>(null);
   const [bookmarksFetched, setBookmarksFetched] = useState(false);
+
+  // ===== Trip Detail States =====
+  const [tripDetailLoading, setTripDetailLoading] = useState(false);
+
+  // ===== Handle Trip Click - Fetch Details =====
+  const handleTripClick = useCallback(async (trip: TripDisplayItem | BookmarkDisplayItem) => {
+    // Set basic info immediately for quick display
+    setSelectedTrip(trip);
+    setTripDetailLoading(true);
+
+    try {
+      const response = await getTripById(trip.id);
+      if (response.success && response.data) {
+        // Merge detail data with existing data
+        setSelectedTrip({
+          ...trip,
+          ...response.data,
+          rating: response.data.averageRating,
+        });
+      }
+    } catch (error) {
+      console.error('[MyTrip] Failed to fetch trip details:', error);
+      // Keep the basic info, just without detailed itinerary
+    } finally {
+      setTripDetailLoading(false);
+    }
+  }, []);
 
   // ===== Fetch Trips from API =====
   const fetchTrips = useCallback(async () => {
@@ -393,7 +420,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
     const displayTrip = trip as TripDisplayItem;
 
     return (
-      <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer" onClick={() => setSelectedTrip(trip)}>
+      <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer" onClick={() => handleTripClick(trip)}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -470,7 +497,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                     View Details
                   </Button>
                 ) : (
-                  <Button variant="outline" size="sm" onClick={() => setSelectedTrip(trip)}>
+                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleTripClick(trip); }}>
                     <Eye className="h-4 w-4 mr-1" />
                     View
                   </Button>
@@ -901,14 +928,14 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                   <div className="flex items-center justify-center mb-2">
                     <Eye className="h-5 w-5 text-gray-600" />
                   </div>
-                  <div className="text-lg font-bold">{selectedTrip.views}</div>
+                  <div className="text-lg font-bold">{selectedTrip.views ?? 'N/A'}</div>
                   <div className="text-sm text-gray-600">Views</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-center mb-2">
                     <Heart className="h-5 w-5 text-gray-600" />
                   </div>
-                  <div className="text-lg font-bold">{selectedTrip.likes}</div>
+                  <div className="text-lg font-bold">{selectedTrip.likes ?? 'N/A'}</div>
                   <div className="text-sm text-gray-600">Likes</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
@@ -974,31 +1001,39 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
 
                 {/* Sample Itinerary Preview */}
                 <div>
-                  <h4 className="font-semibold mb-3">Sample Itinerary</h4>
+                  <h4 className="font-semibold mb-3">Itinerary</h4>
                   <div className="space-y-3">
-                    {Array.from({ length: parseInt(selectedTrip.duration) || 3 }, (_, i) => (
-                      <div key={i} className="border border-gray-200 rounded-lg p-4">
-                        <h5 className="font-medium mb-2">Day {i + 1} - Exploring {selectedTrip.cities?.[i % selectedTrip.cities.length] || 'Seoul'}</h5>
-                        <div className="space-y-2 text-sm text-gray-600">
-                          <div className="flex items-center gap-2">
-                            <span className="w-16 text-xs bg-gray-100 px-2 py-1 rounded">09:00 AM</span>
-                            <span>{selectedTrip.interests?.[0] === 'Culture' ? 'Visit traditional palace' : 'Morning activity based on interests'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-16 text-xs bg-gray-100 px-2 py-1 rounded">12:00 PM</span>
-                            <span>Traditional Korean lunch</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-16 text-xs bg-gray-100 px-2 py-1 rounded">02:00 PM</span>
-                            <span>{selectedTrip.interests?.[1] === 'Shopping' ? 'Shopping district exploration' : 'Afternoon activity'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-16 text-xs bg-gray-100 px-2 py-1 rounded">07:00 PM</span>
-                            <span>Korean BBQ dinner</span>
+                    {tripDetailLoading ? (
+                      <div className="flex items-center justify-center p-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                        <span className="ml-2 text-gray-500">Loading itinerary...</span>
+                      </div>
+                    ) : selectedTrip.days && selectedTrip.days.length > 0 ? (
+                      selectedTrip.days.map((day: { day: number; title: string; activities?: { time: string; activity: string; location?: string }[] }) => (
+                        <div key={day.day} className="border border-gray-200 rounded-lg p-4">
+                          <h5 className="font-medium mb-2">Day {day.day} - {day.title || 'Exploring'}</h5>
+                          <div className="space-y-2 text-sm text-gray-600">
+                            {day.activities && day.activities.length > 0 ? (
+                              day.activities.map((activity, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <span className="w-16 text-xs bg-gray-100 px-2 py-1 rounded">{activity.time || '--:--'}</span>
+                                  <span>{activity.activity}</span>
+                                  {activity.location && (
+                                    <span className="text-gray-400 text-xs">@ {activity.location}</span>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-gray-400 italic">No activities scheduled</div>
+                            )}
                           </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-gray-400 italic p-4 border border-dashed rounded-lg text-center">
+                        No itinerary data available
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
 

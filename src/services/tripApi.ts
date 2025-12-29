@@ -293,6 +293,57 @@ export interface TripListResponse {
   };
 }
 
+// ===== Trip Detail Types =====
+
+/**
+ * Trip detail response matching BE TripDetailResponse
+ */
+export interface TripDetailResponse {
+  id: string;
+  title: string;
+  duration: string;
+  interests: string[];
+  budget: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  confirmedAt: string;
+  cities: string[];
+  daysCount: number;
+  activitiesCount: number;
+  days: TripDayResponse[];
+  totalEstimatedCost: string;
+  averageRating: number | null;
+  ratings: RatingResponse[];
+  travelTips: string[];
+  warnings: string[];
+}
+
+export interface TripDayResponse {
+  day: number;
+  title: string;
+  activities: TripActivityResponse[];
+}
+
+export interface TripActivityResponse {
+  time: string;
+  activity: string;
+  location: string;
+  description: string;
+  estimatedCost: string;
+  isEvent: boolean;
+  eventType: string | null;
+  eventId: string | null;
+  rating: number | null;
+}
+
+export interface RatingResponse {
+  dayIndex: number;
+  activityIndex: number;
+  rating: number;
+  review: string;
+}
+
 /**
  * Get user's trip list
  *
@@ -335,7 +386,7 @@ export async function getTrips(
  *
  * GET /api/v1/trips/:id
  */
-export async function getTripById(id: string): Promise<ApiResponse<unknown>> {
+export async function getTripById(id: string): Promise<ApiResponse<TripDetailResponse>> {
   const response = await fetchWithAuth(`${API_BASE_URL}/trips/${id}`);
 
   if (!response.ok) {
