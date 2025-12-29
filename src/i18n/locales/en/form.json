@@ -1,0 +1,79 @@
+{
+  "steps": {
+    "destination": "Where to?",
+    "destinationDesc": "Select your destinations",
+    "dates": "When?",
+    "datesDesc": "Choose your travel dates",
+    "interests": "What interests you?",
+    "interestsDesc": "Select your travel interests",
+    "budget": "Budget",
+    "budgetDesc": "Set your daily budget",
+    "travelers": "Who's going?",
+    "travelersDesc": "Tell us about your group",
+    "notes": "Additional notes",
+    "notesDesc": "Any special requests?"
+  },
+  "labels": {
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "duration": "Duration",
+    "numberOfTravelers": "Number of Travelers",
+    "travelStyle": "Travel Style",
+    "additionalNotes": "Additional Notes",
+    "selectDestinations": "Select Destinations",
+    "selectInterests": "Select Interests",
+    "selectBudget": "Select Budget Level"
+  },
+  "placeholders": {
+    "searchDestination": "Search for a destination...",
+    "additionalNotes": "Any special requests, dietary restrictions, or preferences...",
+    "selectDate": "Select a date"
+  },
+  "interests": {
+    "food": "Food & Cuisine",
+    "foodDesc": "Korean BBQ, street food, local restaurants",
+    "culture": "Culture & History",
+    "cultureDesc": "Palaces, museums, traditional villages",
+    "nature": "Nature & Outdoors",
+    "natureDesc": "Mountains, beaches, national parks",
+    "shopping": "Shopping",
+    "shoppingDesc": "Markets, malls, fashion districts",
+    "nightlife": "Nightlife",
+    "nightlifeDesc": "Clubs, bars, entertainment",
+    "kculture": "K-Culture",
+    "kcultureDesc": "K-Pop, K-Drama filming spots",
+    "wellness": "Wellness",
+    "wellnessDesc": "Spas, temples, meditation",
+    "adventure": "Adventure",
+    "adventureDesc": "Hiking, water sports, activities"
+  },
+  "budget": {
+    "budget": "Budget",
+    "budgetDesc": "$50-100/day - Hostels, street food, public transit",
+    "midRange": "Mid-range",
+    "midRangeDesc": "$100-200/day - Hotels, restaurants, some tours",
+    "luxury": "Luxury",
+    "luxuryDesc": "$200+/day - Premium hotels, fine dining, private tours"
+  },
+  "duration": {
+    "3days": "3 days",
+    "5days": "5 days",
+    "7days": "7 days",
+    "10days": "10+ days"
+  },
+  "validation": {
+    "selectDestination": "Please select at least one destination",
+    "selectDates": "Please select your travel dates",
+    "selectInterests": "Please select at least one interest",
+    "selectBudget": "Please select a budget level",
+    "loginRequired": "Please login to generate itinerary",
+    "durationRequired": "Please select trip duration",
+    "dateRequired": "Please select a travel start date"
+  },
+  "generate": {
+    "button": "Generate My Korea Itinerary",
+    "buttonDestination": "Create {{destination}} Itinerary",
+    "generating": "Generating Your Perfect Korea Trip...",
+    "generatingDestination": "Creating Your {{destination}} Adventure..."
+  }
+}

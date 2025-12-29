@@ -2,10 +2,15 @@ import { format } from 'date-fns';
 import { ItineraryData } from '../App';
 
 // AI Schedule Generation Service (별도 서비스)
-const AI_API_BASE_URL = import.meta.env.VITE_AI_API_BASE_URL || 'http://localhost:8081/api/v1';
+// TODO: AI 서버에 CORS 설정 후 프록시 우회 코드 삭제 필요
+// 현재: 개발 모드에서 Vite 프록시로 CORS 우회 중
+// 삭제 후: const AI_API_BASE_URL = import.meta.env.VITE_AI_API_BASE_URL || 'http://localhost:8081/api/v1';
+const AI_API_BASE_URL = import.meta.env.DEV
+  ? '/ai-api/api/v1'
+  : (import.meta.env.VITE_AI_API_BASE_URL || 'http://localhost:8081/api/v1');
 
 // Enable mock mode for testing (set to true to use mock data)
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = false;
 
 // ===== Request Types =====
 
@@ -27,8 +32,8 @@ interface TransportInfo {
   duration_minutes: number;
   distance_km: number;
   transport_mode: string;
-  transit_details: string;
-  cost_estimate: string;
+  transit_details: string | null;
+  cost_estimate: string | null;
 }
 
 interface ScheduleItem {
@@ -36,13 +41,16 @@ interface ScheduleItem {
   address: string;
   time: string;
   description: string;
+  recommendation_reason: string | null;
+  image_url: string | null;
   rating: number;
   review_count: number;
+  google_maps_url: string | null;
+  price_range: string | null;
+  item_type: string;
   opening_hours: string;
   is_open_on_date: boolean;
-  item_type: string;
   transport_from_prev: TransportInfo | null;
-  google_maps_url?: string;
 }
 
 interface ScheduleDay {
@@ -152,6 +160,7 @@ export function convertToApiRequest(
     budget: string;
     interests: string[];
     additionalNotes?: string;
+    language?: 'ko' | 'en' | 'ja' | 'zh';
   }
 ): ScheduleGenerateRequest {
   const startDate = userInput.startDate || new Date();
@@ -162,13 +171,13 @@ export function convertToApiRequest(
     cities: userInput.cities.length > 0 ? userInput.cities.slice(0, 5) : ['Seoul'],
     interests: userInput.interests.slice(0, 5).map(id => INTEREST_ID_TO_LABEL[id] || id),
     budget_level: BUDGET_TO_LEVEL[userInput.budget] || 'MEDIUM',
-    language: 'en',
+    language: userInput.language || 'en',
     additional_notes: userInput.additionalNotes?.slice(0, 500),
   };
 }
 
 export function convertToItineraryData(response: ScheduleGenerateResponse): ItineraryData {
-  const { meta, itinerary } = response;
+  const { meta, itinerary, travel_tips } = response;
 
   return {
     id: String(response.id),
@@ -187,9 +196,14 @@ export function convertToItineraryData(response: ScheduleGenerateResponse): Itin
         estimatedCost: item.transport_from_prev?.cost_estimate || '',
         googleMapsUrl: item.google_maps_url,
         transportMode: item.transport_from_prev?.transport_mode as 'walking' | 'transit' | 'driving' | undefined,
+        transportDuration: item.transport_from_prev?.duration_minutes,
+        transportDistance: item.transport_from_prev?.distance_km,
+        transportDetails: item.transport_from_prev?.transit_details || undefined,
+        transportCost: item.transport_from_prev?.cost_estimate || undefined,
       })),
     })),
     totalEstimatedCost: calculateTotalCost(itinerary),
+    travelTips: travel_tips,
   };
 }
 
@@ -282,9 +296,21 @@ function generateMockItinerary(userInput: {
   };
 
   const days = Array.from({ length: numDays }, (_, i) => {
-    const dayActivities: { time: string; activity: string; location: string; description: string; estimatedCost: string; googleMapsUrl?: string; transportMode?: 'walking' | 'transit' | 'driving' }[] = [];
+    const dayActivities: {
+      time: string;
+      activity: string;
+      location: string;
+      description: string;
+      estimatedCost: string;
+      googleMapsUrl?: string;
+      transportMode?: 'walking' | 'transit' | 'driving';
+      transportDuration?: number;
+      transportDistance?: number;
+      transportDetails?: string;
+      transportCost?: string;
+    }[] = [];
 
-    // Morning Activity (first activity - transit from hotel/accommodation)
+    // Morning Activity (first activity - no transport from previous)
     const morningInterest = userInput.interests[i % userInput.interests.length] || 'culture';
     const morningActivities = mockActivities[morningInterest] || mockActivities.culture;
     const morningActivity = morningActivities[i % morningActivities.length];
@@ -292,7 +318,6 @@ function generateMockItinerary(userInput: {
       time: '09:00 AM',
       ...morningActivity,
       estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid-range' ? '$20-50' : '$50-100',
-      transportMode: 'transit',
     });
 
     // Lunch (walking from morning activity)
@@ -302,6 +327,8 @@ function generateMockItinerary(userInput: {
       ...lunch,
       estimatedCost: userInput.budget === 'budget' ? '$8-15' : userInput.budget === 'mid-range' ? '$15-25' : '$25-40',
       transportMode: 'walking',
+      transportDuration: 15,
+      transportDistance: 0.8,
     });
 
     // Afternoon Activity (transit from lunch)
@@ -313,6 +340,10 @@ function generateMockItinerary(userInput: {
       ...afternoonActivity,
       estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid-range' ? '$20-50' : '$50-100',
       transportMode: 'transit',
+      transportDuration: 25,
+      transportDistance: 3.5,
+      transportDetails: 'Line 3 → Transfer at Jongno 3-ga',
+      transportCost: '₩1,400',
     });
 
     // Dinner (transit or driving based on budget)
@@ -322,6 +353,10 @@ function generateMockItinerary(userInput: {
       ...dinner,
       estimatedCost: userInput.budget === 'budget' ? '$15-25' : userInput.budget === 'mid-range' ? '$25-40' : '$40-80',
       transportMode: userInput.budget === 'luxury' ? 'driving' : 'transit',
+      transportDuration: userInput.budget === 'luxury' ? 15 : 20,
+      transportDistance: 2.5,
+      transportDetails: userInput.budget === 'luxury' ? undefined : 'Line 1 → Anguk Station',
+      transportCost: userInput.budget === 'luxury' ? '₩8,000' : '₩1,400',
     });
 
     return {
@@ -343,6 +378,13 @@ function generateMockItinerary(userInput: {
       : userInput.budget === 'mid-range'
       ? `$${numDays * 200}-${numDays * 300}`
       : `$${numDays * 400}-${numDays * 600}`,
+    travelTips: [
+      'Download Papago or Google Translate for language assistance',
+      'Get a T-money card for convenient public transportation',
+      "Many places don't accept international cards - bring cash",
+      'Tipping is not customary in Korea',
+      'Free WiFi is widely available in cafes and public areas',
+    ],
   };
 }
 
@@ -368,6 +410,7 @@ export async function generateSchedule(
     budget: string;
     interests: string[];
     additionalNotes?: string;
+    language?: 'ko' | 'en' | 'ja' | 'zh';
   }
 ): Promise<ItineraryData> {
   // Use mock data for testing
@@ -382,7 +425,7 @@ export async function generateSchedule(
 
   // Create AbortController for timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout (1 minute)
 
   try {
     console.log('[Schedule API] Generating schedule...', request);

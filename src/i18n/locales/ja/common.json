@@ -1,0 +1,91 @@
+{
+  "nav": {
+    "planTrip": "旅行プラン",
+    "myTrips": "マイトリップ",
+    "admin": "管理者",
+    "newPlan": "新規プラン",
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "profile": "プロフィール",
+    "settings": "設定"
+  },
+  "hero": {
+    "title": "完璧な韓国旅行を計画しよう",
+    "subtitle": "AIが作る忘れられない韓国旅行",
+    "cta": "計画を始める",
+    "description": "あなただけのオーダーメイド旅行プランで韓国の美しさを発見しよう",
+    "badge": "AI トラベルプランナー",
+    "tagline": "探索し、広げ、アイデアを磨く",
+    "getStarted": "始める",
+    "startJourney": "旅を始めよう",
+    "palaceTour": "王宮ツアー"
+  },
+  "buttons": {
+    "submit": "送信",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "confirm": "確認",
+    "back": "戻る",
+    "next": "次へ",
+    "close": "閉じる",
+    "viewDetails": "詳細を見る",
+    "generateItinerary": "日程を作成",
+    "saveTrip": "旅行を保存",
+    "shareTrip": "旅行を共有"
+  },
+  "tabs": {
+    "overview": "概要",
+    "itinerary": "日程",
+    "map": "地図",
+    "budget": "予算"
+  },
+  "messages": {
+    "loading": "読み込み中...",
+    "generating": "完璧な日程を作成しています...",
+    "success": "成功！",
+    "error": "問題が発生しました",
+    "noResults": "結果が見つかりません",
+    "confirmDelete": "本当に削除しますか？",
+    "savedSuccessfully": "保存されました",
+    "loginRequired": "続けるにはログインしてください",
+    "itineraryGenerated": "日程が正常に作成されました！",
+    "generateError": "日程の作成に失敗しました。もう一度お試しください。"
+  },
+  "destinations": {
+    "popular": "人気の目的地",
+    "recommended": "おすすめの目的地",
+    "seoul": "ソウル",
+    "busan": "釜山",
+    "jeju": "済州島",
+    "gyeongju": "慶州",
+    "incheon": "仁川",
+    "daegu": "大邱",
+    "daejeon": "大田",
+    "gwangju": "光州",
+    "jeonju": "全州",
+    "gangneung": "江陵",
+    "sokcho": "束草",
+    "suwon": "水原",
+    "andong": "安東",
+    "tongyeong": "統営",
+    "yeosu": "麗水"
+  },
+  "itinerary": {
+    "title": "あなたの韓国旅行プラン",
+    "planAnother": "別の旅行を計画",
+    "day": "日目",
+    "morning": "午前",
+    "afternoon": "午後",
+    "evening": "夜",
+    "activity": "アクティビティ",
+    "location": "場所",
+    "duration": "所要時間",
+    "estimatedCost": "予想費用",
+    "transportation": "交通手段",
+    "walking": "徒歩",
+    "transit": "公共交通",
+    "driving": "車"
+  }
+}

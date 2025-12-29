@@ -1,0 +1,35 @@
+{
+  "general": {
+    "somethingWrong": "問題が発生しました",
+    "tryAgain": "もう一度お試しください",
+    "notFound": "ページが見つかりません",
+    "unauthorized": "このページを表示する権限がありません",
+    "forbidden": "アクセスが拒否されました",
+    "serverError": "サーバーエラー。後でもう一度お試しください",
+    "networkError": "ネットワークエラー。接続を確認してください",
+    "timeout": "リクエストがタイムアウトしました。もう一度お試しください"
+  },
+  "validation": {
+    "required": "必須項目です",
+    "invalidEmail": "正しいメールアドレスを入力してください",
+    "invalidDate": "正しい日付を入力してください",
+    "minLength": "{{min}}文字以上である必要があります",
+    "maxLength": "{{max}}文字以内である必要があります",
+    "invalidFormat": "形式が正しくありません"
+  },
+  "api": {
+    "fetchFailed": "データの取得に失敗しました",
+    "saveFailed": "保存に失敗しました",
+    "deleteFailed": "削除に失敗しました",
+    "updateFailed": "更新に失敗しました",
+    "generateFailed": "日程の作成に失敗しました",
+    "loginRequired": "続けるにはログインしてください"
+  },
+  "itinerary": {
+    "generationFailed": "日程の作成に失敗しました",
+    "saveFailed": "日程の保存に失敗しました",
+    "loadFailed": "日程の読み込みに失敗しました",
+    "noDestinations": "目的地を1つ以上選択してください",
+    "invalidDates": "正しい旅行日程を選択してください"
+  }
+}

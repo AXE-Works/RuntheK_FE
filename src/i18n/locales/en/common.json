@@ -1,0 +1,91 @@
+{
+  "nav": {
+    "planTrip": "Plan Trip",
+    "myTrips": "My Trips",
+    "admin": "Admin",
+    "newPlan": "New Plan",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "hero": {
+    "title": "Plan Your Perfect Korea Trip",
+    "subtitle": "AI-powered travel planning for unforgettable Korean adventures",
+    "cta": "Start Planning",
+    "description": "Discover the beauty of Korea with personalized itineraries crafted just for you",
+    "badge": "AI Travel Planner",
+    "tagline": "Explore, expand, and refine your ideas",
+    "getStarted": "Get started",
+    "startJourney": "Start your journey",
+    "palaceTour": "Royal Palace Tour"
+  },
+  "buttons": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "viewDetails": "View Details",
+    "generateItinerary": "Generate Itinerary",
+    "saveTrip": "Save Trip",
+    "shareTrip": "Share Trip"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "itinerary": "Itinerary",
+    "map": "Map",
+    "budget": "Budget"
+  },
+  "messages": {
+    "loading": "Loading...",
+    "generating": "Generating your perfect itinerary...",
+    "success": "Success!",
+    "error": "Something went wrong",
+    "noResults": "No results found",
+    "confirmDelete": "Are you sure you want to delete this?",
+    "savedSuccessfully": "Saved successfully",
+    "loginRequired": "Please login to continue",
+    "itineraryGenerated": "Itinerary generated successfully!",
+    "generateError": "Failed to generate itinerary. Please try again."
+  },
+  "destinations": {
+    "popular": "Popular Destinations",
+    "recommended": "Recommended for You",
+    "seoul": "Seoul",
+    "busan": "Busan",
+    "jeju": "Jeju Island",
+    "gyeongju": "Gyeongju",
+    "incheon": "Incheon",
+    "daegu": "Daegu",
+    "daejeon": "Daejeon",
+    "gwangju": "Gwangju",
+    "jeonju": "Jeonju",
+    "gangneung": "Gangneung",
+    "sokcho": "Sokcho",
+    "suwon": "Suwon",
+    "andong": "Andong",
+    "tongyeong": "Tongyeong",
+    "yeosu": "Yeosu"
+  },
+  "itinerary": {
+    "title": "Your Korea Itinerary",
+    "planAnother": "Plan Another Trip",
+    "day": "Day",
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "activity": "Activity",
+    "location": "Location",
+    "duration": "Duration",
+    "estimatedCost": "Estimated Cost",
+    "transportation": "Transportation",
+    "walking": "Walking",
+    "transit": "Public Transit",
+    "driving": "Driving"
+  }
+}

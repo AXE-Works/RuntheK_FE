@@ -1,0 +1,58 @@
+{
+  "myTrips": {
+    "title": "My Trips",
+    "subtitle": "Manage your travel plans",
+    "noTrips": "No trips yet",
+    "startPlanning": "Start planning your first Korea adventure!",
+    "createNew": "Create New Trip"
+  },
+  "tripCard": {
+    "days": "days",
+    "people": "people",
+    "viewDetails": "View Details",
+    "edit": "Edit",
+    "delete": "Delete",
+    "share": "Share",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "draft": "Draft"
+  },
+  "tripDetails": {
+    "overview": "Overview",
+    "itinerary": "Itinerary",
+    "map": "Map",
+    "budget": "Budget",
+    "notes": "Notes",
+    "totalCost": "Total Estimated Cost",
+    "destinations": "Destinations",
+    "travelDates": "Travel Dates",
+    "interests": "Interests"
+  },
+  "actions": {
+    "confirmTrip": "Confirm Trip",
+    "editTrip": "Edit Trip",
+    "deleteTrip": "Delete Trip",
+    "shareTrip": "Share Trip",
+    "downloadPdf": "Download PDF",
+    "addToCalendar": "Add to Calendar"
+  },
+  "filters": {
+    "all": "All Trips",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "drafts": "Drafts"
+  },
+  "sort": {
+    "newest": "Newest First",
+    "oldest": "Oldest First",
+    "dateAsc": "Date (Ascending)",
+    "dateDesc": "Date (Descending)"
+  },
+  "messages": {
+    "tripSaved": "Trip saved successfully",
+    "tripDeleted": "Trip deleted",
+    "tripShared": "Trip shared successfully",
+    "confirmDelete": "Are you sure you want to delete this trip?",
+    "cannotUndo": "This action cannot be undone"
+  }
+}

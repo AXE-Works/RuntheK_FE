@@ -1,0 +1,58 @@
+{
+  "myTrips": {
+    "title": "マイトリップ",
+    "subtitle": "旅行プランを管理",
+    "noTrips": "まだ旅行がありません",
+    "startPlanning": "初めての韓国旅行を計画しましょう！",
+    "createNew": "新しい旅行を作成"
+  },
+  "tripCard": {
+    "days": "日間",
+    "people": "人",
+    "viewDetails": "詳細を見る",
+    "edit": "編集",
+    "delete": "削除",
+    "share": "共有",
+    "upcoming": "今後の旅行",
+    "past": "過去の旅行",
+    "draft": "下書き"
+  },
+  "tripDetails": {
+    "overview": "概要",
+    "itinerary": "日程",
+    "map": "地図",
+    "budget": "予算",
+    "notes": "メモ",
+    "totalCost": "総予想費用",
+    "destinations": "目的地",
+    "travelDates": "旅行日程",
+    "interests": "興味"
+  },
+  "actions": {
+    "confirmTrip": "旅行を確定",
+    "editTrip": "旅行を編集",
+    "deleteTrip": "旅行を削除",
+    "shareTrip": "旅行を共有",
+    "downloadPdf": "PDFをダウンロード",
+    "addToCalendar": "カレンダーに追加"
+  },
+  "filters": {
+    "all": "すべての旅行",
+    "upcoming": "今後の旅行",
+    "past": "過去の旅行",
+    "drafts": "下書き"
+  },
+  "sort": {
+    "newest": "新しい順",
+    "oldest": "古い順",
+    "dateAsc": "日付昇順",
+    "dateDesc": "日付降順"
+  },
+  "messages": {
+    "tripSaved": "旅行が保存されました",
+    "tripDeleted": "旅行が削除されました",
+    "tripShared": "旅行が共有されました",
+    "confirmDelete": "この旅行を削除しますか？",
+    "cannotUndo": "この操作は取り消せません"
+  }
+}

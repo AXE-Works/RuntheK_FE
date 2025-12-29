@@ -26,6 +26,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TravelPlanForm } from './components/TravelPlanForm';
 import { ItineraryDisplay } from './components/ItineraryDisplay';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -37,7 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './components/ui/dropdown-menu';
 import { Badge } from './components/ui/badge';
-import { MapPin, Users, BarChart, ArrowLeft, LogIn, User, LogOut, Settings } from 'lucide-react';
+import { MapPin, Users, BarChart, ArrowLeft, LogIn, User, LogOut, Settings, Globe } from 'lucide-react';
 import { motion } from 'motion/react';
 import logo from 'figma:asset/ade16fc310679880d8b27a51a4119372559298ac.png';
 import { fetchWithAuth, API_BASE_URL } from './utils/api';
@@ -116,9 +117,14 @@ export interface ItineraryData {
       eventType?: string;
       googleMapsUrl?: string;
       transportMode?: 'walking' | 'transit' | 'driving';
+      transportDuration?: number;      // 이동시간 (분)
+      transportDistance?: number;      // 이동거리 (km)
+      transportDetails?: string;       // 대중교통 상세 (예: "2호선 → 3호선 환승")
+      transportCost?: string;          // 예상 교통비
     }[];
   }[];
   totalEstimatedCost: string;
+  travelTips?: string[];
 }
 
 export interface UserInput {
@@ -143,6 +149,21 @@ export default function App() {
   const [myTripsDefaultTab, setMyTripsDefaultTab] = useState<string>("my-trips");
   const [events, setEvents] = useState(mockEvents);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
+  const [language, setLanguage] = useState<'ko' | 'en' | 'ja' | 'zh'>('en');
+
+  const languageOptions = [
+    { code: 'ko' as const, label: '한국어', flag: '🇰🇷' },
+    { code: 'en' as const, label: 'English', flag: '🇺🇸' },
+    { code: 'ja' as const, label: '日本語', flag: '🇯🇵' },
+    { code: 'zh' as const, label: '中文', flag: '🇨🇳' },
+  ];
+
+  const { t, i18n } = useTranslation();
+
+  // Sync language state with i18n
+  useEffect(() => {
+    i18n.changeLanguage(language);
+  }, [language, i18n]);
 
   // Restore session on app start
   useEffect(() => {
@@ -457,7 +478,7 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-gray-300 border-t-black rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-500 text-sm">Loading...</p>
+          <p className="text-gray-500 text-sm">{t('messages.loading')}</p>
         </div>
       </div>
     );
@@ -502,14 +523,41 @@ export default function App() {
               <Badge variant="outline" className="hidden sm:inline-flex text-xs border-gray-300 text-gray-600">
                 v3.0.0
               </Badge>
-              
+
+              {/* Language Selector */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 px-2 sm:px-3 hover:bg-gray-100">
+                    <Globe className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline text-sm">
+                      {languageOptions.find(l => l.code === language)?.flag}
+                    </span>
+                    <span className="sm:hidden text-sm">
+                      {languageOptions.find(l => l.code === language)?.flag}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  {languageOptions.map((option) => (
+                    <DropdownMenuItem
+                      key={option.code}
+                      onClick={() => setLanguage(option.code)}
+                      className={language === option.code ? 'bg-gray-100' : ''}
+                    >
+                      <span className="mr-2">{option.flag}</span>
+                      {option.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {currentItinerary && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={handleNewPlan}
                   className="hidden sm:flex border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
-                  New Plan
+                  {t('nav.newPlan')}
                 </Button>
               )}
               
@@ -547,29 +595,29 @@ export default function App() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleGoToProfile}>
                       <User className="mr-2 h-4 w-4" />
-                      Profile
+                      {t('nav.profile')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleGoToMyTrips}>
                       <Settings className="mr-2 h-4 w-4" />
-                      My Trips
+                      {t('nav.myTrips')}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
+                      {t('nav.logout')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button 
+                <Button
                   onClick={() => setShowAuthModal(true)}
                   variant="outline"
                   className="border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-2 sm:px-4"
                   size="sm"
                 >
                   <LogIn className="h-4 w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Sign In</span>
-                  <span className="sm:hidden">Login</span>
+                  <span className="hidden sm:inline">{t('nav.login')}</span>
+                  <span className="sm:hidden">{t('nav.login')}</span>
                 </Button>
               )}
             </div>
@@ -582,13 +630,13 @@ export default function App() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 max-w-lg mx-auto mb-6 sm:mb-8 bg-gray-100">
             <TabsTrigger value="plan" className="data-[state=active]:bg-white data-[state=active]:text-black text-sm sm:text-base">
-              Plan Trip
+              {t('nav.planTrip')}
             </TabsTrigger>
             <TabsTrigger value="my-trips" className="data-[state=active]:bg-white data-[state=active]:text-black text-sm sm:text-base">
-              My Trips
+              {t('nav.myTrips')}
             </TabsTrigger>
             <TabsTrigger value="admin" className="data-[state=active]:bg-white data-[state=active]:text-black text-sm sm:text-base">
-              관리자
+              {t('nav.admin')}
             </TabsTrigger>
           </TabsList>
 
@@ -602,16 +650,15 @@ export default function App() {
                 {/* Welcome Section */}
                 <div className="text-center space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                   <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-[20px]">
-                    Plan Your Perfect Korea Trip
+                    {t('hero.title')}
                   </h2>
                   <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
-                    Get AI-powered travel recommendations tailored to your interests. 
-                    No need to worry about exact dates - we'll help you plan the perfect itinerary!
+                    {t('hero.subtitle')}
                   </p>
                 </div>
 
                 {/* Travel Plan Form with Recommended Tours */}
-                <TravelPlanForm 
+                <TravelPlanForm
                   onItineraryGenerated={handleItineraryGenerated}
                   isGenerating={isGenerating}
                   setIsGenerating={setIsGenerating}
@@ -619,6 +666,7 @@ export default function App() {
                   onDestinationSelect={handleDestinationSelect}
                   currentUser={currentUser}
                   events={events}
+                  language={language}
                 />
               </motion.div>
             ) : (
@@ -630,17 +678,17 @@ export default function App() {
                 {/* Itinerary Display */}
                 <div className="max-w-4xl mx-auto mb-6">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Your Korea Itinerary</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('itinerary.title')}</h2>
                     <motion.div
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Button 
-                        onClick={handleNewPlan} 
+                      <Button
+                        onClick={handleNewPlan}
                         variant="outline"
                         className="w-full sm:w-auto border-2 border-black bg-white text-black hover:bg-black hover:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-bold h-12 sm:h-10 text-base sm:text-sm"
                       >
-                        Plan Another Trip
+                        {t('itinerary.planAnother')}
                       </Button>
                     </motion.div>
                   </div>

@@ -1,0 +1,58 @@
+{
+  "myTrips": {
+    "title": "내 여행",
+    "subtitle": "여행 계획을 관리하세요",
+    "noTrips": "아직 여행이 없습니다",
+    "startPlanning": "첫 번째 한국 여행을 계획해보세요!",
+    "createNew": "새 여행 만들기"
+  },
+  "tripCard": {
+    "days": "일",
+    "people": "명",
+    "viewDetails": "상세 보기",
+    "edit": "수정",
+    "delete": "삭제",
+    "share": "공유",
+    "upcoming": "예정",
+    "past": "지난 여행",
+    "draft": "임시저장"
+  },
+  "tripDetails": {
+    "overview": "개요",
+    "itinerary": "일정",
+    "map": "지도",
+    "budget": "예산",
+    "notes": "메모",
+    "totalCost": "총 예상 비용",
+    "destinations": "여행지",
+    "travelDates": "여행 날짜",
+    "interests": "관심사"
+  },
+  "actions": {
+    "confirmTrip": "여행 확정",
+    "editTrip": "여행 수정",
+    "deleteTrip": "여행 삭제",
+    "shareTrip": "여행 공유",
+    "downloadPdf": "PDF 다운로드",
+    "addToCalendar": "캘린더에 추가"
+  },
+  "filters": {
+    "all": "전체 여행",
+    "upcoming": "예정된 여행",
+    "past": "지난 여행",
+    "drafts": "임시저장"
+  },
+  "sort": {
+    "newest": "최신순",
+    "oldest": "오래된순",
+    "dateAsc": "날짜 오름차순",
+    "dateDesc": "날짜 내림차순"
+  },
+  "messages": {
+    "tripSaved": "여행이 저장되었습니다",
+    "tripDeleted": "여행이 삭제되었습니다",
+    "tripShared": "여행이 공유되었습니다",
+    "confirmDelete": "이 여행을 삭제하시겠습니까?",
+    "cannotUndo": "이 작업은 되돌릴 수 없습니다"
+  }
+}

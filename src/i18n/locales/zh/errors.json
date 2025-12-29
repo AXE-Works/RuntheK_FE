@@ -1,0 +1,35 @@
+{
+  "general": {
+    "somethingWrong": "出现问题",
+    "tryAgain": "请重试",
+    "notFound": "页面未找到",
+    "unauthorized": "您无权查看此页面",
+    "forbidden": "访问被拒绝",
+    "serverError": "服务器错误，请稍后重试",
+    "networkError": "网络错误，请检查网络连接",
+    "timeout": "请求超时，请重试"
+  },
+  "validation": {
+    "required": "此项为必填项",
+    "invalidEmail": "请输入有效的邮箱地址",
+    "invalidDate": "请输入有效的日期",
+    "minLength": "至少需要{{min}}个字符",
+    "maxLength": "最多{{max}}个字符",
+    "invalidFormat": "格式无效"
+  },
+  "api": {
+    "fetchFailed": "获取数据失败",
+    "saveFailed": "保存失败",
+    "deleteFailed": "删除失败",
+    "updateFailed": "更新失败",
+    "generateFailed": "生成行程失败",
+    "loginRequired": "请登录后继续"
+  },
+  "itinerary": {
+    "generationFailed": "生成行程失败",
+    "saveFailed": "保存行程失败",
+    "loadFailed": "加载行程失败",
+    "noDestinations": "请至少选择一个目的地",
+    "invalidDates": "请选择有效的旅行日期"
+  }
+}

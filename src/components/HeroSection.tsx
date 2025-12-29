@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
@@ -36,6 +37,7 @@ const inspiringQuotes = [
 ];
 
 export function HeroSection({ onStartPlanning }: HeroSectionProps) {
+  const { t } = useTranslation();
   const [currentQuote, setCurrentQuote] = useState(0);
   const [floatingIcons, setFloatingIcons] = useState<Array<{ 
     id: number; 
@@ -349,7 +351,7 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
                   className="w-full h-full object-cover" 
                 />
               </div>
-              <p className="text-sm font-bold text-gray-400 text-center">Royal Palace Tour</p>
+              <p className="text-sm font-bold text-gray-400 text-center">{t('hero.palaceTour')}</p>
             </div>
           </motion.div>
 
@@ -409,7 +411,7 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
              transition={{ duration: 0.5 }}
           >
             <Badge variant="secondary" className="bg-gray-100 text-gray-500 hover:bg-gray-200 border-gray-200 px-4 py-1 rounded-full mb-6 text-xs font-bold tracking-wider uppercase">
-              AI Travel Planner
+              {t('hero.badge')}
             </Badge>
           </motion.div>
           
@@ -422,13 +424,13 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
             RuntheK
           </motion.h1>
 
-          <motion.p 
+          <motion.p
             className="text-lg md:text-xl text-gray-500 font-bold tracking-[0.3em] uppercase max-w-3xl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            Explore, expand, and refine your ideas
+            {t('hero.tagline')}
           </motion.p>
 
           <motion.div
@@ -437,11 +439,11 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="pt-4"
           >
-            <Button 
+            <Button
               onClick={onStartPlanning}
               className="h-14 px-12 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-lg font-bold shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
             >
-              Get started
+              {t('hero.getStarted')}
             </Button>
           </motion.div>
 
@@ -453,7 +455,7 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
             transition={{ delay: 1 }}
           >
              <div className="flex flex-col items-center">
-                <p className="font-handwriting text-gray-500 text-sm mb-2">Start your journey ⤵</p>
+                <p className="font-handwriting text-gray-500 text-sm mb-2">{t('hero.startJourney')} ⤵</p>
                 <svg width="40" height="40" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 transform rotate-90">
                   <path d="M10 10 C 20 20, 40 10, 40 40" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   <path d="M30 35 L 40 40 L 45 30" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />

@@ -1,0 +1,79 @@
+{
+  "steps": {
+    "destination": "어디로?",
+    "destinationDesc": "여행지를 선택하세요",
+    "dates": "언제?",
+    "datesDesc": "여행 날짜를 선택하세요",
+    "interests": "관심사는?",
+    "interestsDesc": "여행 관심사를 선택하세요",
+    "budget": "예산",
+    "budgetDesc": "일일 예산을 설정하세요",
+    "travelers": "누구와?",
+    "travelersDesc": "동행자 정보를 알려주세요",
+    "notes": "추가 요청",
+    "notesDesc": "특별한 요청이 있으신가요?"
+  },
+  "labels": {
+    "startDate": "시작일",
+    "endDate": "종료일",
+    "duration": "여행 기간",
+    "numberOfTravelers": "여행 인원",
+    "travelStyle": "여행 스타일",
+    "additionalNotes": "추가 요청사항",
+    "selectDestinations": "여행지 선택",
+    "selectInterests": "관심사 선택",
+    "selectBudget": "예산 수준 선택"
+  },
+  "placeholders": {
+    "searchDestination": "여행지 검색...",
+    "additionalNotes": "특별한 요청, 식이 제한, 선호사항 등...",
+    "selectDate": "날짜 선택"
+  },
+  "interests": {
+    "food": "음식 & 미식",
+    "foodDesc": "한식, 길거리 음식, 맛집 탐방",
+    "culture": "문화 & 역사",
+    "cultureDesc": "궁궐, 박물관, 전통 마을",
+    "nature": "자연 & 야외",
+    "natureDesc": "산, 해변, 국립공원",
+    "shopping": "쇼핑",
+    "shoppingDesc": "시장, 쇼핑몰, 패션거리",
+    "nightlife": "나이트라이프",
+    "nightlifeDesc": "클럽, 바, 엔터테인먼트",
+    "kculture": "K-컬처",
+    "kcultureDesc": "K-팝, K-드라마 촬영지",
+    "wellness": "웰니스",
+    "wellnessDesc": "스파, 사찰, 명상",
+    "adventure": "모험",
+    "adventureDesc": "등산, 수상 스포츠, 액티비티"
+  },
+  "budget": {
+    "budget": "저예산",
+    "budgetDesc": "일 5-10만원 - 게스트하우스, 길거리 음식, 대중교통",
+    "midRange": "중간",
+    "midRangeDesc": "일 10-20만원 - 호텔, 레스토랑, 일부 투어",
+    "luxury": "럭셔리",
+    "luxuryDesc": "일 20만원+ - 프리미엄 호텔, 파인 다이닝, 프라이빗 투어"
+  },
+  "duration": {
+    "3days": "3일",
+    "5days": "5일",
+    "7days": "7일",
+    "10days": "10일 이상"
+  },
+  "validation": {
+    "selectDestination": "최소 하나의 여행지를 선택하세요",
+    "selectDates": "여행 날짜를 선택하세요",
+    "selectInterests": "최소 하나의 관심사를 선택하세요",
+    "selectBudget": "예산 수준을 선택하세요",
+    "loginRequired": "일정 생성을 위해 로그인하세요",
+    "durationRequired": "여행 기간을 선택하세요",
+    "dateRequired": "여행 시작일을 선택하세요"
+  },
+  "generate": {
+    "button": "나만의 한국 여행 일정 생성",
+    "buttonDestination": "{{destination}} 일정 생성",
+    "generating": "완벽한 한국 여행을 생성 중...",
+    "generatingDestination": "{{destination}} 여행을 생성 중..."
+  }
+}

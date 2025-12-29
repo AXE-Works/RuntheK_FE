@@ -363,15 +363,25 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                                                 </div>
                                             </div>
                                             <div
-                                                className="flex-1 flex items-center px-3 py-1.5 rounded text-xs font-medium"
+                                                className="flex-1 px-3 py-2 rounded text-xs"
                                                 style={{
                                                     backgroundColor: activity.transportMode === 'walking' ? '#EFF6FF' : activity.transportMode === 'transit' ? '#ECFDF5' : '#FEF2F2',
                                                     color: activity.transportMode === 'walking' ? '#1D4ED8' : activity.transportMode === 'transit' ? '#059669' : '#DC2626',
                                                 }}
                                             >
-                                                {activity.transportMode === 'walking' && '🚶 Walk to next destination'}
-                                                {activity.transportMode === 'transit' && '🚇 Take transit to next destination'}
-                                                {activity.transportMode === 'driving' && '🚗 Drive to next destination'}
+                                                <div className="font-medium">
+                                                    {activity.transportMode === 'walking' && '🚶 Walk'}
+                                                    {activity.transportMode === 'transit' && '🚇 Transit'}
+                                                    {activity.transportMode === 'driving' && '🚗 Drive'}
+                                                    {activity.transportDuration && ` · ${activity.transportDuration} min`}
+                                                    {activity.transportDistance && ` · ${activity.transportDistance} km`}
+                                                    {activity.transportCost && ` · ${activity.transportCost}`}
+                                                </div>
+                                                {activity.transportDetails && (
+                                                    <div className="mt-1 opacity-80 text-[11px]">
+                                                        {activity.transportDetails}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -470,11 +480,18 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
           </CardHeader>
           <CardContent className="space-y-2">
             <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-              <li>Download Papago or Google Translate for language assistance</li>
-              <li>Get a T-money card for convenient public transportation</li>
-              <li>Many places don't accept international cards - bring cash</li>
-              <li>Tipping is not customary in Korea</li>
-              <li>Free WiFi is widely available in cafes and public areas</li>
+              {(itinerary.travelTips && itinerary.travelTips.length > 0
+                ? itinerary.travelTips
+                : [
+                    'Download Papago or Google Translate for language assistance',
+                    'Get a T-money card for convenient public transportation',
+                    "Many places don't accept international cards - bring cash",
+                    'Tipping is not customary in Korea',
+                    'Free WiFi is widely available in cafes and public areas',
+                  ]
+              ).map((tip, index) => (
+                <li key={index}>{tip}</li>
+              ))}
             </ul>
           </CardContent>
         </Card>

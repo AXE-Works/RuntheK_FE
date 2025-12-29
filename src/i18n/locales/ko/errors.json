@@ -1,0 +1,35 @@
+{
+  "general": {
+    "somethingWrong": "문제가 발생했습니다",
+    "tryAgain": "다시 시도해주세요",
+    "notFound": "페이지를 찾을 수 없습니다",
+    "unauthorized": "이 페이지를 볼 권한이 없습니다",
+    "forbidden": "접근이 거부되었습니다",
+    "serverError": "서버 오류. 나중에 다시 시도해주세요",
+    "networkError": "네트워크 오류. 연결을 확인하세요",
+    "timeout": "요청 시간이 초과되었습니다. 다시 시도해주세요"
+  },
+  "validation": {
+    "required": "필수 입력 항목입니다",
+    "invalidEmail": "올바른 이메일 주소를 입력하세요",
+    "invalidDate": "올바른 날짜를 입력하세요",
+    "minLength": "최소 {{min}}자 이상이어야 합니다",
+    "maxLength": "최대 {{max}}자까지 입력 가능합니다",
+    "invalidFormat": "형식이 올바르지 않습니다"
+  },
+  "api": {
+    "fetchFailed": "데이터를 가져오는데 실패했습니다",
+    "saveFailed": "저장에 실패했습니다",
+    "deleteFailed": "삭제에 실패했습니다",
+    "updateFailed": "업데이트에 실패했습니다",
+    "generateFailed": "일정 생성에 실패했습니다",
+    "loginRequired": "계속하려면 로그인하세요"
+  },
+  "itinerary": {
+    "generationFailed": "일정 생성에 실패했습니다",
+    "saveFailed": "일정 저장에 실패했습니다",
+    "loadFailed": "일정 불러오기에 실패했습니다",
+    "noDestinations": "최소 하나의 여행지를 선택하세요",
+    "invalidDates": "올바른 여행 날짜를 선택하세요"
+  }
+}

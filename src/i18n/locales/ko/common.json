@@ -1,0 +1,91 @@
+{
+  "nav": {
+    "planTrip": "여행 계획",
+    "myTrips": "내 여행",
+    "admin": "관리자",
+    "newPlan": "새 계획",
+    "login": "로그인",
+    "logout": "로그아웃",
+    "profile": "프로필",
+    "settings": "설정"
+  },
+  "hero": {
+    "title": "완벽한 한국 여행을 계획하세요",
+    "subtitle": "AI가 만들어주는 잊지 못할 한국 여행 일정",
+    "cta": "계획 시작",
+    "description": "당신만을 위한 맞춤형 여행 일정으로 한국의 아름다움을 발견하세요",
+    "badge": "AI 여행 플래너",
+    "tagline": "탐색하고, 확장하고, 아이디어를 다듬으세요",
+    "getStarted": "시작하기",
+    "startJourney": "여행을 시작하세요",
+    "palaceTour": "궁궐 투어"
+  },
+  "buttons": {
+    "submit": "제출",
+    "cancel": "취소",
+    "save": "저장",
+    "delete": "삭제",
+    "edit": "수정",
+    "confirm": "확인",
+    "back": "뒤로",
+    "next": "다음",
+    "close": "닫기",
+    "viewDetails": "상세 보기",
+    "generateItinerary": "일정 생성",
+    "saveTrip": "여행 저장",
+    "shareTrip": "여행 공유"
+  },
+  "tabs": {
+    "overview": "개요",
+    "itinerary": "일정",
+    "map": "지도",
+    "budget": "예산"
+  },
+  "messages": {
+    "loading": "로딩 중...",
+    "generating": "완벽한 일정을 생성하고 있습니다...",
+    "success": "성공!",
+    "error": "문제가 발생했습니다",
+    "noResults": "결과가 없습니다",
+    "confirmDelete": "정말 삭제하시겠습니까?",
+    "savedSuccessfully": "저장되었습니다",
+    "loginRequired": "계속하려면 로그인하세요",
+    "itineraryGenerated": "일정이 성공적으로 생성되었습니다!",
+    "generateError": "일정 생성에 실패했습니다. 다시 시도해 주세요."
+  },
+  "destinations": {
+    "popular": "인기 여행지",
+    "recommended": "추천 여행지",
+    "seoul": "서울",
+    "busan": "부산",
+    "jeju": "제주도",
+    "gyeongju": "경주",
+    "incheon": "인천",
+    "daegu": "대구",
+    "daejeon": "대전",
+    "gwangju": "광주",
+    "jeonju": "전주",
+    "gangneung": "강릉",
+    "sokcho": "속초",
+    "suwon": "수원",
+    "andong": "안동",
+    "tongyeong": "통영",
+    "yeosu": "여수"
+  },
+  "itinerary": {
+    "title": "나만의 한국 여행 일정",
+    "planAnother": "다른 여행 계획하기",
+    "day": "일차",
+    "morning": "오전",
+    "afternoon": "오후",
+    "evening": "저녁",
+    "activity": "활동",
+    "location": "장소",
+    "duration": "소요 시간",
+    "estimatedCost": "예상 비용",
+    "transportation": "이동 수단",
+    "walking": "도보",
+    "transit": "대중교통",
+    "driving": "자가용"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "general": {
+    "somethingWrong": "Something went wrong",
+    "tryAgain": "Please try again",
+    "notFound": "Page not found",
+    "unauthorized": "You are not authorized to view this page",
+    "forbidden": "Access denied",
+    "serverError": "Server error. Please try again later",
+    "networkError": "Network error. Check your connection",
+    "timeout": "Request timed out. Please try again"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Please enter a valid email address",
+    "invalidDate": "Please enter a valid date",
+    "minLength": "Must be at least {{min}} characters",
+    "maxLength": "Must be no more than {{max}} characters",
+    "invalidFormat": "Invalid format"
+  },
+  "api": {
+    "fetchFailed": "Failed to fetch data",
+    "saveFailed": "Failed to save",
+    "deleteFailed": "Failed to delete",
+    "updateFailed": "Failed to update",
+    "generateFailed": "Failed to generate itinerary",
+    "loginRequired": "Please login to continue"
+  },
+  "itinerary": {
+    "generationFailed": "Failed to generate itinerary",
+    "saveFailed": "Failed to save itinerary",
+    "loadFailed": "Failed to load itinerary",
+    "noDestinations": "Please select at least one destination",
+    "invalidDates": "Please select valid travel dates"
+  }
+}

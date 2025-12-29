@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -27,6 +28,7 @@ interface TravelPlanFormProps {
   onDestinationSelect?: (destination: any) => void;
   currentUser?: any;
   events?: any[];
+  language?: 'ko' | 'en' | 'ja' | 'zh';
 }
 
 const KOREAN_CITIES = [
@@ -401,7 +403,8 @@ const generateMockItinerary = (userInput: UserInput, availableEvents: any[] = []
   };
 };
 
-export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenerating, selectedDestination, onDestinationSelect, currentUser, events = [] }: TravelPlanFormProps) {
+export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenerating, selectedDestination, onDestinationSelect, currentUser, events = [], language = 'en' }: TravelPlanFormProps) {
+  const { t } = useTranslation(['form', 'common']);
   const [userInput, setUserInput] = useState<UserInput>({
     duration: '',
     cities: [],
@@ -479,17 +482,17 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
 
   const handleGenerate = async () => {
     if (!currentUser) {
-      toast.error('Please login to generate itinerary');
+      toast.error(t('form:validation.loginRequired'));
       return;
     }
 
     if (userInput.interests.length === 0) {
-      toast.error('Please select at least one interest!');
+      toast.error(t('form:validation.selectInterests'));
       return;
     }
 
     if (!userInput.startDate) {
-      toast.error('Please select a start date!');
+      toast.error(t('form:validation.dateRequired'));
       return;
     }
 
@@ -503,14 +506,15 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
         budget: userInput.budget,
         interests: userInput.interests,
         additionalNotes: additionalNotes,
+        language: language,
       });
       onItineraryGenerated(itinerary);
-      toast.success('Itinerary generated successfully!');
+      toast.success(t('common:messages.itineraryGenerated'));
     } catch (error) {
       if (error instanceof ScheduleApiError) {
         toast.error(error.message);
       } else {
-        toast.error('Failed to generate itinerary. Please try again.');
+        toast.error(t('common:messages.generateError'));
       }
       console.error('Schedule generation error:', error);
     } finally {
@@ -806,16 +810,16 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
             <>
               <Sparkles className="h-5 w-5 mr-2 animate-spin" />
               {selectedDestination
-                ? `Creating Your ${selectedDestination.name} Adventure...`
-                : `Generating Your Perfect Korea Trip...`
+                ? t('form:generate.generatingDestination', { destination: selectedDestination.name })
+                : t('form:generate.generating')
               }
             </>
           ) : (
             <>
               <Sparkles className="h-5 w-5 mr-2" />
               {selectedDestination
-                ? `Create ${selectedDestination.name} Itinerary`
-                : `Generate My Korea Itinerary`
+                ? t('form:generate.buttonDestination', { destination: selectedDestination.name })
+                : t('form:generate.button')
               }
             </>
           )}
@@ -823,22 +827,22 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
 
         {!currentUser && (
           <p className="text-sm text-amber-600 font-medium mt-3">
-            * Please login to generate itinerary
+            * {t('form:validation.loginRequired')}
           </p>
         )}
         {currentUser && !userInput.duration && (
           <p className="text-sm text-red-600 font-medium mt-3 animate-pulse">
-            * Please select a duration to continue
+            * {t('form:validation.durationRequired')}
           </p>
         )}
         {currentUser && userInput.duration && userInput.interests.length === 0 && (
           <p className="text-sm text-red-600 font-medium mt-3 animate-pulse">
-            * Please select at least one interest to continue
+            * {t('form:validation.selectInterests')}
           </p>
         )}
         {currentUser && userInput.duration && userInput.interests.length > 0 && !userInput.startDate && (
           <p className="text-sm text-red-600 font-medium mt-3 animate-pulse">
-            * Please select a start date to continue
+            * {t('form:validation.dateRequired')}
           </p>
         )}
       </motion.div>

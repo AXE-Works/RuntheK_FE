@@ -1,0 +1,79 @@
+{
+  "steps": {
+    "destination": "去哪里？",
+    "destinationDesc": "选择目的地",
+    "dates": "什么时候？",
+    "datesDesc": "选择旅行日期",
+    "interests": "感兴趣的是？",
+    "interestsDesc": "选择您的旅行兴趣",
+    "budget": "预算",
+    "budgetDesc": "设置每日预算",
+    "travelers": "和谁一起？",
+    "travelersDesc": "告诉我们同行者信息",
+    "notes": "附加说明",
+    "notesDesc": "有特殊要求吗？"
+  },
+  "labels": {
+    "startDate": "开始日期",
+    "endDate": "结束日期",
+    "duration": "旅行时长",
+    "numberOfTravelers": "旅行人数",
+    "travelStyle": "旅行风格",
+    "additionalNotes": "附加说明",
+    "selectDestinations": "选择目的地",
+    "selectInterests": "选择兴趣",
+    "selectBudget": "选择预算级别"
+  },
+  "placeholders": {
+    "searchDestination": "搜索目的地...",
+    "additionalNotes": "特殊要求、饮食限制、偏好等...",
+    "selectDate": "选择日期"
+  },
+  "interests": {
+    "food": "美食",
+    "foodDesc": "韩国料理、街头美食、网红餐厅",
+    "culture": "文化历史",
+    "cultureDesc": "宫殿、博物馆、传统村落",
+    "nature": "自然户外",
+    "natureDesc": "山川、海滩、国家公园",
+    "shopping": "购物",
+    "shoppingDesc": "市场、商场、时尚街区",
+    "nightlife": "夜生活",
+    "nightlifeDesc": "俱乐部、酒吧、娱乐",
+    "kculture": "韩流文化",
+    "kcultureDesc": "K-POP、韩剧拍摄地",
+    "wellness": "养生",
+    "wellnessDesc": "水疗、寺庙、冥想",
+    "adventure": "冒险",
+    "adventureDesc": "徒步、水上运动、户外活动"
+  },
+  "budget": {
+    "budget": "经济型",
+    "budgetDesc": "每天350-700元 - 青旅、街头美食、公共交通",
+    "midRange": "中档",
+    "midRangeDesc": "每天700-1400元 - 酒店、餐厅、部分旅游团",
+    "luxury": "豪华",
+    "luxuryDesc": "每天1400元以上 - 高档酒店、精致餐饮、私人定制"
+  },
+  "duration": {
+    "3days": "3天",
+    "5days": "5天",
+    "7days": "7天",
+    "10days": "10天以上"
+  },
+  "validation": {
+    "selectDestination": "请至少选择一个目的地",
+    "selectDates": "请选择旅行日期",
+    "selectInterests": "请至少选择一个兴趣",
+    "selectBudget": "请选择预算级别",
+    "loginRequired": "请登录以生成行程",
+    "durationRequired": "请选择旅行时长",
+    "dateRequired": "请选择旅行开始日期"
+  },
+  "generate": {
+    "button": "生成我的韩国行程",
+    "buttonDestination": "生成{{destination}}行程",
+    "generating": "正在生成您的完美韩国之旅...",
+    "generatingDestination": "正在生成{{destination}}之旅..."
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -63,6 +64,7 @@ const COUNTRIES = [
 ];
 
 export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
+  const { t } = useTranslation(['auth', 'common']);
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -319,12 +321,12 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     setAuthError(null);
 
     if (signupForm.password !== signupForm.confirmPassword) {
-      setAuthError('Passwords do not match!');
+      setAuthError(t('auth:errors.passwordMismatch'));
       return;
     }
 
     if (signupForm.password.length < 8) {
-      setAuthError('Password must be at least 8 characters long.');
+      setAuthError(t('auth:errors.invalidPassword'));
       return;
     }
 
@@ -362,7 +364,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
   const handleVerifyEmail = async () => {
     // Note: In real implementation, user clicks link in email
     // This button is for demo/testing - actual verification happens via email link
-    setAuthError('Please check your email and click the verification link to complete signup.');
+    setAuthError(t('auth:verification.checkInbox'));
   };
 
   if (emailSent) {
@@ -377,9 +379,9 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                 className="h-8 w-auto object-contain"
               />
             </div>
-            <DialogTitle className="text-center">Check Your Email</DialogTitle>
+            <DialogTitle className="text-center">{t('auth:verification.title')}</DialogTitle>
             <DialogDescription className="text-center text-sm text-gray-600">
-              Complete your account verification
+              {t('auth:verification.subtitle')}
             </DialogDescription>
           </DialogHeader>
           
@@ -393,30 +395,30 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
             </div>
             
             <div className="space-y-2">
-              <h3 className="font-semibold text-gray-900">Verification Email Sent</h3>
+              <h3 className="font-semibold text-gray-900">{t('auth:messages.verificationSent')}</h3>
               <p className="text-sm text-gray-600">
-                We've sent a verification email to <strong>{signupForm.email}</strong>
+                {t('auth:verification.subtitle')} <strong>{signupForm.email}</strong>
               </p>
               <p className="text-xs text-gray-500">
-                Click the link in your email to verify your account
+                {t('auth:verification.checkInbox')}
               </p>
             </div>
-            
+
             <div className="space-y-3">
-              <Button 
+              <Button
                 onClick={handleVerifyEmail}
                 disabled={isLoading}
                 className="w-full bg-black text-white hover:bg-gray-800"
               >
-                {isLoading ? 'Verifying...' : 'I\'ve verified my email'}
+                {isLoading ? t('common:messages.loading') : t('auth:verification.verified')}
               </Button>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 onClick={() => setEmailSent(false)}
                 className="w-full"
               >
-                Back to Sign Up
+                {t('common:buttons.back')}
               </Button>
             </div>
           </motion.div>
@@ -436,16 +438,16 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
               className="h-8 w-auto object-contain"
             />
           </div>
-          <DialogTitle className="text-center">Welcome</DialogTitle>
+          <DialogTitle className="text-center">{t('auth:login.title')}</DialogTitle>
           <DialogDescription className="text-center text-sm text-gray-600">
-            Sign in or create an account to save your trips and get personalized recommendations
+            {t('auth:login.subtitle')}
           </DialogDescription>
         </DialogHeader>
-        
+
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="login">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsTrigger value="login">{t('auth:login.submit')}</TabsTrigger>
+            <TabsTrigger value="signup">{t('auth:signup.submit')}</TabsTrigger>
           </TabsList>
           
           {/* Login Tab */}
@@ -493,13 +495,13 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
 
             <form onSubmit={handleEmailLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
+                <Label htmlFor="login-email">{t('auth:login.email')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="login-email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t('auth:login.email')}
                     className="pl-10 border-gray-300"
                     value={loginForm.email}
                     onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
@@ -507,15 +509,15 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
+                <Label htmlFor="login-password">{t('auth:login.password')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="login-password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder={t('auth:login.password')}
                     className="pl-10 border-gray-300"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
@@ -523,13 +525,13 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   />
                 </div>
               </div>
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 disabled={isLoading}
                 className="w-full bg-black text-white hover:bg-gray-800"
               >
-                {isLoading ? 'Signing In...' : 'Sign In'}
+                {isLoading ? t('common:messages.loading') : t('auth:login.submit')}
               </Button>
             </form>
           </TabsContent>
@@ -579,13 +581,13 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
             
             <form onSubmit={handleEmailSignup} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signup-name">Full Name</Label>
+                <Label htmlFor="signup-name">{t('auth:signup.name')}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="signup-name"
                     type="text"
-                    placeholder="Enter your full name"
+                    placeholder={t('auth:signup.name')}
                     className="pl-10 border-gray-300"
                     value={signupForm.name}
                     onChange={(e) => setSignupForm(prev => ({ ...prev, name: e.target.value }))}
@@ -593,15 +595,15 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
+                <Label htmlFor="signup-email">{t('auth:signup.email')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t('auth:signup.email')}
                     className="pl-10 border-gray-300"
                     value={signupForm.email}
                     onChange={(e) => setSignupForm(prev => ({ ...prev, email: e.target.value }))}
@@ -609,9 +611,9 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="signup-country">Country</Label>
+                <Label htmlFor="signup-country">{t('auth:signup.country')}</Label>
                 <div className="relative">
                   <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <select
@@ -621,7 +623,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                     onChange={(e) => setSignupForm(prev => ({ ...prev, country: e.target.value }))}
                     required
                   >
-                    <option value="">Select your country</option>
+                    <option value="">{t('auth:signup.selectCountry')}</option>
                     {COUNTRIES.map((country) => (
                       <option key={country.code} value={country.code}>
                         {country.name}
@@ -630,16 +632,16 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   </select>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password">{t('auth:signup.password')}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="Password"
+                      placeholder={t('auth:signup.password')}
                       className="pl-10 border-gray-300"
                       value={signupForm.password}
                       onChange={(e) => setSignupForm(prev => ({ ...prev, password: e.target.value }))}
@@ -647,15 +649,15 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="signup-confirm">Confirm</Label>
+                  <Label htmlFor="signup-confirm">{t('auth:signup.confirmPassword')}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       id="signup-confirm"
                       type="password"
-                      placeholder="Confirm"
+                      placeholder={t('auth:signup.confirmPassword')}
                       className="pl-10 border-gray-300"
                       value={signupForm.confirmPassword}
                       onChange={(e) => setSignupForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
@@ -664,20 +666,20 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   </div>
                 </div>
               </div>
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 disabled={isLoading}
                 className="w-full bg-black text-white hover:bg-gray-800"
               >
-                {isLoading ? 'Creating Account...' : 'Create Account'}
+                {isLoading ? t('common:messages.loading') : t('auth:signup.submit')}
               </Button>
             </form>
           </TabsContent>
         </Tabs>
         
         <div className="text-center text-xs text-gray-500 mt-4">
-          By continuing, you agree to our Terms of Service and Privacy Policy
+          {t('auth:signup.agreeTerms')}
         </div>
       </DialogContent>
     </Dialog>

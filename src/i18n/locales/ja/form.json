@@ -1,0 +1,79 @@
+{
+  "steps": {
+    "destination": "どこへ？",
+    "destinationDesc": "目的地を選択",
+    "dates": "いつ？",
+    "datesDesc": "旅行日程を選択",
+    "interests": "興味は？",
+    "interestsDesc": "旅行の興味を選択",
+    "budget": "予算",
+    "budgetDesc": "1日の予算を設定",
+    "travelers": "誰と？",
+    "travelersDesc": "同行者情報を教えてください",
+    "notes": "追加リクエスト",
+    "notesDesc": "特別なご要望はありますか？"
+  },
+  "labels": {
+    "startDate": "開始日",
+    "endDate": "終了日",
+    "duration": "旅行期間",
+    "numberOfTravelers": "旅行人数",
+    "travelStyle": "旅行スタイル",
+    "additionalNotes": "追加リクエスト",
+    "selectDestinations": "目的地を選択",
+    "selectInterests": "興味を選択",
+    "selectBudget": "予算レベルを選択"
+  },
+  "placeholders": {
+    "searchDestination": "目的地を検索...",
+    "additionalNotes": "特別なリクエスト、食事制限、好みなど...",
+    "selectDate": "日付を選択"
+  },
+  "interests": {
+    "food": "グルメ",
+    "foodDesc": "韓国料理、屋台料理、人気店",
+    "culture": "文化・歴史",
+    "cultureDesc": "宮殿、博物館、伝統村",
+    "nature": "自然・アウトドア",
+    "natureDesc": "山、ビーチ、国立公園",
+    "shopping": "ショッピング",
+    "shoppingDesc": "市場、モール、ファッション街",
+    "nightlife": "ナイトライフ",
+    "nightlifeDesc": "クラブ、バー、エンターテイメント",
+    "kculture": "K-カルチャー",
+    "kcultureDesc": "K-POP、K-ドラマロケ地",
+    "wellness": "ウェルネス",
+    "wellnessDesc": "スパ、寺院、瞑想",
+    "adventure": "アドベンチャー",
+    "adventureDesc": "ハイキング、ウォータースポーツ、アクティビティ"
+  },
+  "budget": {
+    "budget": "格安",
+    "budgetDesc": "1日5,000〜10,000円 - ゲストハウス、屋台、公共交通",
+    "midRange": "中級",
+    "midRangeDesc": "1日10,000〜20,000円 - ホテル、レストラン、一部ツアー",
+    "luxury": "ラグジュアリー",
+    "luxuryDesc": "1日20,000円以上 - 高級ホテル、高級レストラン、プライベートツアー"
+  },
+  "duration": {
+    "3days": "3日間",
+    "5days": "5日間",
+    "7days": "7日間",
+    "10days": "10日間以上"
+  },
+  "validation": {
+    "selectDestination": "目的地を1つ以上選択してください",
+    "selectDates": "旅行日程を選択してください",
+    "selectInterests": "興味を1つ以上選択してください",
+    "selectBudget": "予算レベルを選択してください",
+    "loginRequired": "日程を作成するにはログインしてください",
+    "durationRequired": "旅行期間を選択してください",
+    "dateRequired": "旅行開始日を選択してください"
+  },
+  "generate": {
+    "button": "韓国旅行プランを作成",
+    "buttonDestination": "{{destination}}プランを作成",
+    "generating": "完璧な韓国旅行を作成中...",
+    "generatingDestination": "{{destination}}の旅を作成中..."
+  }
+}

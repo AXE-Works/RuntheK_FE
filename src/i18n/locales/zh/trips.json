@@ -1,0 +1,58 @@
+{
+  "myTrips": {
+    "title": "我的旅行",
+    "subtitle": "管理您的旅行计划",
+    "noTrips": "还没有旅行",
+    "startPlanning": "开始规划您的第一次韩国之旅！",
+    "createNew": "创建新旅行"
+  },
+  "tripCard": {
+    "days": "天",
+    "people": "人",
+    "viewDetails": "查看详情",
+    "edit": "编辑",
+    "delete": "删除",
+    "share": "分享",
+    "upcoming": "即将出行",
+    "past": "过往旅行",
+    "draft": "草稿"
+  },
+  "tripDetails": {
+    "overview": "概览",
+    "itinerary": "行程",
+    "map": "地图",
+    "budget": "预算",
+    "notes": "备注",
+    "totalCost": "预估总费用",
+    "destinations": "目的地",
+    "travelDates": "旅行日期",
+    "interests": "兴趣"
+  },
+  "actions": {
+    "confirmTrip": "确认旅行",
+    "editTrip": "编辑旅行",
+    "deleteTrip": "删除旅行",
+    "shareTrip": "分享旅行",
+    "downloadPdf": "下载PDF",
+    "addToCalendar": "添加到日历"
+  },
+  "filters": {
+    "all": "全部旅行",
+    "upcoming": "即将出行",
+    "past": "过往旅行",
+    "drafts": "草稿"
+  },
+  "sort": {
+    "newest": "最新优先",
+    "oldest": "最早优先",
+    "dateAsc": "日期升序",
+    "dateDesc": "日期降序"
+  },
+  "messages": {
+    "tripSaved": "旅行已保存",
+    "tripDeleted": "旅行已删除",
+    "tripShared": "旅行已分享",
+    "confirmDelete": "确定要删除这个旅行吗？",
+    "cannotUndo": "此操作无法撤销"
+  }
+}
