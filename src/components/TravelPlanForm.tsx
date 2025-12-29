@@ -16,6 +16,8 @@ import { SuggestedBanners } from './SuggestedBanners';
 import { PopularDestinations } from './PopularDestinations';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { generateSchedule, ScheduleApiError } from '../services/scheduleApi';
 
 interface TravelPlanFormProps {
   onItineraryGenerated: (itinerary: ItineraryData) => void;
@@ -148,7 +150,7 @@ const INTERESTS = [
 
 const BUDGET_OPTIONS = [
   { value: 'budget', label: 'Budget ($50-100/day)', description: 'Hostels, street food, public transport' },
-  { value: 'mid', label: 'Mid-range ($100-200/day)', description: 'Hotels, restaurants, some experiences' },
+  { value: 'mid-range', label: 'Mid-range ($100-200/day)', description: 'Hotels, restaurants, some experiences' },
   { value: 'luxury', label: 'Luxury ($200+/day)', description: 'Premium hotels, fine dining, private tours' }
 ];
 
@@ -306,7 +308,7 @@ const generateMockItinerary = (userInput: UserInput, availableEvents: any[] = []
       dayActivities.push({
         time: '09:00 AM',
         ...activity,
-        estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid' ? '$20-50' : '$50-100'
+        estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid-range' ? '$20-50' : '$50-100'
       });
     }
 
@@ -315,7 +317,7 @@ const generateMockItinerary = (userInput: UserInput, availableEvents: any[] = []
     dayActivities.push({
       time: '12:00 PM',
       ...lunchOption,
-      estimatedCost: userInput.budget === 'budget' ? '$8-15' : userInput.budget === 'mid' ? '$15-25' : '$25-40'
+      estimatedCost: userInput.budget === 'budget' ? '$8-15' : userInput.budget === 'mid-range' ? '$15-25' : '$25-40'
     });
 
     // Afternoon Activity 1 (2:00 PM)
@@ -326,7 +328,7 @@ const generateMockItinerary = (userInput: UserInput, availableEvents: any[] = []
       dayActivities.push({
         time: '02:00 PM',
         ...activity,
-        estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid' ? '$20-50' : '$50-100'
+        estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid-range' ? '$20-50' : '$50-100'
       });
     }
 
@@ -338,7 +340,7 @@ const generateMockItinerary = (userInput: UserInput, availableEvents: any[] = []
       dayActivities.push({
         time: '04:00 PM',
         ...activity,
-        estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid' ? '$20-50' : '$50-100'
+        estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid-range' ? '$20-50' : '$50-100'
       });
     }
 
@@ -347,7 +349,7 @@ const generateMockItinerary = (userInput: UserInput, availableEvents: any[] = []
     dayActivities.push({
       time: '07:00 PM',
       ...dinnerOption,
-      estimatedCost: userInput.budget === 'budget' ? '$15-25' : userInput.budget === 'mid' ? '$25-40' : '$40-80'
+      estimatedCost: userInput.budget === 'budget' ? '$15-25' : userInput.budget === 'mid-range' ? '$25-40' : '$40-80'
     });
 
     // Evening Activity (9:00 PM) - Optional
@@ -359,7 +361,7 @@ const generateMockItinerary = (userInput: UserInput, availableEvents: any[] = []
         dayActivities.push({
           time: '09:00 PM',
           ...activity,
-          estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid' ? '$20-50' : '$50-100'
+          estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid-range' ? '$20-50' : '$50-100'
         });
       }
     }
@@ -393,7 +395,7 @@ const generateMockItinerary = (userInput: UserInput, availableEvents: any[] = []
     days,
     totalEstimatedCost: userInput.budget === 'budget' 
       ? `$${numDays * 100}-${numDays * 150}` 
-      : userInput.budget === 'mid' 
+      : userInput.budget === 'mid-range' 
       ? `$${numDays * 200}-${numDays * 300}` 
       : `$${numDays * 400}-${numDays * 600}`
   };
@@ -403,7 +405,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
   const [userInput, setUserInput] = useState<UserInput>({
     duration: '',
     cities: [],
-    budget: 'mid',
+    budget: 'mid-range',
     interests: [],
     nationality: '',
     startDate: undefined
@@ -443,8 +445,8 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
         duration: selectedDestination.recommendedDuration || '5 days',
         cities: [selectedCity],
         interests: selectedDestination.recommendedInterests || [],
-        budget: selectedDestination.name === 'Seoul' ? 'mid' : 
-                selectedDestination.name === 'Traditional Markets' ? 'budget' : 'mid'
+        budget: selectedDestination.name === 'Seoul' ? 'mid-range' :
+                selectedDestination.name === 'Traditional Markets' ? 'budget' : 'mid-range'
       }));
 
       // Scroll to form section
@@ -476,19 +478,44 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
   };
 
   const handleGenerate = async () => {
+    if (!currentUser) {
+      toast.error('Please login to generate itinerary');
+      return;
+    }
+
     if (userInput.interests.length === 0) {
-      alert('Please select at least one interest!');
+      toast.error('Please select at least one interest!');
+      return;
+    }
+
+    if (!userInput.startDate) {
+      toast.error('Please select a start date!');
       return;
     }
 
     setIsGenerating(true);
-    
-    // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const itinerary = generateMockItinerary({ ...userInput, additionalNotes }, events);
-    onItineraryGenerated(itinerary);
-    setIsGenerating(false);
+
+    try {
+      const itinerary = await generateSchedule({
+        startDate: userInput.startDate,
+        duration: userInput.duration,
+        cities: userInput.cities,
+        budget: userInput.budget,
+        interests: userInput.interests,
+        additionalNotes: additionalNotes,
+      });
+      onItineraryGenerated(itinerary);
+      toast.success('Itinerary generated successfully!');
+    } catch (error) {
+      if (error instanceof ScheduleApiError) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to generate itinerary. Please try again.');
+      }
+      console.error('Schedule generation error:', error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -589,10 +616,10 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                     <SelectValue placeholder="Select trip duration" />
                   </SelectTrigger>
                   <SelectContent className="z-50 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-lg">
-                    <SelectItem value="1 day">1 day</SelectItem>
-                    <SelectItem value="2 days">2 days</SelectItem>
                     <SelectItem value="3 days">3 days</SelectItem>
                     <SelectItem value="5 days">5 days</SelectItem>
+                    <SelectItem value="7 days">7 days</SelectItem>
+                    <SelectItem value="10+ days">10+ days</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -771,14 +798,14 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
       >
         <Button
           onClick={handleGenerate}
-          disabled={isGenerating || userInput.interests.length === 0}
+          disabled={isGenerating || !currentUser || userInput.interests.length === 0 || !userInput.startDate}
           size="lg"
           className="h-14 px-[24px] bg-black hover:bg-gray-900 text-white text-lg font-bold rounded-full shadow-[0px_4px_15px_rgba(0,0,0,0.3)] transition-all duration-300 hover:scale-105 hover:shadow-[0px_6px_20px_rgba(0,0,0,0.4)] disabled:opacity-50 disabled:hover:scale-100 text-[16px] py-[0px] mx-[12px] my-[0px]"
         >
           {isGenerating ? (
             <>
               <Sparkles className="h-5 w-5 mr-2 animate-spin" />
-              {selectedDestination 
+              {selectedDestination
                 ? `Creating Your ${selectedDestination.name} Adventure...`
                 : `Generating Your Perfect Korea Trip...`
               }
@@ -786,17 +813,27 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
           ) : (
             <>
               <Sparkles className="h-5 w-5 mr-2" />
-              {selectedDestination 
+              {selectedDestination
                 ? `Create ${selectedDestination.name} Itinerary`
                 : `Generate My Korea Itinerary`
               }
             </>
           )}
         </Button>
-        
-        {userInput.interests.length === 0 && (
+
+        {!currentUser && (
+          <p className="text-sm text-amber-600 font-medium mt-3">
+            * Please login to generate itinerary
+          </p>
+        )}
+        {currentUser && userInput.interests.length === 0 && (
           <p className="text-sm text-red-600 font-medium mt-3 animate-pulse">
             * Please select at least one interest to continue
+          </p>
+        )}
+        {currentUser && userInput.interests.length > 0 && !userInput.startDate && (
+          <p className="text-sm text-red-600 font-medium mt-3 animate-pulse">
+            * Please select a start date to continue
           </p>
         )}
       </motion.div>

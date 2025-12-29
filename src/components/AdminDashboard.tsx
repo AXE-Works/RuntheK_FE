@@ -334,7 +334,7 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
         title: '7 Days Seoul Cultural Experience',
         duration: '7 days',
         interests: ['culture', 'history', 'food'],
-        budget: 'mid',
+        budget: 'mid-range',
         cities: ['Seoul'],
         createdAt: '2024-03-20',
         status: '완료',

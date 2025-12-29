@@ -647,150 +647,134 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
-### 4.3 Itinerary Generation APIs (2 endpoints)
+### 4.3 Schedule Generation APIs (1 endpoint)
 
 ---
 
-#### 4.3.1 POST `/itinerary/generate`
+#### 4.3.1 POST `/schedules/generate`
 
-**Description**: Generate AI-powered travel itinerary
+**Description**: Generate AI-powered travel schedule
 
-**Auth Required**: Yes (User)
+**Auth Required**: No (but UI restricts to logged-in users)
 
 **Request**
 ```json
 {
-  "startDate": "2024-12-25",
-  "duration": "5 days",
-  "cities": ["Seoul", "Busan"],
-  "interests": ["food", "culture", "nature"],
-  "budget": "mid-range",
-  "nationality": "United States",
-  "additionalNotes": "I would like to experience local markets and traditional food. Prefer less crowded places."
+  "start_date": "2025-04-01",
+  "duration_days": 2,
+  "cities": ["Seoul"],
+  "interests": ["K-Pop & Entertainment"],
+  "budget_level": "MEDIUM",
+  "language": "ko",
+  "additional_notes": "채식 선호"
 }
 ```
 
 **Validation Rules**
 | Field | Rules |
 |-------|-------|
-| `startDate` | Optional, ISO date format, must be future date |
-| `duration` | Required, one of: `3 days`, `5 days`, `7 days`, `10+ days` |
+| `start_date` | Required, YYYY-MM-DD format |
+| `duration_days` | Required, integer 1-14 |
 | `cities` | Required, 1-5 cities from valid list |
-| `interests` | Required, 1-8 interests from valid list |
-| `budget` | Required, one of: `budget`, `mid-range`, `luxury` |
-| `nationality` | Optional, valid country name |
-| `additionalNotes` | Optional, max 500 characters |
+| `interests` | Required, 1-5 interests from valid list |
+| `budget_level` | Optional, one of: `LOW`, `MEDIUM`, `HIGH` (default: `MEDIUM`) |
+| `language` | Optional, one of: `ko`, `en`, `ja`, `zh` (default: `ko`) |
+| `additional_notes` | Optional, max 500 characters |
+
+**Valid Interests**
+- `Culture & History`
+- `Korean Food`
+- `Shopping`
+- `Nature & Hiking`
+- `K-Pop & Entertainment`
+- `Nightlife`
+- `Temples & Spirituality`
+- `Traditional Arts`
 
 **Response** `200 OK`
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "itin_abc123",
-    "title": "Seoul & Busan Adventure",
-    "duration": "5 days",
-    "interests": ["food", "culture", "nature"],
-    "budget": "mid-range",
-    "days": [
-      {
-        "day": 1,
-        "title": "Arrival & Seoul Exploration",
-        "activities": [
-          {
-            "time": "09:00",
-            "activity": "Airport Arrival",
-            "location": "Incheon International Airport",
-            "description": "Arrive at Incheon Airport and take AREX to Seoul Station",
-            "estimatedCost": "₩9,500",
-            "isEvent": false
-          },
-          {
-            "time": "12:00",
-            "activity": "Gwangjang Market",
-            "location": "Jongno-gu, Seoul",
-            "description": "Experience authentic Korean street food at the oldest market",
-            "estimatedCost": "₩15,000",
-            "isEvent": false
-          },
-          {
-            "time": "15:00",
-            "activity": "Winter Festival 2024",
-            "location": "Cheonggyecheon Stream",
-            "description": "Special winter light festival with lantern displays",
-            "estimatedCost": "Free",
-            "isEvent": true,
-            "eventType": "festival",
-            "eventId": "evt_winter2024"
+  "id": 1,
+  "itinerary": [
+    {
+      "day": 1,
+      "date": "2025-04-01",
+      "day_title": "Day 1 - 서울 K-Pop 투어",
+      "total_travel_time": 55,
+      "total_distance_km": 9.5,
+      "items": [
+        {
+          "place_name": "HYBE 인사이트",
+          "address": "서울 용산구 한강대로 42길 15",
+          "time": "09:00 - 11:00",
+          "description": "BTS 소속사 HYBE의 공식 전시관",
+          "rating": 4.5,
+          "review_count": 100,
+          "opening_hours": "09:00 - 21:00",
+          "is_open_on_date": true,
+          "item_type": "place",
+          "transport_from_prev": null
+        },
+        {
+          "place_name": "SM타운 코엑스아티움",
+          "address": "서울 강남구 영동대로 513",
+          "time": "12:00 - 14:00",
+          "description": "SM 엔터테인먼트 아티스트 전시관",
+          "rating": 4.6,
+          "review_count": 150,
+          "opening_hours": "09:00 - 21:00",
+          "is_open_on_date": true,
+          "item_type": "place",
+          "transport_from_prev": {
+            "from_place": "HYBE 인사이트",
+            "to_place": "SM타운 코엑스아티움",
+            "duration_minutes": 20,
+            "distance_km": 3.0,
+            "transport_mode": "transit",
+            "transit_details": "1호선 → 2호선 환승",
+            "cost_estimate": "₩1,500"
           }
-        ]
-      }
-    ],
-    "totalEstimatedCost": "₩850,000 - ₩1,200,000",
-    "generatedAt": "2024-12-22T10:00:00Z"
-  }
+        }
+      ]
+    }
+  ],
+  "warnings": [],
+  "meta": {
+    "cities": ["Seoul"],
+    "interests": ["K-Pop & Entertainment"],
+    "budget_level": "MEDIUM",
+    "duration_days": 2,
+    "generated_at": "2025-04-01T10:30:00Z"
+  },
+  "travel_tips": [
+    "T-money 카드를 미리 준비하면 대중교통 이용이 편리합니다",
+    "현금보다 카드 결제가 더 널리 사용됩니다"
+  ]
 }
 ```
 
 **Errors**
 | Code | Message |
 |------|---------|
-| 400 | `VALIDATION_ERROR` - Invalid input data |
-| 429 | `RATE_LIMIT_EXCEEDED` - Too many generation requests |
-| 503 | `AI_SERVICE_UNAVAILABLE` - AI service temporarily down |
+| 400 | `INVALID_CITIES` - Invalid city in cities list |
+| 400 | `INVALID_INTERESTS` - Invalid interest in interests list |
+| 400 | `INVALID_DURATION` - duration_days must be between 1 and 14 |
+| 400 | `MAX_CITIES_EXCEEDED` - Maximum 5 cities allowed |
+| 400 | `MAX_INTERESTS_EXCEEDED` - Maximum 5 interests allowed |
+| 500 | `SCHEDULE_GENERATION_FAILED` - Internal server error |
+
+**Error Response Format**
+```json
+{
+  "code": "INVALID_CITIES",
+  "message": "유효하지 않은 도시입니다",
+  "details": null
+}
+```
 
 **Performance Notes**
 - Typical response time: 3-8 seconds
-- Rate limit: 10 requests per hour per user
 - Consider implementing streaming response for better UX
-
----
-
-#### 4.3.2 POST `/itinerary/regenerate`
-
-**Description**: Regenerate itinerary with user feedback
-
-**Auth Required**: Yes (User)
-
-**Request**
-```json
-{
-  "originalItineraryId": "itin_abc123",
-  "feedback": "I want more food experiences and less museum visits. Also, please include a day trip to Nami Island.",
-  "keepDays": [1, 3],
-  "modifyDays": [2, 4, 5]
-}
-```
-
-**Validation Rules**
-| Field | Rules |
-|-------|-------|
-| `originalItineraryId` | Required, valid itinerary ID |
-| `feedback` | Required, 10-1000 characters |
-| `keepDays` | Optional, array of day numbers to preserve |
-| `modifyDays` | Optional, array of day numbers to regenerate |
-
-**Response** `200 OK`
-```json
-{
-  "success": true,
-  "data": {
-    "id": "itin_def456",
-    "parentId": "itin_abc123",
-    "title": "Seoul & Busan Food Adventure",
-    "duration": "5 days",
-    "interests": ["food", "culture", "nature"],
-    "budget": "mid-range",
-    "days": [...],
-    "totalEstimatedCost": "₩900,000 - ₩1,300,000",
-    "generatedAt": "2024-12-22T11:00:00Z",
-    "changes": [
-      "Added 3 more food experiences",
-      "Replaced museum visits with market tours",
-      "Added Nami Island day trip on Day 4"
-    ]
-  }
-}
-```
 
 ---
 
@@ -2439,7 +2423,7 @@ const VALID_INTERESTS = [
 
 ## Appendix B: API Summary Table
 
-### B.1 Customer APIs (24)
+### B.1 Customer APIs (23)
 
 | # | Method | Endpoint | Auth | Description |
 |---|--------|----------|------|-------------|
@@ -2454,19 +2438,18 @@ const VALID_INTERESTS = [
 | 9 | GET | `/destinations/:id` | No | Destination detail |
 | 10 | GET | `/banners` | No | List banners |
 | 11 | GET | `/banners/:id` | No | Banner detail |
-| 12 | POST | `/itinerary/generate` | User | Generate itinerary |
-| 13 | POST | `/itinerary/regenerate` | User | Regenerate itinerary |
-| 14 | GET | `/trips` | User | List trips |
-| 15 | GET | `/trips/:id` | User | Trip detail |
-| 16 | POST | `/trips` | User | Save trip |
-| 17 | PUT | `/trips/:id` | User | Update trip |
-| 18 | DELETE | `/trips/:id` | User | Delete trip |
-| 19 | POST | `/trips/:id/ratings` | User | Add ratings |
-| 20 | GET | `/bookmarks` | User | List bookmarks |
-| 21 | POST | `/bookmarks/:tripId` | User | Add bookmark |
-| 22 | DELETE | `/bookmarks/:tripId` | User | Remove bookmark |
-| 23 | GET | `/users/profile` | User | Get profile |
-| 24 | PUT | `/users/profile` | User | Update profile |
+| 12 | POST | `/schedules/generate` | No | Generate AI schedule |
+| 13 | GET | `/trips` | User | List trips |
+| 14 | GET | `/trips/:id` | User | Trip detail |
+| 15 | POST | `/trips` | User | Save trip |
+| 16 | PUT | `/trips/:id` | User | Update trip |
+| 17 | DELETE | `/trips/:id` | User | Delete trip |
+| 18 | POST | `/trips/:id/ratings` | User | Add ratings |
+| 19 | GET | `/bookmarks` | User | List bookmarks |
+| 20 | POST | `/bookmarks/:tripId` | User | Add bookmark |
+| 21 | DELETE | `/bookmarks/:tripId` | User | Remove bookmark |
+| 22 | GET | `/users/profile` | User | Get profile |
+| 23 | PUT | `/users/profile` | User | Update profile |
 
 ### B.2 Admin APIs (22)
 

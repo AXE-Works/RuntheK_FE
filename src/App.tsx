@@ -207,7 +207,7 @@ export default function App() {
           newActivities.splice(3, 0, {
             time: '05:00 PM',
             ...foodActivity,
-            estimatedCost: userInput.budget === 'budget' ? '$15-25' : userInput.budget === 'mid' ? '$25-40' : '$40-80'
+            estimatedCost: userInput.budget === 'budget' ? '$15-25' : userInput.budget === 'mid-range' ? '$25-40' : '$40-80'
           });
         }
       }
@@ -218,7 +218,7 @@ export default function App() {
           newActivities.splice(1, 0, {
             time: '10:30 AM',
             ...cultureActivity,
-            estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid' ? '$20-40' : '$40-80'
+            estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid-range' ? '$20-40' : '$40-80'
           });
         }
       }
@@ -242,7 +242,7 @@ export default function App() {
           newActivities.push({
             time: '06:00 AM',
             ...photoActivity,
-            estimatedCost: userInput.budget === 'budget' ? '$5-15' : userInput.budget === 'mid' ? '$15-30' : '$30-60'
+            estimatedCost: userInput.budget === 'budget' ? '$5-15' : userInput.budget === 'mid-range' ? '$15-30' : '$30-60'
           });
         }
       }
