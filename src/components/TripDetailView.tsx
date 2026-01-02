@@ -243,6 +243,10 @@ export function TripDetailView({ trip, onBack }: TripDetailViewProps) {
                                 googleMapsUrl: act.googleMapsUrl,
                                 isEvent: act.isEvent,
                                 transportMode: act.transportMode,
+                                transportDuration: act.transportDuration,
+                                transportDistance: act.transportDistance,
+                                transportDetails: act.transportDetails,
+                                transportCost: act.transportCost,
                               })) || []}
                               activeIndex={
                                 highlightedActivity?.startsWith(`${day.day}-`)

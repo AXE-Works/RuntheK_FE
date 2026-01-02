@@ -17,6 +17,10 @@ interface Activity {
   googleMapsUrl?: string;
   isEvent?: boolean;
   transportMode?: 'walking' | 'transit' | 'driving';
+  transportDuration?: number;  // 분
+  transportDistance?: number;  // km
+  transportDetails?: string;   // 환승 정보
+  transportCost?: string;      // 이동 비용
 }
 
 interface ItineraryMapProps {
@@ -365,21 +369,39 @@ export function ItineraryMap({ activities, activeIndex, onMarkerClick }: Itinera
                 {activities[selectedMarker]?.description}
               </p>
 
-              {/* Transport mode from previous location */}
+              {/* Transport info from previous location */}
               {selectedMarker > 0 && activities[selectedMarker]?.transportMode && (
                 <div
-                  className="flex items-center gap-2 mb-2 px-2 py-1.5 rounded text-xs"
+                  className="mb-2 px-2 py-2 rounded text-xs"
                   style={{
                     backgroundColor: `${ROUTE_COLORS[activities[selectedMarker].transportMode!]}15`,
                     borderLeft: `3px solid ${ROUTE_COLORS[activities[selectedMarker].transportMode!]}`
                   }}
                 >
-                  <TransportIcon mode={activities[selectedMarker].transportMode} />
-                  <span className="font-medium">
-                    {activities[selectedMarker].transportMode === 'walking' && 'Walk from previous'}
-                    {activities[selectedMarker].transportMode === 'transit' && 'Transit from previous'}
-                    {activities[selectedMarker].transportMode === 'driving' && 'Drive from previous'}
-                  </span>
+                  <div className="flex items-center gap-2 mb-1">
+                    <TransportIcon mode={activities[selectedMarker].transportMode} />
+                    <span className="font-semibold">
+                      {activities[selectedMarker].transportMode === 'walking' && 'Walking'}
+                      {activities[selectedMarker].transportMode === 'transit' && 'Public Transit'}
+                      {activities[selectedMarker].transportMode === 'driving' && 'Driving'}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-gray-600">
+                    {activities[selectedMarker].transportDuration && (
+                      <span>{activities[selectedMarker].transportDuration} min</span>
+                    )}
+                    {activities[selectedMarker].transportDistance && (
+                      <span>{activities[selectedMarker].transportDistance} km</span>
+                    )}
+                    {activities[selectedMarker].transportCost && (
+                      <span className="font-medium text-gray-700">{activities[selectedMarker].transportCost}</span>
+                    )}
+                  </div>
+                  {activities[selectedMarker].transportDetails && (
+                    <div className="mt-1 text-gray-500 italic">
+                      {activities[selectedMarker].transportDetails}
+                    </div>
+                  )}
                 </div>
               )}
 
