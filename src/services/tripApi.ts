@@ -187,6 +187,11 @@ export function transformAIResponseToBeRequest(
         opening_hours: item.opening_hours,
         is_open_on_date: item.is_open_on_date,
         item_type: item.item_type,
+        // 지도/장소 정보 추가
+        google_maps_url: item.google_maps_url,
+        price_range: item.price_range,
+        image_url: item.image_url,
+        recommendation_reason: item.recommendation_reason,
         transport_from_prev: item.transport_from_prev ? {
           from_place: item.transport_from_prev.from_place,
           to_place: item.transport_from_prev.to_place,
@@ -335,6 +340,17 @@ export interface TripActivityResponse {
   eventType: string | null;
   eventId: string | null;
   rating: number | null;
+  // 지도/장소 정보
+  googleMapsUrl: string | null;
+  priceRange: string | null;
+  imageUrl: string | null;
+  recommendationReason: string | null;
+  // Transport 정보
+  transportMode: string | null;
+  transportDuration: number | null;
+  transportDistance: number | null;
+  transportDetails: string | null;
+  transportCost: string | null;
 }
 
 export interface RatingResponse {
