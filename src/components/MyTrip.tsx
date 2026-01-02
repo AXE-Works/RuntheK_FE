@@ -347,9 +347,39 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
     setIsEditing(false);
   };
 
-  const handleViewTripDetail = (trip: any) => {
+  const handleViewTripDetail = async (trip: any) => {
+    // 1. 먼저 현재 데이터로 화면 표시 (로딩 UX 개선)
     setDetailViewTrip(trip);
     setShowDetailView(true);
+
+    // 2. localStorage에 완전한 데이터가 있는지 확인
+    const hasLocalData = trip.itineraryData?.days && trip.itineraryData.days.length > 0;
+
+    if (hasLocalData) {
+      // localStorage 데이터가 완전하면 API 호출 생략
+      console.log('Using cached trip data from localStorage');
+      return;
+    }
+
+    // 3. 완전한 데이터가 없으면 API 호출
+    try {
+      const response = await getTripById(trip.id);
+      if (response.success && response.data) {
+        // API 응답의 days를 itineraryData.days 형태로 변환하여 병합
+        const enrichedTrip = {
+          ...trip,
+          ...response.data,
+          itineraryData: {
+            ...trip.itineraryData,
+            days: response.data.days || trip.itineraryData?.days || []
+          }
+        };
+        setDetailViewTrip(enrichedTrip);
+      }
+    } catch (error) {
+      console.error('Failed to fetch trip details:', error);
+      // 에러 시 기존 데이터 유지 (이미 화면에 표시됨)
+    }
   };
 
   const handleBackFromDetail = () => {

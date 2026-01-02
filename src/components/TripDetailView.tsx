@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { MapPin, Clock, DollarSign, Calendar, Star, ExternalLink, ArrowLeft, ThumbsUp, ThumbsDown, MessageSquare, Info, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ItineraryData } from '../App';
+import { ItineraryMap } from './ItineraryMap';
 
 interface TripDetailViewProps {
   trip: any;
@@ -230,62 +231,26 @@ export function TripDetailView({ trip, onBack }: TripDetailViewProps) {
                             </div>
                         </div>
 
-                        {/* Map Section */}
-                        <div className="relative h-[400px] bg-gray-100 group overflow-hidden">
-                           {/* Map Background */}
-                           <div 
-                                className="absolute inset-0 bg-cover bg-center grayscale opacity-80 transition-transform duration-700 group-hover:scale-105"
-                                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1662140246046-fc44f41e4362?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaXR5JTIwbWFwJTIwdG9wJTIwZG93biUyMGJsYWNrJTIwYW5kJTIwd2hpdGV8ZW58MXx8fHwxNzY2MDQ1NzgxfDA&ixlib=rb-4.1.0&q=80&w=1080')` }}
+                        {/* Map Section - Real Google Maps */}
+                        <div className="relative h-[400px] bg-gray-100 overflow-hidden">
+                           <ItineraryMap
+                              activities={day.activities?.map((act: any) => ({
+                                time: act.time,
+                                activity: act.activity,
+                                location: act.location,
+                                description: act.description,
+                                estimatedCost: act.estimatedCost,
+                                googleMapsUrl: act.googleMapsUrl,
+                                isEvent: act.isEvent,
+                                transportMode: act.transportMode,
+                              })) || []}
+                              activeIndex={
+                                highlightedActivity?.startsWith(`${day.day}-`)
+                                  ? parseInt(highlightedActivity.split('-')[1])
+                                  : null
+                              }
+                              onMarkerClick={(index) => setHighlightedActivity(`${day.day}-${index}`)}
                            />
-                           
-                           {/* Simulated Route Line */}
-                           <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-60">
-                                <path d="M 120 100 Q 180 150 240 120 T 320 200" stroke="black" strokeWidth="3" fill="none" strokeDasharray="6 4" />
-                           </svg>
-
-                           {/* Simulated Pins */}
-                           {day.activities?.map((act: any, idx: number) => {
-                               const activityKey = `${day.day}-${idx}`;
-                               const isHighlighted = highlightedActivity === activityKey;
-
-                               // Generate pseudo-random positions for demo purposes
-                               // In a real app, these would be calculated from geo-coordinates relative to the map bounds
-                               const leftPos = 20 + ((idx * 23) % 60);
-                               const topPos = 20 + ((idx * 17) % 60);
-                               
-                               return (
-                                  <div 
-                                      key={idx}
-                                      className={`absolute w-8 h-8 -ml-4 -mt-8 flex flex-col items-center group/pin cursor-pointer z-10 hover:z-20 transition-all duration-300 ${isHighlighted ? 'scale-125 z-30' : 'hover:scale-110'}`}
-                                      style={{ 
-                                          top: `${topPos}%`, 
-                                          left: `${leftPos}%` 
-                                      }}
-                                      onMouseEnter={() => setHighlightedActivity(activityKey)}
-                                      onMouseLeave={() => setHighlightedActivity(null)}
-                                  >
-                                      <div className={`border-2 border-black w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] relative transition-colors duration-300 ${isHighlighted ? 'bg-black text-white' : 'bg-white text-black'}`}>
-                                          {idx + 1}
-                                      </div>
-                                      <div className="w-0.5 h-3 bg-black"></div>
-                                      
-                                      {/* Tooltip */}
-                                      <div className="absolute bottom-full mb-2 opacity-0 group-hover/pin:opacity-100 transition-opacity whitespace-nowrap z-30">
-                                          <div className="bg-black text-white text-xs font-bold px-3 py-1.5 shadow-lg">
-                                              {act.activity}
-                                          </div>
-                                      </div>
-                                  </div>
-                               );
-                           })}
-                           
-                           {/* Floating Action Button */}
-                           <div className="absolute bottom-5 right-5 z-20">
-                                <Button className="bg-white text-black border-2 border-black hover:bg-gray-50 font-bold text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-10 px-4 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all rounded-none">
-                                    <MapPin className="h-4 w-4 mr-2" />
-                                    Open Full Route
-                                </Button>
-                           </div>
                         </div>
                     </Card>
                  </div>
