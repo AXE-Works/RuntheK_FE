@@ -731,7 +731,7 @@ export default function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-lg mx-auto mb-6 sm:mb-8 bg-gray-100">
+          <TabsList className="w-full max-w-lg mx-auto mb-6 sm:mb-8 bg-gray-100">
             <TabsTrigger value="plan" className="data-[state=active]:bg-white data-[state=active]:text-black text-sm sm:text-base">
               {t('nav.planTrip')}
             </TabsTrigger>
