@@ -3,12 +3,13 @@ import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { motion } from 'motion/react';
-import { Edit2, Eye, Save, X, Users, Star, MapPin, Plus } from 'lucide-react';
+import { Edit2, Eye, Save, X, Users, Star, MapPin, Plus, Loader2, AlertCircle, Calendar, Wallet } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { getRecommendedTrips, RecommendedTripResponse, RecommendedDayResponse } from '../services/tripApi';
 
 // Mock user-generated travel course data
 const USER_GENERATED_COURSES = [
@@ -370,7 +371,7 @@ interface SuggestedBannersProps {
 }
 
 interface BannerData {
-  id: number;
+  id: string;
   title: string;
   subtitle: string;
   image: string;
@@ -380,29 +381,98 @@ interface BannerData {
   highlights: string[];
   category: string;
   isEditable?: boolean;
+  // Additional fields from API
+  startDate?: string | null;
+  budget?: string;
+  cities?: string[];
+  // Mock data schedule (not available from API)
+  detailedSchedule?: any[];
 }
 
 export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
   const [banners, setBanners] = useState<BannerData[]>([]);
-  const [editingBanner, setEditingBanner] = useState<number | null>(null);
+  const [editingBanner, setEditingBanner] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<BannerData>>({});
   const [detailBanner, setDetailBanner] = useState<BannerData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Auto-generate banners from user course data
+  // Helper function to format visitors count
+  const formatVisitors = (count: number): string => {
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M+`;
+    if (count >= 1000) return `${(count / 1000).toFixed(0)}K+`;
+    return String(count);
+  };
+
+  // Fetch recommended trips from API
   useEffect(() => {
-    const generatedBanners = USER_GENERATED_COURSES.map((course, index) => ({
-      id: course.id,
-      title: course.title,
-      subtitle: course.subtitle,
-      image: BANNER_IMAGES[index % BANNER_IMAGES.length],
-      duration: course.duration,
-      visitors: course.visitors,
-      rating: course.rating,
-      highlights: course.highlights,
-      category: course.category,
-      isEditable: true
-    }));
-    setBanners(generatedBanners);
+    const fetchRecommendedTrips = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const apiTrips = await getRecommendedTrips(8);
+
+        if (apiTrips.length > 0) {
+          // Transform API response to BannerData format
+          const apiBanners: BannerData[] = apiTrips.map((trip, index) => ({
+            id: trip.id,
+            title: trip.title,
+            subtitle: trip.subtitle || `Explore Korea's ${trip.category?.toLowerCase() || 'travel'} experiences`,
+            image: trip.image || BANNER_IMAGES[index % BANNER_IMAGES.length],
+            duration: trip.duration,
+            visitors: formatVisitors(trip.visitors || 0),
+            rating: trip.rating || 0,
+            highlights: trip.highlights || [],
+            category: trip.category || 'Cultural',
+            isEditable: false, // API data is not editable
+            startDate: trip.startDate,
+            budget: trip.budget,
+            cities: trip.cities || [],
+            // Map API days to detailedSchedule format
+            detailedSchedule: trip.days?.map((day: RecommendedDayResponse) => ({
+              day: day.day,
+              title: day.title,
+              activities: day.activities.map(act => ({
+                time: act.time || '',
+                name: act.name,
+                description: act.description || ''
+              }))
+            })),
+          }));
+          setBanners(apiBanners);
+        } else {
+          // No data from API, use mock data as fallback
+          console.log('[SuggestedBanners] No API data, using mock data fallback');
+          loadMockData();
+        }
+      } catch (err) {
+        console.error('[SuggestedBanners] Failed to fetch from API, using mock data:', err);
+        setError('Failed to load recommended trips. Showing sample data.');
+        loadMockData();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const loadMockData = () => {
+      const generatedBanners = USER_GENERATED_COURSES.map((course, index) => ({
+        id: String(course.id),
+        title: course.title,
+        subtitle: course.subtitle,
+        image: BANNER_IMAGES[index % BANNER_IMAGES.length],
+        duration: course.duration,
+        visitors: course.visitors,
+        rating: course.rating,
+        highlights: course.highlights,
+        category: course.category,
+        isEditable: true,
+        detailedSchedule: course.detailedSchedule,
+      }));
+      setBanners(generatedBanners);
+    };
+
+    fetchRecommendedTrips();
   }, []);
 
   const handleEditBanner = (banner: BannerData) => {
@@ -439,8 +509,13 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
       onBannerSelect({
         name: banner.title,
         subtitle: banner.subtitle,
+        // Form auto-fill parameters
         recommendedDuration: banner.duration,
-        recommendedInterests: [banner.category.toLowerCase()],
+        recommendedInterests: banner.highlights || [banner.category.toLowerCase()],
+        recommendedCities: banner.cities || [],
+        recommendedBudget: banner.budget || 'mid-range',
+        recommendedStartDate: banner.startDate,
+        // Additional info
         description: banner.subtitle,
         rating: banner.rating,
         visitors: banner.visitors,
@@ -450,10 +525,23 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
   };
 
   const handleBannerDetail = (banner: BannerData) => {
-    // Find the full course data with detailed schedule
-    const fullCourse = USER_GENERATED_COURSES.find(c => c.id === banner.id);
-    setDetailBanner(fullCourse ? { ...banner, detailedSchedule: fullCourse.detailedSchedule } : banner);
+    // For API data, detailedSchedule is not available
+    // For mock data, try to find the full course data with detailed schedule
+    if (banner.detailedSchedule) {
+      setDetailBanner(banner);
+    } else {
+      // Try to find from mock data (for fallback scenario)
+      const fullCourse = USER_GENERATED_COURSES.find(c => String(c.id) === banner.id);
+      setDetailBanner(fullCourse ? { ...banner, detailedSchedule: fullCourse.detailedSchedule } : banner);
+    }
   };
+
+  // Loading skeleton component
+  const BannerSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="bg-gray-200 rounded-lg h-48 w-full" />
+    </div>
+  );
 
   return (
     <motion.section
@@ -470,43 +558,72 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
         </p>
       </div>
 
-      {/* Top Row - 4 Banners */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
-        {banners.slice(0, 4).map((banner, index) => (
-          <BannerCard
-            key={banner.id}
-            banner={banner}
-            index={index}
-            isEditing={editingBanner === banner.id}
-            editForm={editForm}
-            onEdit={handleEditBanner}
-            onSave={handleSaveEdit}
-            onCancel={handleCancelEdit}
-            onClick={handleBannerClick}
-            onFormChange={setEditForm}
-            onDetail={handleBannerDetail}
-          />
-        ))}
-      </div>
+      {/* Error message (if using fallback data) */}
+      {error && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+          <p className="text-xs text-amber-700">{error}</p>
+        </div>
+      )}
 
-      {/* Bottom Row - 4 Banners */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
-        {banners.slice(4, 8).map((banner, index) => (
-          <BannerCard
-            key={banner.id}
-            banner={banner}
-            index={index + 4}
-            isEditing={editingBanner === banner.id}
-            editForm={editForm}
-            onEdit={handleEditBanner}
-            onSave={handleSaveEdit}
-            onCancel={handleCancelEdit}
-            onClick={handleBannerClick}
-            onFormChange={setEditForm}
-            onDetail={handleBannerDetail}
-          />
-        ))}
-      </div>
+      {/* Loading state */}
+      {loading ? (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
+            {[...Array(4)].map((_, i) => <BannerSkeleton key={`skeleton-top-${i}`} />)}
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
+            {[...Array(4)].map((_, i) => <BannerSkeleton key={`skeleton-bottom-${i}`} />)}
+          </div>
+        </>
+      ) : banners.length === 0 ? (
+        // Empty state
+        <div className="text-center py-12 text-gray-500">
+          <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+          <p>No recommended trips available yet.</p>
+          <p className="text-sm mt-1">Check back later for curated travel experiences!</p>
+        </div>
+      ) : (
+        <>
+          {/* Top Row - 4 Banners */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
+            {banners.slice(0, 4).map((banner, index) => (
+              <BannerCard
+                key={banner.id}
+                banner={banner}
+                index={index}
+                isEditing={editingBanner === banner.id}
+                editForm={editForm}
+                onEdit={handleEditBanner}
+                onSave={handleSaveEdit}
+                onCancel={handleCancelEdit}
+                onClick={handleBannerClick}
+                onFormChange={setEditForm}
+                onDetail={handleBannerDetail}
+              />
+            ))}
+          </div>
+
+          {/* Bottom Row - 4 Banners */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
+            {banners.slice(4, 8).map((banner, index) => (
+              <BannerCard
+                key={banner.id}
+                banner={banner}
+                index={index + 4}
+                isEditing={editingBanner === banner.id}
+                editForm={editForm}
+                onEdit={handleEditBanner}
+                onSave={handleSaveEdit}
+                onCancel={handleCancelEdit}
+                onClick={handleBannerClick}
+                onFormChange={setEditForm}
+                onDetail={handleBannerDetail}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Auto-generation Info */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mt-6">
@@ -564,11 +681,9 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-2">Tour Overview</h4>
-                    <p className="text-gray-600 leading-relaxed">
-                      {detailBanner.subtitle} - This carefully curated experience showcases 
-                      the best of what this destination has to offer, combining must-see 
-                      attractions with authentic local experiences.
-                    </p>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                      <p className="text-gray-500 text-sm">TBD - Description coming soon</p>
+                    </div>
                   </div>
 
                   <div>
@@ -586,6 +701,22 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
                           {detailBanner.category}
                         </Badge>
                       </div>
+                      {detailBanner.budget && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">Budget:</span>
+                          <Badge variant="outline" className="border-gray-300 text-gray-700 capitalize">
+                            {detailBanner.budget}
+                          </Badge>
+                        </div>
+                      )}
+                      {detailBanner.startDate && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">Start Date:</span>
+                          <span className="text-gray-900 font-medium">
+                            {new Date(detailBanner.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between">
                         <span className="text-gray-600">Popularity:</span>
                         <span className="text-gray-900 font-medium">{detailBanner.visitors}</span>
@@ -617,18 +748,17 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
 
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-semibold text-gray-900 mb-2">Recommended For</h4>
-                    <p className="text-sm text-gray-600">
-                      This experience is perfect for travelers interested in {detailBanner.category.toLowerCase()} 
-                      activities and cultural immersion. Suitable for all age groups and fitness levels.
+                    <p className="text-gray-500 text-sm text-center">
+                      TBD - Recommendation details coming soon
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* Detailed Schedule Section */}
-              {detailBanner.detailedSchedule && detailBanner.detailedSchedule.length > 0 && (
-                <div className="border-t border-gray-200 pt-6">
-                  <h4 className="font-semibold text-gray-900 mb-4">Detailed Travel Schedule</h4>
+              <div className="border-t border-gray-200 pt-6">
+                <h4 className="font-semibold text-gray-900 mb-4">Detailed Travel Schedule</h4>
+                {detailBanner.detailedSchedule && detailBanner.detailedSchedule.length > 0 ? (
                   <div className="space-y-6">
                     {detailBanner.detailedSchedule.map((daySchedule: any) => (
                       <div key={daySchedule.day} className="bg-gray-50 rounded-lg p-5">
@@ -657,8 +787,19 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  /* TBD message when detailed schedule is not available */
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+                    <Calendar className="h-8 w-8 text-amber-400 mx-auto mb-2" />
+                    <p className="text-amber-800 text-sm font-medium">
+                      Detailed itinerary will be available soon
+                    </p>
+                    <p className="text-amber-600 text-xs mt-1">
+                      TBD - Full day-by-day schedule coming in future update
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 pt-4 border-t border-gray-200">

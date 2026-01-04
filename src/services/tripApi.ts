@@ -514,3 +514,74 @@ export async function removeBookmark(tripId: string): Promise<void> {
     throw new Error(errorData.error?.message || 'Failed to remove bookmark');
   }
 }
+
+// ===== Recommended Trips API (Public) =====
+
+/**
+ * Recommended trip response from BE
+ */
+export interface RecommendedTripResponse {
+  id: string;
+  title: string;
+  subtitle: string;
+  image: string | null;
+  duration: string;
+  visitors: number;
+  rating: number;
+  highlights: string[];
+  category: string;
+  startDate: string | null;
+  budget: string;
+  cities: string[];
+  days?: RecommendedDayResponse[];
+}
+
+/**
+ * Day schedule in recommended trips
+ */
+export interface RecommendedDayResponse {
+  day: number;
+  title: string;
+  activities: RecommendedActivityResponse[];
+}
+
+/**
+ * Activity in recommended trips
+ */
+export interface RecommendedActivityResponse {
+  time: string | null;
+  name: string;
+  description: string | null;
+}
+
+/**
+ * Get recommended trips (public endpoint - no authentication required)
+ *
+ * GET /api/v1/trips/recommended
+ *
+ * @param limit - Number of trips to return (default: 8, max: 20)
+ * @param category - Optional category filter
+ * @returns Array of recommended trips
+ */
+export async function getRecommendedTrips(
+  limit: number = 8,
+  category?: string
+): Promise<RecommendedTripResponse[]> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (category) {
+    params.append('category', category);
+  }
+
+  // Public endpoint - no auth required
+  const response = await fetch(`${API_BASE_URL}/trips/recommended?${params}`);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error('[Trip API] Failed to fetch recommended trips:', errorData);
+    throw new Error(errorData.error?.message || 'Failed to fetch recommended trips');
+  }
+
+  const result = await response.json();
+  console.log('[Trip API] Fetched recommended trips:', result);
+  return result.data ?? [];
+}
