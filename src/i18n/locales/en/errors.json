@@ -31,5 +31,12 @@
     "loadFailed": "Failed to load itinerary",
     "noDestinations": "Please select at least one destination",
     "invalidDates": "Please select valid travel dates"
+  },
+  "boundary": {
+    "title": "Something went wrong",
+    "message": "We're sorry, but something unexpected happened. Please try refreshing the page.",
+    "details": "Error details",
+    "tryAgain": "Try Again",
+    "refresh": "Refresh Page"
   }
 }

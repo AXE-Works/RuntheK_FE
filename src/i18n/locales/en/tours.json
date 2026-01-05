@@ -1,0 +1,25 @@
+{
+  "suggested": {
+    "title": "Suggested tours for South Korea",
+    "description": "These tours give you a starting point for what your trip to South Korea could look like. Treat them as inspiration, as each trip is created uniquely for you."
+  },
+  "activities": {
+    "title": "Suggested activities for South Korea",
+    "description": "Whatever your interests, our specialists can build your ideal trip around the activities you love."
+  },
+  "actions": {
+    "viewTour": "VIEW THIS TOUR",
+    "customize": "Customize This Tour",
+    "bookNow": "Book Now",
+    "saveForLater": "Save for Later"
+  },
+  "labels": {
+    "duration": "Duration",
+    "groupSize": "Group Size",
+    "difficulty": "Difficulty",
+    "price": "Price",
+    "included": "What's Included",
+    "notIncluded": "Not Included",
+    "durationFrom": "{{duration}} from {{price}}"
+  }
+}

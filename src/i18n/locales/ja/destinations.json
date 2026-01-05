@@ -1,0 +1,53 @@
+{
+  "popular": {
+    "title": "人気の目的地",
+    "subtitle": "旅行者が最も愛する目的地を発見。クリックして旅行プランを始めましょう！"
+  },
+  "details": {
+    "tourOverview": "ツアー概要",
+    "quickFacts": "基本情報",
+    "highlights": "主なハイライト",
+    "topHighlights": "主なハイライト",
+    "bestTimeToVisit": "ベストシーズン",
+    "gettingThere": "アクセス",
+    "duration": "期間",
+    "popularity": "人気度",
+    "rating": "評価",
+    "yearlyVisitors": "年間訪問者",
+    "recommendedFor": "おすすめ対象",
+    "recommendedForDesc": "この体験は{{interests}}活動や文化体験に興味のある旅行者に最適です。",
+    "detailedSchedule": "詳細な旅行スケジュール",
+    "day": "{{day}}日目",
+    "more": "+{{count}}件"
+  },
+  "actions": {
+    "viewDetails": "詳細を見る",
+    "viewSchedule": "スケジュールを見る",
+    "applyToForm": "フォームに適用",
+    "applyToMyTripPlan": "旅行プランに適用",
+    "recommended": "おすすめ"
+  },
+  "dialog": {
+    "description": "この目的地の詳細スケジュール、ハイライト、基本情報をご覧ください。"
+  },
+  "seoul": {
+    "tagline": "現代の首都",
+    "description": "韓国のダイナミックな首都で、古代の伝統と最先端の現代性の完璧な融合を体験",
+    "highlights": ["景福宮", "明洞ショッピング", "漢江", "Nソウルタワー", "北村韓屋村"]
+  },
+  "busan": {
+    "tagline": "海岸のパラダイス",
+    "description": "韓国の美しい港町で、素晴らしいビーチ、新鮮な海鮮、活気ある市場を探索",
+    "highlights": ["海雲台ビーチ", "チャガルチ市場", "甘川文化村", "海東龍宮寺"]
+  },
+  "jeju": {
+    "tagline": "夢の島",
+    "description": "韓国の熱帯の楽園で、火山の景観、pristineビーチ、ユニークな文化を発見",
+    "highlights": ["漢拏山", "城山日出峰", "万丈窟", "済州オルレ"]
+  },
+  "gyeongju": {
+    "tagline": "屋根のない博物館",
+    "description": "ユネスコ世界遺産が満載の新羅王国の古都で、過去へタイムスリップ",
+    "highlights": ["仏国寺", "石窟庵", "瞻星台", "大陵苑"]
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "popular": {
+    "title": "热门目的地",
+    "subtitle": "发现旅行者最爱的目的地。点击任意目的地开始规划您的旅行！"
+  },
+  "details": {
+    "tourOverview": "行程概览",
+    "quickFacts": "快速了解",
+    "highlights": "主要亮点",
+    "topHighlights": "主要亮点",
+    "bestTimeToVisit": "最佳旅行时间",
+    "gettingThere": "交通指南",
+    "duration": "时长",
+    "popularity": "热度",
+    "rating": "评分",
+    "yearlyVisitors": "年访客量",
+    "recommendedFor": "推荐人群",
+    "recommendedForDesc": "此体验非常适合对{{interests}}活动和文化沉浸感兴趣的旅行者。",
+    "detailedSchedule": "详细行程安排",
+    "day": "第{{day}}天",
+    "more": "+{{count}}个"
+  },
+  "actions": {
+    "viewDetails": "查看详情",
+    "viewSchedule": "查看行程",
+    "applyToForm": "应用到表单",
+    "applyToMyTripPlan": "应用到我的旅行计划",
+    "recommended": "推荐"
+  },
+  "dialog": {
+    "description": "查看此目的地的详细行程、亮点和快速信息。"
+  },
+  "seoul": {
+    "tagline": "现代化首都",
+    "description": "在韩国充满活力的首都体验古老传统与尖端现代的完美融合",
+    "highlights": ["景福宫", "明洞购物", "汉江", "N首尔塔", "北村韩屋村"]
+  },
+  "busan": {
+    "tagline": "海滨天堂",
+    "description": "在韩国美丽的港口城市探索迷人海滩、新鲜海鲜和热闹市场",
+    "highlights": ["海云台海滩", "札嘎其市场", "甘川文化村", "海东龙宫寺"]
+  },
+  "jeju": {
+    "tagline": "梦幻之岛",
+    "description": "在韩国的热带岛屿天堂探索火山景观、原始海滩和独特文化",
+    "highlights": ["汉拿山", "城山日出峰", "万丈窟", "济州偶来小路"]
+  },
+  "gyeongju": {
+    "tagline": "没有屋顶的博物馆",
+    "description": "在充满联合国教科文组织世界遗产的新罗王国古都穿越时空",
+    "highlights": ["佛国寺", "石窟庵", "瞻星台", "大陵苑"]
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -80,6 +81,7 @@ const STATUS_DISPLAY: Record<string, string> = {
 };
 
 export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthModal, defaultTab, onTabChange }: MyTripProps) {
+  const { t } = useTranslation(['trips', 'common']);
   const [activeTab, setActiveTab] = useState(defaultTab || 'my-trips');
 
   // Sync with defaultTab from parent
@@ -231,13 +233,13 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
         <div className="bg-gray-100 rounded-full p-6 mb-6">
           <User className="h-12 w-12 text-gray-400" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Sign in to view your trips</h3>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('trips:auth.signInRequired')}</h3>
         <p className="text-gray-600 mb-6 max-w-md">
-          Create an account or sign in to manage your travel plans, save favorite destinations, and track your trip history.
+          {t('trips:auth.signInDescription')}
         </p>
         <Button size="lg" className="bg-black text-white hover:bg-gray-800" onClick={onOpenAuthModal}>
           <User className="h-5 w-5 mr-2" />
-          Sign In
+          {t('common:buttons.signIn')}
         </Button>
       </div>
     );
@@ -398,7 +400,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
       <div className="flex items-center justify-between">
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <Badge className="bg-green-600 text-white">Confirmed</Badge>
+            <Badge className="bg-green-600 text-white">{t('trips:status.confirmed')}</Badge>
             <Badge variant="outline" className="border-white/30 text-white">
               {STATUS_DISPLAY[trip.status] || trip.status}
             </Badge>
@@ -434,7 +436,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-right space-y-1">
-            <div className="text-sm text-gray-300">Created</div>
+            <div className="text-sm text-gray-300">{t('trips:labels.created')}</div>
             <div className="font-medium">{new Date(trip.confirmedAt).toLocaleDateString()}</div>
           </div>
           <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
@@ -524,12 +526,12 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                 {displayTrip.confirmed ? (
                   <Button variant="outline" size="sm" onClick={() => handleViewTripDetail(trip)}>
                     <Eye className="h-4 w-4 mr-1" />
-                    View Details
+                    {t('trips:actions.viewDetails')}
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleTripClick(trip); }}>
                     <Eye className="h-4 w-4 mr-1" />
-                    View
+                    {t('trips:actions.view')}
                   </Button>
                 )}
               </div>
@@ -554,17 +556,17 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
       >
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">My Trips</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('trips:header.title')}</h1>
           <p className="text-gray-600 text-[12px]">
-            Manage your travel plans, preferences, and saved destinations
+            {t('trips:header.description')}
           </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto mb-8">
-            <TabsTrigger value="my-trips">My Trips</TabsTrigger>
-            <TabsTrigger value="bookmarks">Bookmarks</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="my-trips">{t('trips:tabs.myTrips')}</TabsTrigger>
+            <TabsTrigger value="bookmarks">{t('trips:tabs.bookmarks')}</TabsTrigger>
+            <TabsTrigger value="profile">{t('trips:tabs.profile')}</TabsTrigger>
           </TabsList>
 
           {/* My Trips Tab - Now first */}
@@ -573,7 +575,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
             {tripsLoading && (
               <div className="flex flex-col items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-4" />
-                <p className="text-gray-600">Loading your trips...</p>
+                <p className="text-gray-600">{t('trips:loading.trips')}</p>
               </div>
             )}
 
@@ -583,11 +585,11 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                 <div className="bg-red-50 rounded-full p-4 mb-4">
                   <AlertCircle className="h-8 w-8 text-red-500" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load trips</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('trips:error.loadFailed')}</h3>
                 <p className="text-gray-600 mb-4">{tripsError}</p>
                 <Button onClick={() => { setTripsFetched(false); fetchTrips(); }} variant="outline">
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Try Again
+                  {t('common:buttons.tryAgain')}
                 </Button>
               </div>
             )}
@@ -600,8 +602,8 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h2 className="text-xl font-semibold text-gray-900">Confirmed Trips</h2>
-                        <p className="text-gray-600">Your finalized travel plans ready for adventure</p>
+                        <h2 className="text-xl font-semibold text-gray-900">{t('trips:sections.confirmed')}</h2>
+                        <p className="text-gray-600">{t('trips:sections.confirmedDesc')}</p>
                       </div>
                     </div>
                     <div className="grid gap-4">
@@ -616,10 +618,10 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">
-                      {confirmedTrips.length > 0 ? 'All Travel Plans' : 'My Travel Plans'}
+                      {confirmedTrips.length > 0 ? t('trips:sections.all') : t('trips:sections.myPlans')}
                     </h2>
                     <p className="text-gray-600">
-                      {confirmedTrips.length > 0 ? 'Complete overview of all your trips' : 'Trips you\'ve created and planned'}
+                      {confirmedTrips.length > 0 ? t('trips:sections.allDesc') : t('trips:sections.myPlansDesc')}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -628,7 +630,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                     </Button>
                     <Button onClick={onCreateNewTrip}>
                       <MapPin className="h-4 w-4 mr-2" />
-                      Create New Trip
+                      {t('trips:actions.createNew')}
                     </Button>
                   </div>
                 </div>
@@ -644,9 +646,9 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                     <div className="bg-gray-100 rounded-full p-6 mb-4 mx-auto w-fit">
                       <MapPin className="h-8 w-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No trips yet</h3>
-                    <p className="text-gray-600 mb-4">Start planning your first Korea adventure!</p>
-                    <Button onClick={onCreateNewTrip}>Plan Your First Trip</Button>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('trips:empty.title')}</h3>
+                    <p className="text-gray-600 mb-4">{t('trips:empty.description')}</p>
+                    <Button onClick={onCreateNewTrip}>{t('trips:actions.planFirst')}</Button>
                   </div>
                 )}
               </>
@@ -659,7 +661,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
             {bookmarksLoading && (
               <div className="flex flex-col items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-4" />
-                <p className="text-gray-600">Loading your bookmarks...</p>
+                <p className="text-gray-600">{t('trips:loading.bookmarks')}</p>
               </div>
             )}
 
@@ -669,11 +671,11 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                 <div className="bg-red-50 rounded-full p-4 mb-4">
                   <AlertCircle className="h-8 w-8 text-red-500" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load bookmarks</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('trips:error.bookmarksFailed')}</h3>
                 <p className="text-gray-600 mb-4">{bookmarksError}</p>
                 <Button onClick={() => { setBookmarksFetched(false); fetchBookmarks(); }} variant="outline">
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Try Again
+                  {t('common:buttons.tryAgain')}
                 </Button>
               </div>
             )}
@@ -683,8 +685,8 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
               <>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Saved Trips</h2>
-                    <p className="text-gray-600">Travel plans you've bookmarked from other users</p>
+                    <h2 className="text-xl font-semibold text-gray-900">{t('trips:sections.saved')}</h2>
+                    <p className="text-gray-600">{t('trips:sections.savedDesc')}</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => { setBookmarksFetched(false); fetchBookmarks(); }}>
                     <RefreshCw className="h-4 w-4" />
@@ -702,11 +704,11 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                     <div className="bg-gray-100 rounded-full p-6 mb-4 mx-auto w-fit">
                       <Bookmark className="h-8 w-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookmarks yet</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('trips:empty.bookmarks')}</h3>
                     <p className="text-gray-600 mb-4">
-                      Discover and save inspiring travel plans from other users
+                      {t('trips:empty.bookmarksDesc')}
                     </p>
-                    <Button variant="outline">Explore Public Trips</Button>
+                    <Button variant="outline">{t('trips:actions.explorePublic')}</Button>
                   </div>
                 )}
               </>
@@ -719,9 +721,9 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Profile Information</CardTitle>
+                    <CardTitle>{t('trips:profile.title')}</CardTitle>
                     <CardDescription className="text-[13px] px-[0px] py-[5px]">
-                      Manage your personal information and travel preferences
+                      {t('trips:profile.description')}
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
@@ -734,7 +736,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                       className="text-[13px]"
                       disabled={profileLoading || profileSaving}
                     >
-                      {isEditing ? 'Cancel' : 'Edit Profile'}
+                      {isEditing ? t('common:buttons.cancel') : t('trips:profile.edit')}
                     </Button>
                   </div>
                 </div>
@@ -759,7 +761,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">{t('trips:profile.fullName')}</Label>
                     <Input
                       id="name"
                       value={isEditing ? (editedUser?.name || '') : (currentUser?.name || '')}
@@ -767,9 +769,9 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                       disabled={!isEditing}
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t('trips:profile.email')}</Label>
                     <Input
                       id="email"
                       type="email"
@@ -778,15 +780,15 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                       disabled={!isEditing}
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="country">Country</Label>
+                    <Label htmlFor="country">{t('trips:profile.country')}</Label>
                     <Select
                       value={isEditing ? (editedUser?.country || '') : (currentUser?.country || '')}
                       onValueChange={(value) => setEditedUser({ ...editedUser, country: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select your country" />
+                        <SelectValue placeholder={t('trips:profile.selectCountry')} />
                       </SelectTrigger>
                       <SelectContent>
                         {countries.map((country) => (
@@ -797,9 +799,9 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label>Phone Number</Label>
+                    <Label>{t('trips:profile.phone')}</Label>
                     <div className="flex gap-2">
                       <Select
                         value={isEditing ? (editedUser?.countryCode || '+1') : (currentUser?.countryCode || '+1')}
@@ -840,7 +842,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                         className="flex-1"
                         value={isEditing ? (editedUser?.phone || '') : (currentUser?.phone || '')}
                         onChange={(e) => setEditedUser({ ...editedUser, phone: e.target.value })}
-                        placeholder="Phone number"
+                        placeholder={t('trips:profile.phonePlaceholder')}
                         disabled={!isEditing}
                       />
                     </div>
@@ -858,7 +860,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                       className="ml-auto text-red-700 hover:text-red-800 hover:bg-red-100"
                       onClick={() => setProfileError(null)}
                     >
-                      Dismiss
+                      {t('common:buttons.dismiss')}
                     </Button>
                   </div>
                 )}
@@ -866,16 +868,16 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                 {isEditing && (
                   <div className="flex justify-end space-x-2">
                     <Button variant="outline" onClick={handleCancelEdit} disabled={profileSaving}>
-                      Cancel
+                      {t('common:buttons.cancel')}
                     </Button>
                     <Button onClick={handleSaveProfile} disabled={profileSaving}>
                       {profileSaving ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Saving...
+                          {t('common:buttons.saving')}
                         </>
                       ) : (
-                        'Save Changes'
+                        t('common:buttons.saveChanges')
                       )}
                     </Button>
                   </div>
@@ -888,13 +890,13 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                     <div className="text-2xl font-bold text-gray-900">
                       {trips.length}
                     </div>
-                    <div className="text-sm text-gray-600 text-[12px]">Trips Created</div>
+                    <div className="text-sm text-gray-600 text-[12px]">{t('trips:profile.stats.tripsCreated')}</div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-2xl font-bold text-gray-900">
                       {bookmarks.length}
                     </div>
-                    <div className="text-sm text-gray-600 text-[12px]">Bookmarks</div>
+                    <div className="text-sm text-gray-600 text-[12px]">{t('trips:profile.stats.bookmarks')}</div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-2xl font-bold text-gray-900">
@@ -902,13 +904,13 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                         ? (trips.reduce((acc, t) => acc + (t.rating || 0), 0) / trips.filter(t => t.rating).length || 0).toFixed(1)
                         : '-'}
                     </div>
-                    <div className="text-sm text-gray-600 text-[12px]">Avg Rating</div>
+                    <div className="text-sm text-gray-600 text-[12px]">{t('trips:profile.stats.avgRating')}</div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-2xl font-bold text-gray-900">
                       {confirmedTrips.length}
                     </div>
-                    <div className="text-sm text-gray-600 text-[12px]">Active Trips</div>
+                    <div className="text-sm text-gray-600 text-[12px]">{t('trips:profile.stats.activeTrips')}</div>
                   </div>
                 </div>
               </CardContent>
@@ -952,28 +954,28 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                     <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                   </div>
                   <div className="text-lg font-bold">{selectedTrip.rating || 'N/A'}</div>
-                  <div className="text-sm text-gray-600">Rating</div>
+                  <div className="text-sm text-gray-600">{t('trips:modal.rating')}</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-center mb-2">
                     <Eye className="h-5 w-5 text-gray-600" />
                   </div>
                   <div className="text-lg font-bold">{selectedTrip.views ?? 'N/A'}</div>
-                  <div className="text-sm text-gray-600">Views</div>
+                  <div className="text-sm text-gray-600">{t('trips:modal.views')}</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-center mb-2">
                     <Heart className="h-5 w-5 text-gray-600" />
                   </div>
                   <div className="text-lg font-bold">{selectedTrip.likes ?? 'N/A'}</div>
-                  <div className="text-sm text-gray-600">Likes</div>
+                  <div className="text-sm text-gray-600">{t('trips:modal.likes')}</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-center mb-2">
                     <Clock className="h-5 w-5 text-gray-600" />
                   </div>
                   <div className="text-lg font-bold">{selectedTrip.confirmedAt ? new Date(selectedTrip.confirmedAt).toLocaleDateString() : '-'}</div>
-                  <div className="text-sm text-gray-600">Created</div>
+                  <div className="text-sm text-gray-600">{t('trips:labels.created')}</div>
                 </div>
               </div>
 
@@ -983,8 +985,8 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                   <div className="flex items-center gap-3">
                     <User className="h-8 w-8 p-2 bg-blue-100 rounded-full" />
                     <div>
-                      <p className="font-medium">Created by {selectedTrip.creator}</p>
-                      <p className="text-sm text-gray-600">From {selectedTrip.creatorCountry}</p>
+                      <p className="font-medium">{t('trips:modal.createdBy', { name: selectedTrip.creator })}</p>
+                      <p className="text-sm text-gray-600">{t('trips:modal.fromCountry', { country: selectedTrip.creatorCountry })}</p>
                     </div>
                   </div>
                 </div>
@@ -993,22 +995,22 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
               {/* Trip Details */}
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-semibold mb-2">Trip Overview</h4>
+                  <h4 className="font-semibold mb-2">{t('trips:modal.tripOverview')}</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-600">Duration:</span>
+                      <span className="text-gray-600">{t('trips:labels.duration')}:</span>
                       <span className="ml-2 font-medium">{selectedTrip.duration}</span>
                     </div>
                     <div>
-                      <span className="text-gray-600">Budget:</span>
+                      <span className="text-gray-600">{t('trips:labels.budget')}:</span>
                       <span className="ml-2 font-medium">{selectedTrip.budget}</span>
                     </div>
                     <div>
-                      <span className="text-gray-600">Cities:</span>
+                      <span className="text-gray-600">{t('trips:labels.cities')}:</span>
                       <span className="ml-2 font-medium">{selectedTrip.cities?.join(', ')}</span>
                     </div>
                     <div>
-                      <span className="text-gray-600">Status:</span>
+                      <span className="text-gray-600">{t('trips:labels.status')}:</span>
                       <span className="ml-2">
                         <Badge variant={selectedTrip.status === '완료' ? 'default' : 'secondary'}>
                           {selectedTrip.status}
@@ -1019,7 +1021,7 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                 </div>
 
                 <div>
-                  <h4 className="font-semibold mb-2">Interests</h4>
+                  <h4 className="font-semibold mb-2">{t('trips:labels.interests')}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedTrip.interests?.map((interest: string) => (
                       <Badge key={interest} variant="outline">
@@ -1031,17 +1033,17 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
 
                 {/* Sample Itinerary Preview */}
                 <div>
-                  <h4 className="font-semibold mb-3">Itinerary</h4>
+                  <h4 className="font-semibold mb-3">{t('trips:itinerary.title')}</h4>
                   <div className="space-y-3">
                     {tripDetailLoading ? (
                       <div className="flex items-center justify-center p-8">
                         <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                        <span className="ml-2 text-gray-500">Loading itinerary...</span>
+                        <span className="ml-2 text-gray-500">{t('trips:loading.itinerary')}</span>
                       </div>
                     ) : selectedTrip.days && selectedTrip.days.length > 0 ? (
                       selectedTrip.days.map((day: { day: number; title: string; activities?: { time: string; activity: string; location?: string }[] }) => (
                         <div key={day.day} className="border border-gray-200 rounded-lg p-4">
-                          <h5 className="font-medium mb-2">Day {day.day} - {day.title || 'Exploring'}</h5>
+                          <h5 className="font-medium mb-2">{t('trips:itinerary.day', { day: day.day })} - {day.title || t('trips:itinerary.exploring')}</h5>
                           <div className="space-y-2 text-sm text-gray-600">
                             {day.activities && day.activities.length > 0 ? (
                               day.activities.map((activity, idx) => (
@@ -1054,14 +1056,14 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                                 </div>
                               ))
                             ) : (
-                              <div className="text-gray-400 italic">No activities scheduled</div>
+                              <div className="text-gray-400 italic">{t('trips:itinerary.noActivities')}</div>
                             )}
                           </div>
                         </div>
                       ))
                     ) : (
                       <div className="text-gray-400 italic p-4 border border-dashed rounded-lg text-center">
-                        No itinerary data available
+                        {t('trips:itinerary.noData')}
                       </div>
                     )}
                   </div>
@@ -1072,23 +1074,23 @@ export function MyTrip({ currentUser, onUpdateUser, onCreateNewTrip, onOpenAuthM
                   {!selectedTrip.creator && selectedTrip.confirmed && (
                     <Button className="flex-1" onClick={() => handleViewTripDetail(selectedTrip)}>
                       <Eye className="h-4 w-4 mr-2" />
-                      View Full Details & Rate
+                      {t('trips:actions.viewFullDetails')}
                     </Button>
                   )}
                   {!selectedTrip.creator && !selectedTrip.confirmed && (
                     <Button className="flex-1">
                       <Edit className="h-4 w-4 mr-2" />
-                      Edit Trip
+                      {t('trips:actions.editTrip')}
                     </Button>
                   )}
                   <Button variant="outline" className="flex-1">
                     <Heart className="h-4 w-4 mr-2" />
-                    {selectedTrip.creator ? 'Save to My Trips' : 'Share Trip'}
+                    {selectedTrip.creator ? t('trips:actions.saveToMyTrips') : t('trips:actions.shareTrip')}
                   </Button>
                   {!selectedTrip.confirmed && (
                     <Button variant="outline">
                       <Eye className="h-4 w-4 mr-2" />
-                      View Full Itinerary
+                      {t('trips:actions.viewFullItinerary')}
                     </Button>
                   )}
                 </div>

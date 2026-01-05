@@ -34,7 +34,15 @@
     "deleteTrip": "여행 삭제",
     "shareTrip": "여행 공유",
     "downloadPdf": "PDF 다운로드",
-    "addToCalendar": "캘린더에 추가"
+    "addToCalendar": "캘린더에 추가",
+    "view": "보기",
+    "viewDetails": "상세 보기",
+    "createNew": "새 여행 만들기",
+    "planFirst": "첫 여행 계획하기",
+    "explorePublic": "공개 여행 둘러보기",
+    "viewFullDetails": "전체 상세 보기 & 평가",
+    "saveToMyTrips": "내 여행에 저장",
+    "viewFullItinerary": "전체 일정 보기"
   },
   "filters": {
     "all": "전체 여행",
@@ -53,6 +61,133 @@
     "tripDeleted": "여행이 삭제되었습니다",
     "tripShared": "여행이 공유되었습니다",
     "confirmDelete": "이 여행을 삭제하시겠습니까?",
-    "cannotUndo": "이 작업은 되돌릴 수 없습니다"
+    "cannotUndo": "이 작업은 되돌릴 수 없습니다",
+    "loading": "여행 정보를 불러오는 중...",
+    "loadFailed": "여행 정보를 불러오는데 실패했습니다"
+  },
+  "auth": {
+    "signInRequired": "여행을 확인하려면 로그인하세요",
+    "signInDescription": "계정을 만들거나 로그인하여 여행 계획을 관리하고, 좋아하는 여행지를 저장하고, 여행 기록을 추적하세요."
+  },
+  "tabs": {
+    "myTrips": "내 여행",
+    "bookmarks": "북마크",
+    "profile": "프로필"
+  },
+  "sections": {
+    "confirmed": "확정된 여행",
+    "confirmedDesc": "모험을 떠날 준비가 된 확정 여행 계획",
+    "all": "전체 여행 계획",
+    "allDesc": "모든 여행의 전체 개요",
+    "myPlans": "내 여행 계획",
+    "myPlansDesc": "직접 만들고 계획한 여행",
+    "saved": "저장된 여행",
+    "savedDesc": "다른 사용자로부터 북마크한 여행 계획"
+  },
+  "empty": {
+    "title": "아직 여행이 없습니다",
+    "description": "첫 번째 한국 여행을 계획해보세요!",
+    "bookmarks": "아직 북마크가 없습니다",
+    "bookmarksDesc": "다른 사용자의 영감 가득한 여행 계획을 발견하고 저장하세요"
+  },
+  "profile": {
+    "title": "프로필 정보",
+    "description": "개인 정보와 여행 환경설정을 관리하세요",
+    "edit": "프로필 수정",
+    "fullName": "이름",
+    "email": "이메일",
+    "country": "국가",
+    "selectCountry": "국가를 선택하세요",
+    "phone": "전화번호",
+    "phonePlaceholder": "전화번호",
+    "phoneNumber": "전화번호",
+    "language": "선호 언어",
+    "notifications": "알림",
+    "stats": {
+      "tripsCreated": "생성한 여행",
+      "bookmarks": "북마크",
+      "avgRating": "평균 평점",
+      "activeTrips": "진행중인 여행"
+    }
+  },
+  "header": {
+    "title": "내 여행",
+    "description": "여행 계획, 환경설정, 저장된 여행지를 관리하세요"
+  },
+  "itinerary": {
+    "title": "일정",
+    "actionPrompt": "이 일정으로 무엇을 하시겠습니까?",
+    "confirmSave": "확정 & 마이페이지에 저장",
+    "confirmSavePrompt": "이 일정을 확정하고 마이페이지에 저장하시겠습니까?",
+    "modifyRegenerate": "수정 & 재생성",
+    "modifyTitle": "일정 수정",
+    "modifyDescription": "일정에 어떤 변경을 원하시는지 설명해주세요.",
+    "additionalRequests": "추가 요청 또는 변경사항",
+    "placeholder": "일정에 변경하거나 추가하고 싶은 내용을 알려주세요. 예시:\n- 더 많은 음식 체험 추가\n- 특정 명소 포함\n- 특정 활동의 예산 수준 변경\n- 접근성 요구사항 추가\n- 특정 관심사에 더 집중",
+    "regenerateNote": "요청사항을 반영하여 일정이 재생성됩니다",
+    "regenerating": "재생성 중...",
+    "regenerateItinerary": "일정 재생성",
+    "day": "{{day}}일차",
+    "exploring": "탐험",
+    "noActivities": "예정된 활동이 없습니다",
+    "noData": "일정 데이터가 없습니다",
+    "tripHighlights": "여행 하이라이트",
+    "highlights": {
+      "cultural": "문화 명소",
+      "culturalDesc": "궁궐, 박물관, 역사 지구",
+      "local": "현지 체험",
+      "localDesc": "정통 음식과 문화 활동",
+      "events": "특별 이벤트",
+      "eventsDesc": "계절 축제 및 프로모션"
+    },
+    "stops": "{{count}}개 장소",
+    "recommendedSpots": "{{count}}개 추천 장소",
+    "openFullRoute": "전체 경로 열기",
+    "transport": {
+      "walk": "도보",
+      "transit": "대중교통",
+      "drive": "차량"
+    },
+    "event": "이벤트",
+    "map": "지도",
+    "info": "정보",
+    "actions": {
+      "email": "일정 이메일로 보내기",
+      "download": "PDF로 다운로드",
+      "share": "친구와 공유"
+    },
+    "contentNotFound": "콘텐츠를 찾을 수 없습니다",
+    "pdfFailed": "PDF 생성에 실패했습니다. 다시 시도해주세요."
+  },
+  "status": {
+    "confirmed": "확정됨",
+    "upcoming": "예정",
+    "ongoing": "진행중",
+    "completed": "완료"
+  },
+  "labels": {
+    "created": "생성일",
+    "duration": "기간",
+    "budget": "예산",
+    "cities": "도시",
+    "status": "상태",
+    "interests": "관심사"
+  },
+  "loading": {
+    "trips": "여행 정보를 불러오는 중...",
+    "bookmarks": "북마크를 불러오는 중...",
+    "itinerary": "일정을 불러오는 중..."
+  },
+  "error": {
+    "loadFailed": "여행을 불러오는데 실패했습니다",
+    "bookmarksFailed": "북마크를 불러오는데 실패했습니다"
+  },
+  "modal": {
+    "rating": "평점",
+    "views": "조회수",
+    "likes": "좋아요",
+    "createdBy": "{{name}}님이 작성",
+    "fromCountry": "{{country}} 출신",
+    "tripOverview": "여행 개요"
   }
 }

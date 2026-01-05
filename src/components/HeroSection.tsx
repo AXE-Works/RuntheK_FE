@@ -29,11 +29,11 @@ const travelIcons = [
   { icon: MapPin, size: 'h-6 w-6', opacity: 0.08 }
 ];
 
-const inspiringQuotes = [
-  "Every journey begins with a single step",
-  "Discover the magic of Korea",
-  "Adventure awaits in the Land of Morning Calm",
-  "Create memories that last a lifetime"
+const inspiringQuoteKeys = [
+  "quotes.journey",
+  "quotes.discover",
+  "quotes.adventure",
+  "quotes.memories"
 ];
 
 export function HeroSection({ onStartPlanning }: HeroSectionProps) {
@@ -71,7 +71,7 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
 
     // Rotate quotes
     const interval = setInterval(() => {
-      setCurrentQuote((prev) => (prev + 1) % inspiringQuotes.length);
+      setCurrentQuote((prev) => (prev + 1) % inspiringQuoteKeys.length);
     }, 4000);
 
     return () => clearInterval(interval);
@@ -124,11 +124,11 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
         >
           <ImageWithFallback
             src={travelIcon1}
-            alt="Travel decoration"
+            alt={t('alt.travelDecoration')}
             className="w-16 h-16 opacity-30"
           />
         </motion.div>
-        
+
         <motion.div
           className="absolute opacity-4"
           style={{ left: '75%', top: '60%' }}
@@ -145,7 +145,7 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
         >
           <ImageWithFallback
             src={travelIcon2}
-            alt="Travel decoration"
+            alt={t('alt.travelDecoration')}
             className="w-20 h-20 opacity-25"
           />
         </motion.div>
@@ -309,10 +309,10 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
           >
             <div className="bg-white p-3 rounded-2xl shadow-xl rotate-[-6deg]">
               <div className="aspect-square rounded-xl overflow-hidden bg-gray-50">
-                <ImageWithFallback 
-                  src="https://images.unsplash.com/photo-1757865579170-8d64d9aab467?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600" 
-                  alt="Travel Suitcase" 
-                  className="w-full h-full object-cover" 
+                <ImageWithFallback
+                  src="https://images.unsplash.com/photo-1757865579170-8d64d9aab467?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600"
+                  alt={t('alt.travelSuitcase')}
+                  className="w-full h-full object-cover"
                 />
               </div>
             </div>
@@ -327,10 +327,10 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
           >
             <div className="bg-white p-3 rounded-2xl shadow-xl rotate-[12deg]">
               <div className="aspect-[4/5] rounded-xl overflow-hidden bg-gray-50">
-                <ImageWithFallback 
-                  src="https://images.unsplash.com/photo-1607253852325-7b7c623a253e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600" 
-                  alt="Korean Pottery" 
-                  className="w-full h-full object-cover" 
+                <ImageWithFallback
+                  src="https://images.unsplash.com/photo-1607253852325-7b7c623a253e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600"
+                  alt={t('alt.koreanPottery')}
+                  className="w-full h-full object-cover"
                 />
               </div>
             </div>
@@ -345,10 +345,10 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
           >
             <div className="bg-white p-4 rounded-2xl shadow-2xl -rotate-6">
               <div className="aspect-video rounded-lg overflow-hidden mb-2">
-                <ImageWithFallback 
-                  src="https://images.unsplash.com/photo-1682648354214-a92f654a0c55?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600" 
-                  alt="Palace" 
-                  className="w-full h-full object-cover" 
+                <ImageWithFallback
+                  src="https://images.unsplash.com/photo-1682648354214-a92f654a0c55?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600"
+                  alt={t('alt.palace')}
+                  className="w-full h-full object-cover"
                 />
               </div>
               <p className="text-sm font-bold text-gray-400 text-center">{t('hero.palaceTour')}</p>
@@ -363,10 +363,10 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
             className="absolute bottom-[10%] right-[5%] md:right-[15%] w-52 md:w-80 z-10"
           >
             <div className="relative">
-               <ImageWithFallback 
-                 src="https://images.unsplash.com/photo-1606687826420-9973a460fa70?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600" 
-                 alt="Bibimbap" 
-                 className="w-full h-full object-contain drop-shadow-2xl" 
+               <ImageWithFallback
+                 src="https://images.unsplash.com/photo-1606687826420-9973a460fa70?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600"
+                 alt={t('alt.bibimbap')}
+                 className="w-full h-full object-contain drop-shadow-2xl"
                />
             </div>
           </motion.div>
@@ -380,10 +380,10 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
           >
              <div className="bg-white p-3 rounded-2xl shadow-xl rotate-6">
               <div className="aspect-square rounded-xl overflow-hidden bg-gray-50">
-                <ImageWithFallback 
-                  src="https://images.unsplash.com/photo-1600566977838-58ca846e9eb2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600" 
-                  alt="Traditional Fan" 
-                  className="w-full h-full object-cover" 
+                <ImageWithFallback
+                  src="https://images.unsplash.com/photo-1600566977838-58ca846e9eb2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600"
+                  alt={t('alt.traditionalFan')}
+                  className="w-full h-full object-cover"
                 />
               </div>
             </div>
@@ -395,10 +395,10 @@ export function HeroSection({ onStartPlanning }: HeroSectionProps) {
             transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 3 }}
             className="absolute top-[8%] left-[45%] w-20 md:w-24 z-0 opacity-80 hidden md:block"
           >
-            <ImageWithFallback 
-              src="https://images.unsplash.com/photo-1700580446340-1bd00129863d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200" 
-              alt="Mask" 
-              className="w-full h-full object-contain drop-shadow-lg" 
+            <ImageWithFallback
+              src="https://images.unsplash.com/photo-1700580446340-1bd00129863d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200"
+              alt={t('alt.mask')}
+              className="w-full h-full object-contain drop-shadow-lg"
             />
           </motion.div>
         </div>

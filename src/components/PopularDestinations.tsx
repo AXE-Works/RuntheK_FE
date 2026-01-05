@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -233,6 +234,7 @@ interface PopularDestinationsProps {
 }
 
 export function PopularDestinations({ onDestinationSelect }: PopularDestinationsProps) {
+  const { t } = useTranslation(['destinations', 'common']);
   const [detailDestination, setDetailDestination] = useState<any>(null);
 
   const handleDestinationClick = (destination: any) => {
@@ -255,9 +257,9 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
     >
       {/* Header */}
       <div className="text-center space-y-2 px-4">
-        <h3 className="text-lg md:text-2xl font-bold text-gray-900">Most Popular Destinations</h3>
+        <h3 className="text-lg md:text-2xl font-bold text-gray-900">{t('destinations:popular.title')}</h3>
         <p className="text-xs md:text-base text-gray-600 max-w-2xl mx-auto">
-          Discover the places that travelers love most. Click any destination to start planning your trip there!
+          {t('destinations:popular.subtitle')}
         </p>
       </div>
 
@@ -293,7 +295,7 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
                 onClick={(e) => handleShowDetails(SEOUL_DESTINATION, e)}
               >
                 <Eye className="h-3 w-3 md:h-4 md:w-4 text-white md:mr-2" />
-                <span className="hidden md:inline text-white text-sm">View Details</span>
+                <span className="hidden md:inline text-white text-sm">{t('destinations:actions.viewDetails')}</span>
               </Button>
             </div>
             
@@ -328,7 +330,7 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
 
                 {/* Buttons */}
                 <div className="flex flex-col md:flex-row items-stretch md:items-center gap-1.5 md:gap-3">
-                  <Button 
+                  <Button
                     className="bg-white text-gray-900 hover:bg-gray-100 group/btn"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -336,14 +338,14 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
                     }}
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Apply to Form
+                    {t('destinations:actions.applyToForm')}
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline"
                     className="border-white/40 text-white bg-white/10 hover:bg-white/20"
                     onClick={(e) => handleShowDetails(SEOUL_DESTINATION, e)}
                   >
-                    View Schedule
+                    {t('destinations:actions.viewSchedule')}
                   </Button>
                 </div>
               </div>
@@ -401,7 +403,7 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
                   </div>
 
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs opacity-75">Recommended: {destination.recommendedDuration}</span>
+                    <span className="text-xs opacity-75">{t('destinations:actions.recommended')}: {destination.recommendedDuration}</span>
                   </div>
 
                   {/* Apply to Form Button */}
@@ -414,14 +416,14 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
                     }}
                   >
                     <Plus className="h-2.5 w-2.5 mr-1" />
-                    Apply to Form
+                    {t('destinations:actions.applyToForm')}
                   </Button>
                 </div>
               </div>
               
               <CardContent className="p-4">
                 <div className="space-y-3">
-                  <h5 className="font-medium text-gray-900">Top Highlights</h5>
+                  <h5 className="font-medium text-gray-900">{t('destinations:details.topHighlights')}</h5>
                   <div className="flex flex-wrap gap-1">
                     {destination.highlights.slice(0, 2).map((highlight, idx) => (
                       <Badge key={idx} variant="outline" className="text-xs border-gray-300 text-gray-600">
@@ -430,7 +432,7 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
                     ))}
                     {destination.highlights.length > 2 && (
                       <Badge variant="outline" className="text-xs border-gray-300 text-gray-600">
-                        +{destination.highlights.length - 2} more
+                        {t('destinations:details.more', { count: destination.highlights.length - 2 })}
                       </Badge>
                     )}
                   </div>
@@ -448,7 +450,7 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold">{detailDestination.name} - {detailDestination.subtitle}</DialogTitle>
               <DialogDescription>
-                View detailed travel schedule, highlights, and quick facts about this destination.
+                {t('destinations:dialog.description')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6">
@@ -469,7 +471,7 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
                     </div>
                     <div className="flex items-center space-x-1">
                       <Users className="h-4 w-4" />
-                      <span>{detailDestination.visitors} yearly visitors</span>
+                      <span>{detailDestination.visitors} {t('destinations:details.yearlyVisitors')}</span>
                     </div>
                   </div>
                 </div>
@@ -480,27 +482,27 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
                 {/* Left Column */}
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Tour Overview</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">{t('destinations:details.tourOverview')}</h4>
                     <p className="text-gray-600 leading-relaxed">
                       {detailDestination.description}
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Quick Facts</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">{t('destinations:details.quickFacts')}</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Duration:</span>
+                        <span className="text-gray-600">{t('destinations:details.duration')}:</span>
                         <Badge variant="outline" className="border-gray-300 text-gray-700">
                           {detailDestination.recommendedDuration}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Popularity:</span>
+                        <span className="text-gray-600">{t('destinations:details.popularity')}:</span>
                         <span className="text-gray-900 font-medium">{detailDestination.visitors}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Rating:</span>
+                        <span className="text-gray-600">{t('destinations:details.rating')}:</span>
                         <div className="flex items-center space-x-1">
                           <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                           <span className="text-gray-900 font-medium">{detailDestination.rating}/5</span>
@@ -513,7 +515,7 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
                 {/* Right Column */}
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Top Highlights</h4>
+                    <h4 className="font-semibold text-gray-900 mb-3">{t('destinations:details.topHighlights')}</h4>
                     <ul className="space-y-2">
                       {detailDestination.highlights.map((highlight: string, index: number) => (
                         <li key={index} className="flex items-start text-sm text-gray-700">
@@ -525,10 +527,9 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
                   </div>
 
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-900 mb-2">Recommended For</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">{t('destinations:details.recommendedFor')}</h4>
                     <p className="text-sm text-gray-600">
-                      This experience is perfect for travelers interested in{' '}
-                      {detailDestination.recommendedInterests.join(', ')} activities and cultural immersion.
+                      {t('destinations:details.recommendedForDesc', { interests: detailDestination.recommendedInterests.join(', ') })}
                     </p>
                   </div>
                 </div>
@@ -537,7 +538,7 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
               {/* Detailed Schedule Section */}
               {detailDestination.detailedSchedule && detailDestination.detailedSchedule.length > 0 && (
                 <div className="border-t border-gray-200 pt-6">
-                  <h4 className="font-semibold text-gray-900 mb-4">Detailed Travel Schedule</h4>
+                  <h4 className="font-semibold text-gray-900 mb-4">{t('destinations:details.detailedSchedule')}</h4>
                   <div className="space-y-6">
                     {detailDestination.detailedSchedule.map((daySchedule: any) => (
                       <div key={daySchedule.day} className="bg-gray-50 rounded-lg p-5">
@@ -546,7 +547,7 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
                             {daySchedule.day}
                           </div>
                           <div>
-                            <h5 className="font-semibold text-gray-900">Day {daySchedule.day}</h5>
+                            <h5 className="font-semibold text-gray-900">{t('destinations:details.day', { day: daySchedule.day })}</h5>
                             <p className="text-sm text-gray-600">{daySchedule.title}</p>
                           </div>
                         </div>
@@ -579,13 +580,13 @@ export function PopularDestinations({ onDestinationSelect }: PopularDestinations
                   }}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Apply to My Trip Plan
+                  {t('destinations:actions.applyToMyTripPlan')}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setDetailDestination(null)}
                 >
-                  Close
+                  {t('common:buttons.close')}
                 </Button>
               </div>
             </div>

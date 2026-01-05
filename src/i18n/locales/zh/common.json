@@ -33,7 +33,12 @@
     "viewDetails": "查看详情",
     "generateItinerary": "生成行程",
     "saveTrip": "保存旅行",
-    "shareTrip": "分享旅行"
+    "shareTrip": "分享旅行",
+    "signIn": "登录",
+    "tryAgain": "重试",
+    "dismiss": "关闭",
+    "saving": "保存中...",
+    "saveChanges": "保存更改"
   },
   "tabs": {
     "overview": "概览",
@@ -87,5 +92,33 @@
     "walking": "步行",
     "transit": "公共交通",
     "driving": "驾车"
+  },
+  "footer": {
+    "poweredByAI": "AI驱动",
+    "realTimeUpdates": "实时更新",
+    "support": "全天候支持",
+    "copyright": "© 2024 Korea Travel AI v3.0.0",
+    "tagline": "帮助您发现韩国之美"
+  },
+  "stats": {
+    "travelersHelped": "已帮助{{count}}位旅行者"
+  },
+  "quotes": {
+    "journey": "千里之行，始于足下",
+    "discover": "发现韩国的魅力",
+    "adventure": "在晨静之国，冒险等待着您",
+    "memories": "创造永恒的回忆"
+  },
+  "alt": {
+    "travelDecoration": "旅行装饰",
+    "travelSuitcase": "旅行箱",
+    "koreanPottery": "韩国陶器",
+    "palace": "宫殿",
+    "bibimbap": "石锅拌饭",
+    "traditionalFan": "传统扇子",
+    "mask": "面具"
+  },
+  "loading": {
+    "tests": "正在运行测试..."
   }
 }

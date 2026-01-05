@@ -31,5 +31,12 @@
     "loadFailed": "일정 불러오기에 실패했습니다",
     "noDestinations": "최소 하나의 여행지를 선택하세요",
     "invalidDates": "올바른 여행 날짜를 선택하세요"
+  },
+  "boundary": {
+    "title": "문제가 발생했습니다",
+    "message": "죄송합니다. 예상치 못한 오류가 발생했습니다. 페이지를 새로고침 해주세요.",
+    "details": "오류 상세",
+    "tryAgain": "다시 시도",
+    "refresh": "페이지 새로고침"
   }
 }

@@ -1,0 +1,25 @@
+{
+  "suggested": {
+    "title": "추천 한국 투어",
+    "description": "이 투어들은 한국 여행이 어떤 모습일 수 있는지 시작점을 제공합니다. 각 여행은 당신만을 위해 맞춤 제작되므로 영감으로 활용하세요."
+  },
+  "activities": {
+    "title": "추천 한국 액티비티",
+    "description": "어떤 관심사든, 저희 전문가가 당신이 좋아하는 활동을 중심으로 이상적인 여행을 설계합니다."
+  },
+  "actions": {
+    "viewTour": "투어 보기",
+    "customize": "이 투어 맞춤화",
+    "bookNow": "지금 예약",
+    "saveForLater": "나중을 위해 저장"
+  },
+  "labels": {
+    "duration": "소요 시간",
+    "groupSize": "그룹 규모",
+    "difficulty": "난이도",
+    "price": "가격",
+    "included": "포함 사항",
+    "notIncluded": "불포함 사항",
+    "durationFrom": "{{duration}} / {{price}}부터"
+  }
+}

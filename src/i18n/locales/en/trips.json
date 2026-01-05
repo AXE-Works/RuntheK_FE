@@ -34,7 +34,15 @@
     "deleteTrip": "Delete Trip",
     "shareTrip": "Share Trip",
     "downloadPdf": "Download PDF",
-    "addToCalendar": "Add to Calendar"
+    "addToCalendar": "Add to Calendar",
+    "view": "View",
+    "viewDetails": "View Details",
+    "createNew": "Create New Trip",
+    "planFirst": "Plan Your First Trip",
+    "explorePublic": "Explore Public Trips",
+    "viewFullDetails": "View Full Details & Rate",
+    "saveToMyTrips": "Save to My Trips",
+    "viewFullItinerary": "View Full Itinerary"
   },
   "filters": {
     "all": "All Trips",
@@ -53,6 +61,133 @@
     "tripDeleted": "Trip deleted",
     "tripShared": "Trip shared successfully",
     "confirmDelete": "Are you sure you want to delete this trip?",
-    "cannotUndo": "This action cannot be undone"
+    "cannotUndo": "This action cannot be undone",
+    "loading": "Loading your trips...",
+    "loadFailed": "Failed to load trips"
+  },
+  "auth": {
+    "signInRequired": "Sign in to view your trips",
+    "signInDescription": "Create an account or sign in to manage your travel plans, save favorite destinations, and track your trip history."
+  },
+  "tabs": {
+    "myTrips": "My Trips",
+    "bookmarks": "Bookmarks",
+    "profile": "Profile"
+  },
+  "sections": {
+    "confirmed": "Confirmed Trips",
+    "confirmedDesc": "Your finalized travel plans ready for adventure",
+    "all": "All Travel Plans",
+    "allDesc": "Complete overview of all your trips",
+    "myPlans": "My Travel Plans",
+    "myPlansDesc": "Trips you've created and planned",
+    "saved": "Saved Trips",
+    "savedDesc": "Travel plans you've bookmarked from other users"
+  },
+  "empty": {
+    "title": "No trips yet",
+    "description": "Start planning your first Korea adventure!",
+    "bookmarks": "No bookmarks yet",
+    "bookmarksDesc": "Discover and save inspiring travel plans from other users"
+  },
+  "profile": {
+    "title": "Profile Information",
+    "description": "Manage your personal information and travel preferences",
+    "edit": "Edit Profile",
+    "fullName": "Full Name",
+    "email": "Email",
+    "country": "Country",
+    "selectCountry": "Select your country",
+    "phone": "Phone Number",
+    "phonePlaceholder": "Phone number",
+    "phoneNumber": "Phone Number",
+    "language": "Preferred Language",
+    "notifications": "Notifications",
+    "stats": {
+      "tripsCreated": "Trips Created",
+      "bookmarks": "Bookmarks",
+      "avgRating": "Avg Rating",
+      "activeTrips": "Active Trips"
+    }
+  },
+  "header": {
+    "title": "My Trips",
+    "description": "Manage your travel plans, preferences, and saved destinations"
+  },
+  "itinerary": {
+    "title": "Itinerary",
+    "actionPrompt": "What would you like to do with this itinerary?",
+    "confirmSave": "Confirm & Save to My Page",
+    "confirmSavePrompt": "Are you sure you want to confirm this itinerary and save it to My Page?",
+    "modifyRegenerate": "Modify & Regenerate",
+    "modifyTitle": "Modify Your Itinerary",
+    "modifyDescription": "Please describe what changes you would like to make to your itinerary.",
+    "additionalRequests": "Additional requests or changes",
+    "placeholder": "Tell us what you'd like to change or add to your itinerary. For example:\n- Add more food experiences\n- Include specific attractions\n- Change budget level for certain activities\n- Add accessibility requirements\n- Focus more on certain interests",
+    "regenerateNote": "This will regenerate your itinerary with your requests",
+    "regenerating": "Regenerating...",
+    "regenerateItinerary": "Regenerate Itinerary",
+    "day": "Day {{day}}",
+    "exploring": "Exploring",
+    "noActivities": "No activities scheduled",
+    "noData": "No itinerary data available",
+    "tripHighlights": "Trip Highlights",
+    "highlights": {
+      "cultural": "Cultural Sites",
+      "culturalDesc": "Palaces, museums, and historic districts",
+      "local": "Local Experiences",
+      "localDesc": "Authentic food and cultural activities",
+      "events": "Special Events",
+      "eventsDesc": "Seasonal festivals and promotions"
+    },
+    "stops": "{{count}} Stops",
+    "recommendedSpots": "{{count}} Recommended Spots",
+    "openFullRoute": "Open Full Route",
+    "transport": {
+      "walk": "Walk",
+      "transit": "Transit",
+      "drive": "Drive"
+    },
+    "event": "EVENT",
+    "map": "Map",
+    "info": "Info",
+    "actions": {
+      "email": "Email Itinerary",
+      "download": "Download as PDF",
+      "share": "Share with Friends"
+    },
+    "contentNotFound": "Content not found",
+    "pdfFailed": "Failed to generate PDF. Please try again."
+  },
+  "status": {
+    "confirmed": "Confirmed",
+    "upcoming": "Upcoming",
+    "ongoing": "In Progress",
+    "completed": "Completed"
+  },
+  "labels": {
+    "created": "Created",
+    "duration": "Duration",
+    "budget": "Budget",
+    "cities": "Cities",
+    "status": "Status",
+    "interests": "Interests"
+  },
+  "loading": {
+    "trips": "Loading your trips...",
+    "bookmarks": "Loading your bookmarks...",
+    "itinerary": "Loading itinerary..."
+  },
+  "error": {
+    "loadFailed": "Failed to load trips",
+    "bookmarksFailed": "Failed to load bookmarks"
+  },
+  "modal": {
+    "rating": "Rating",
+    "views": "Views",
+    "likes": "Likes",
+    "createdBy": "Created by {{name}}",
+    "fromCountry": "From {{country}}",
+    "tripOverview": "Trip Overview"
   }
 }

@@ -1,0 +1,25 @@
+{
+  "suggested": {
+    "title": "おすすめ韓国ツアー",
+    "description": "これらのツアーは韓国旅行のイメージを提供します。各旅行はあなただけのために作られるので、インスピレーションとしてご活用ください。"
+  },
+  "activities": {
+    "title": "おすすめ韓国アクティビティ",
+    "description": "どんな興味でも、私たちのスペシャリストがあなたの好きなアクティビティを中心に理想の旅を設計します。"
+  },
+  "actions": {
+    "viewTour": "ツアーを見る",
+    "customize": "このツアーをカスタマイズ",
+    "bookNow": "今すぐ予約",
+    "saveForLater": "後で保存"
+  },
+  "labels": {
+    "duration": "所要時間",
+    "groupSize": "グループサイズ",
+    "difficulty": "難易度",
+    "price": "価格",
+    "included": "含まれるもの",
+    "notIncluded": "含まれないもの",
+    "durationFrom": "{{duration}} / {{price}}から"
+  }
+}

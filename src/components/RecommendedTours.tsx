@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -80,6 +81,7 @@ const RECOMMENDED_ACTIVITIES = [
 ];
 
 export function RecommendedTours() {
+  const { t } = useTranslation(['tours']);
   const [selectedTour, setSelectedTour] = useState<any>(null);
   const [showTourDetail, setShowTourDetail] = useState(false);
 
@@ -98,10 +100,9 @@ export function RecommendedTours() {
         className="space-y-6"
       >
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900">Suggested tours for South Korea</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('tours:suggested.title')}</h2>
           <p className="text-gray-600 max-w-3xl mx-auto">
-            These tours give you a starting point for what your holiday to South Korea could entail. 
-            Treat them as inspiration, as each trip is created uniquely for you.
+            {t('tours:suggested.description')}
           </p>
         </div>
 
@@ -129,17 +130,17 @@ export function RecommendedTours() {
                     
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2 text-sm">
-                        <span>{tour.duration} from {tour.price}</span>
+                        <span>{t('tours:labels.durationFrom', { duration: tour.duration, price: tour.price })}</span>
                       </div>
                     </div>
-                    
+
                     {/* View This Tour Button */}
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={() => handleViewTour(tour)}
                       className="w-full bg-white/90 backdrop-blur-sm text-black hover:bg-white transition-all duration-300 font-medium"
                     >
-                      VIEW THIS TOUR
+                      {t('tours:actions.viewTour')}
                     </Button>
                   </div>
                 </div>
@@ -157,9 +158,9 @@ export function RecommendedTours() {
         className="space-y-6"
       >
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900">Suggested activities for South Korea</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('tours:activities.title')}</h2>
           <p className="text-gray-600 max-w-3xl mx-auto">
-            Whatever your interests, our specialists will build activities into your trip that connect to how you want to experience South Korea.
+            {t('tours:activities.description')}
           </p>
         </div>
 

@@ -1,0 +1,25 @@
+{
+  "suggested": {
+    "title": "推荐韩国之旅",
+    "description": "这些行程为您的韩国之旅提供起点。每次旅行都是为您量身定制的，请将其作为灵感参考。"
+  },
+  "activities": {
+    "title": "推荐韩国活动",
+    "description": "无论您的兴趣是什么，我们的专家都能围绕您喜爱的活动打造理想行程。"
+  },
+  "actions": {
+    "viewTour": "查看行程",
+    "customize": "定制此行程",
+    "bookNow": "立即预订",
+    "saveForLater": "稍后保存"
+  },
+  "labels": {
+    "duration": "时长",
+    "groupSize": "团队规模",
+    "difficulty": "难度",
+    "price": "价格",
+    "included": "包含项目",
+    "notIncluded": "不包含项目",
+    "durationFrom": "{{duration}} / 起价{{price}}"
+  }
+}

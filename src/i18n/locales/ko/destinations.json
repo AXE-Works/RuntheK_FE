@@ -1,0 +1,53 @@
+{
+  "popular": {
+    "title": "인기 여행지",
+    "subtitle": "여행자들이 가장 사랑하는 여행지를 발견하세요. 원하는 여행지를 클릭하여 여행 계획을 시작하세요!"
+  },
+  "details": {
+    "tourOverview": "투어 개요",
+    "quickFacts": "빠른 정보",
+    "highlights": "주요 하이라이트",
+    "topHighlights": "주요 하이라이트",
+    "bestTimeToVisit": "방문 최적 시기",
+    "gettingThere": "교통편",
+    "duration": "기간",
+    "popularity": "인기도",
+    "rating": "평점",
+    "yearlyVisitors": "연간 방문객",
+    "recommendedFor": "추천 대상",
+    "recommendedForDesc": "이 경험은 {{interests}} 활동과 문화 체험에 관심 있는 여행자에게 완벽합니다.",
+    "detailedSchedule": "상세 여행 일정",
+    "day": "{{day}}일차",
+    "more": "+{{count}}개 더"
+  },
+  "actions": {
+    "viewDetails": "상세 보기",
+    "viewSchedule": "일정 보기",
+    "applyToForm": "폼에 적용",
+    "applyToMyTripPlan": "내 여행 계획에 적용",
+    "recommended": "추천"
+  },
+  "dialog": {
+    "description": "이 여행지의 상세 일정, 하이라이트, 빠른 정보를 확인하세요."
+  },
+  "seoul": {
+    "tagline": "현대적인 수도",
+    "description": "대한민국의 역동적인 수도에서 고대 전통과 최첨단 현대성의 완벽한 조화를 경험하세요",
+    "highlights": ["경복궁", "명동 쇼핑", "한강", "N서울타워", "북촌 한옥마을"]
+  },
+  "busan": {
+    "tagline": "해안의 낙원",
+    "description": "한국의 아름다운 항구 도시에서 멋진 해변, 신선한 해산물, 활기찬 시장을 탐험하세요",
+    "highlights": ["해운대 해수욕장", "자갈치 시장", "감천문화마을", "해동용궁사"]
+  },
+  "jeju": {
+    "tagline": "꿈의 섬",
+    "description": "한국의 열대 섬 낙원에서 화산 지형, 깨끗한 해변, 독특한 문화를 발견하세요",
+    "highlights": ["한라산", "성산일출봉", "만장굴", "제주올레길"]
+  },
+  "gyeongju": {
+    "tagline": "지붕 없는 박물관",
+    "description": "유네스코 세계문화유산이 가득한 신라 왕국의 고대 수도에서 과거로의 여행을 떠나세요",
+    "highlights": ["불국사", "석굴암", "첨성대", "대릉원"]
+  }
+}

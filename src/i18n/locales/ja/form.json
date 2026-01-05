@@ -22,12 +22,20 @@
     "additionalNotes": "追加リクエスト",
     "selectDestinations": "目的地を選択",
     "selectInterests": "興味を選択",
-    "selectBudget": "予算レベルを選択"
+    "selectBudget": "予算レベルを選択",
+    "pickDate": "日付を選択",
+    "interestedCities": "興味のある都市",
+    "selectDuration": "旅行期間を選択",
+    "seasonalEventsHint": "選択した日程に合わせて季節イベントをおすすめします。"
   },
   "placeholders": {
     "searchDestination": "目的地を検索...",
-    "additionalNotes": "特別なリクエスト、食事制限、好みなど...",
+    "additionalNotes": "特別なリクエスト、食事制限、バリアフリー対応、特別な興味など（例：ベジタリアン対応、車椅子アクセス可能な場所、フォトスポットなど）",
     "selectDate": "日付を選択"
+  },
+  "cities": {
+    "selected": "{{count}}都市選択済み",
+    "selectHint": "都市を選択するか、空欄のまま全てのおすすめを受け取る"
   },
   "interests": {
     "food": "グルメ",
@@ -75,5 +83,38 @@
     "buttonDestination": "{{destination}}プランを作成",
     "generating": "完璧な韓国旅行を作成中...",
     "generatingDestination": "{{destination}}の旅を作成中..."
+  },
+  "hero": {
+    "title": "次の冒険を見つけよう",
+    "subtitle": "あなたの物語はどこから始まる？"
+  },
+  "sections": {
+    "basicInfo": "基本情報",
+    "basicInfoOptional": "任意",
+    "yourInterests": "興味",
+    "budgetRange": "予算範囲",
+    "additionalNotes": "追加リクエスト",
+    "tellUsMore": "好みを教えてください"
+  },
+  "notes": {
+    "hint": "よりパーソナライズされた旅程作成に役立ちます"
+  },
+  "interestsList": {
+    "culture": "文化・歴史",
+    "food": "韓国料理",
+    "shopping": "ショッピング",
+    "nature": "自然・ハイキング",
+    "kculture": "K-POP・エンタメ",
+    "nightlife": "ナイトライフ",
+    "temples": "寺院・スピリチュアル",
+    "traditional": "伝統芸術"
+  },
+  "budgetOptions": {
+    "budgetLabel": "格安 (1日5,000〜10,000円)",
+    "budgetDesc": "ゲストハウス、屋台、公共交通",
+    "midRangeLabel": "中級 (1日10,000〜20,000円)",
+    "midRangeDesc": "ホテル、レストラン、一部体験",
+    "luxuryLabel": "ラグジュアリー (1日20,000円以上)",
+    "luxuryDesc": "高級ホテル、高級レストラン、プライベートツアー"
   }
 }

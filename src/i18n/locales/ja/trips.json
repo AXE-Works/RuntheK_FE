@@ -34,7 +34,15 @@
     "deleteTrip": "旅行を削除",
     "shareTrip": "旅行を共有",
     "downloadPdf": "PDFをダウンロード",
-    "addToCalendar": "カレンダーに追加"
+    "addToCalendar": "カレンダーに追加",
+    "view": "見る",
+    "viewDetails": "詳細を見る",
+    "createNew": "新しい旅行を作成",
+    "planFirst": "最初の旅行を計画",
+    "explorePublic": "公開旅行を探索",
+    "viewFullDetails": "詳細を見る & 評価",
+    "saveToMyTrips": "マイトリップに保存",
+    "viewFullItinerary": "全日程を見る"
   },
   "filters": {
     "all": "すべての旅行",
@@ -53,6 +61,133 @@
     "tripDeleted": "旅行が削除されました",
     "tripShared": "旅行が共有されました",
     "confirmDelete": "この旅行を削除しますか？",
-    "cannotUndo": "この操作は取り消せません"
+    "cannotUndo": "この操作は取り消せません",
+    "loading": "旅行を読み込み中...",
+    "loadFailed": "旅行の読み込みに失敗しました"
+  },
+  "auth": {
+    "signInRequired": "旅行を見るにはログインしてください",
+    "signInDescription": "アカウントを作成またはログインして、旅行プランを管理し、お気に入りの目的地を保存し、旅行履歴を追跡しましょう。"
+  },
+  "tabs": {
+    "myTrips": "マイトリップ",
+    "bookmarks": "ブックマーク",
+    "profile": "プロフィール"
+  },
+  "sections": {
+    "confirmed": "確定した旅行",
+    "confirmedDesc": "冒険の準備が整った確定旅行プラン",
+    "all": "すべての旅行プラン",
+    "allDesc": "すべての旅行の概要",
+    "myPlans": "マイ旅行プラン",
+    "myPlansDesc": "作成・計画した旅行",
+    "saved": "保存した旅行",
+    "savedDesc": "他のユーザーからブックマークした旅行プラン"
+  },
+  "empty": {
+    "title": "まだ旅行がありません",
+    "description": "初めての韓国旅行を計画しましょう！",
+    "bookmarks": "まだブックマークがありません",
+    "bookmarksDesc": "他のユーザーの素敵な旅行プランを発見して保存しよう"
+  },
+  "profile": {
+    "title": "プロフィール情報",
+    "description": "個人情報と旅行設定を管理",
+    "edit": "プロフィールを編集",
+    "fullName": "氏名",
+    "email": "メールアドレス",
+    "country": "国",
+    "selectCountry": "国を選択",
+    "phone": "電話番号",
+    "phonePlaceholder": "電話番号",
+    "phoneNumber": "電話番号",
+    "language": "言語設定",
+    "notifications": "通知",
+    "stats": {
+      "tripsCreated": "作成した旅行",
+      "bookmarks": "ブックマーク",
+      "avgRating": "平均評価",
+      "activeTrips": "進行中の旅行"
+    }
+  },
+  "header": {
+    "title": "マイトリップ",
+    "description": "旅行プラン、設定、保存した目的地を管理"
+  },
+  "itinerary": {
+    "title": "日程",
+    "actionPrompt": "この日程をどうしますか？",
+    "confirmSave": "確定してマイページに保存",
+    "confirmSavePrompt": "この日程を確定してマイページに保存しますか？",
+    "modifyRegenerate": "修正して再生成",
+    "modifyTitle": "日程を修正",
+    "modifyDescription": "日程にどのような変更を希望するか説明してください。",
+    "additionalRequests": "追加リクエストまたは変更",
+    "placeholder": "日程に変更または追加したい内容をお知らせください。例：\n- グルメ体験を増やす\n- 特定の観光スポットを含める\n- 特定のアクティビティの予算レベルを変更\n- バリアフリー要件を追加\n- 特定の興味に焦点を当てる",
+    "regenerateNote": "リクエストを反映して日程が再生成されます",
+    "regenerating": "再生成中...",
+    "regenerateItinerary": "日程を再生成",
+    "day": "{{day}}日目",
+    "exploring": "探索",
+    "noActivities": "予定されているアクティビティはありません",
+    "noData": "日程データがありません",
+    "tripHighlights": "旅のハイライト",
+    "highlights": {
+      "cultural": "文化スポット",
+      "culturalDesc": "宮殿、博物館、歴史地区",
+      "local": "現地体験",
+      "localDesc": "本格的な料理と文化活動",
+      "events": "特別イベント",
+      "eventsDesc": "季節の祭りやプロモーション"
+    },
+    "stops": "{{count}}か所",
+    "recommendedSpots": "{{count}}か所のおすすめスポット",
+    "openFullRoute": "全ルートを開く",
+    "transport": {
+      "walk": "徒歩",
+      "transit": "公共交通",
+      "drive": "車"
+    },
+    "event": "イベント",
+    "map": "地図",
+    "info": "情報",
+    "actions": {
+      "email": "日程をメールで送信",
+      "download": "PDFでダウンロード",
+      "share": "友達と共有"
+    },
+    "contentNotFound": "コンテンツが見つかりません",
+    "pdfFailed": "PDF生成に失敗しました。もう一度お試しください。"
+  },
+  "status": {
+    "confirmed": "確定済み",
+    "upcoming": "今後",
+    "ongoing": "進行中",
+    "completed": "完了"
+  },
+  "labels": {
+    "created": "作成日",
+    "duration": "期間",
+    "budget": "予算",
+    "cities": "都市",
+    "status": "ステータス",
+    "interests": "興味"
+  },
+  "loading": {
+    "trips": "旅行を読み込み中...",
+    "bookmarks": "ブックマークを読み込み中...",
+    "itinerary": "日程を読み込み中..."
+  },
+  "error": {
+    "loadFailed": "旅行の読み込みに失敗しました",
+    "bookmarksFailed": "ブックマークの読み込みに失敗しました"
+  },
+  "modal": {
+    "rating": "評価",
+    "views": "閲覧数",
+    "likes": "いいね",
+    "createdBy": "{{name}}さんが作成",
+    "fromCountry": "{{country}}出身",
+    "tripOverview": "旅行概要"
   }
 }

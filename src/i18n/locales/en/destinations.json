@@ -1,0 +1,53 @@
+{
+  "popular": {
+    "title": "Most Popular Destinations",
+    "subtitle": "Discover the places that travelers love most. Click any destination to start planning your trip there!"
+  },
+  "details": {
+    "tourOverview": "Tour Overview",
+    "quickFacts": "Quick Facts",
+    "highlights": "Top Highlights",
+    "topHighlights": "Top Highlights",
+    "bestTimeToVisit": "Best Time to Visit",
+    "gettingThere": "Getting There",
+    "duration": "Duration",
+    "popularity": "Popularity",
+    "rating": "Rating",
+    "yearlyVisitors": "yearly visitors",
+    "recommendedFor": "Recommended For",
+    "recommendedForDesc": "This experience is perfect for travelers interested in {{interests}} activities and cultural immersion.",
+    "detailedSchedule": "Detailed Travel Schedule",
+    "day": "Day {{day}}",
+    "more": "+{{count}} more"
+  },
+  "actions": {
+    "viewDetails": "View Details",
+    "viewSchedule": "View Schedule",
+    "applyToForm": "Apply to Form",
+    "applyToMyTripPlan": "Apply to My Trip Plan",
+    "recommended": "Recommended"
+  },
+  "dialog": {
+    "description": "View detailed travel schedule, highlights, and quick facts about this destination."
+  },
+  "seoul": {
+    "tagline": "Modern Capital City",
+    "description": "Experience the perfect blend of ancient traditions and cutting-edge modernity in South Korea's dynamic capital",
+    "highlights": ["Gyeongbokgung Palace", "Myeongdong Shopping", "Han River", "N Seoul Tower", "Bukchon Hanok Village"]
+  },
+  "busan": {
+    "tagline": "Coastal Paradise",
+    "description": "Explore stunning beaches, fresh seafood, and vibrant markets in Korea's beautiful port city",
+    "highlights": ["Haeundae Beach", "Jagalchi Fish Market", "Gamcheon Culture Village", "Haedong Yonggungsa Temple"]
+  },
+  "jeju": {
+    "tagline": "Island of Dreams",
+    "description": "Discover volcanic landscapes, pristine beaches, and unique culture on Korea's tropical island paradise",
+    "highlights": ["Hallasan Mountain", "Seongsan Sunrise Peak", "Manjanggul Cave", "Jeju Olle Trail"]
+  },
+  "gyeongju": {
+    "tagline": "Museum Without Walls",
+    "description": "Step back in time in the ancient capital of the Silla Kingdom, filled with UNESCO World Heritage sites",
+    "highlights": ["Bulguksa Temple", "Seokguram Grotto", "Cheomseongdae Observatory", "Tumuli Park"]
+  }
+}

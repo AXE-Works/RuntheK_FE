@@ -33,7 +33,12 @@
     "viewDetails": "View Details",
     "generateItinerary": "Generate Itinerary",
     "saveTrip": "Save Trip",
-    "shareTrip": "Share Trip"
+    "shareTrip": "Share Trip",
+    "signIn": "Sign In",
+    "tryAgain": "Try Again",
+    "dismiss": "Dismiss",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes"
   },
   "tabs": {
     "overview": "Overview",
@@ -87,5 +92,33 @@
     "walking": "Walking",
     "transit": "Public Transit",
     "driving": "Driving"
+  },
+  "footer": {
+    "poweredByAI": "Powered by AI",
+    "realTimeUpdates": "Real-time Updates",
+    "support": "24/7 Support",
+    "copyright": "© 2024 Korea Travel AI v3.0.0",
+    "tagline": "Helping you discover the beauty of Korea"
+  },
+  "stats": {
+    "travelersHelped": "{{count}} travelers helped"
+  },
+  "quotes": {
+    "journey": "Every journey begins with a single step",
+    "discover": "Discover the magic of Korea",
+    "adventure": "Adventure awaits in the Land of Morning Calm",
+    "memories": "Create memories that last a lifetime"
+  },
+  "alt": {
+    "travelDecoration": "Travel decoration",
+    "travelSuitcase": "Travel Suitcase",
+    "koreanPottery": "Korean Pottery",
+    "palace": "Palace",
+    "bibimbap": "Bibimbap",
+    "traditionalFan": "Traditional Fan",
+    "mask": "Mask"
+  },
+  "loading": {
+    "tests": "Running tests..."
   }
 }

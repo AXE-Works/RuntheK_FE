@@ -34,7 +34,15 @@
     "deleteTrip": "删除旅行",
     "shareTrip": "分享旅行",
     "downloadPdf": "下载PDF",
-    "addToCalendar": "添加到日历"
+    "addToCalendar": "添加到日历",
+    "view": "查看",
+    "viewDetails": "查看详情",
+    "createNew": "创建新旅行",
+    "planFirst": "规划您的第一次旅行",
+    "explorePublic": "探索公开旅行",
+    "viewFullDetails": "查看完整详情 & 评分",
+    "saveToMyTrips": "保存到我的旅行",
+    "viewFullItinerary": "查看完整行程"
   },
   "filters": {
     "all": "全部旅行",
@@ -53,6 +61,133 @@
     "tripDeleted": "旅行已删除",
     "tripShared": "旅行已分享",
     "confirmDelete": "确定要删除这个旅行吗？",
-    "cannotUndo": "此操作无法撤销"
+    "cannotUndo": "此操作无法撤销",
+    "loading": "正在加载您的旅行...",
+    "loadFailed": "加载旅行失败"
+  },
+  "auth": {
+    "signInRequired": "登录以查看您的旅行",
+    "signInDescription": "创建账户或登录，管理您的旅行计划、保存喜欢的目的地并追踪旅行记录。"
+  },
+  "tabs": {
+    "myTrips": "我的旅行",
+    "bookmarks": "收藏夹",
+    "profile": "个人资料"
+  },
+  "sections": {
+    "confirmed": "已确认旅行",
+    "confirmedDesc": "准备好出发的已确认旅行计划",
+    "all": "全部旅行计划",
+    "allDesc": "所有旅行的完整概览",
+    "myPlans": "我的旅行计划",
+    "myPlansDesc": "您创建和规划的旅行",
+    "saved": "已保存旅行",
+    "savedDesc": "您收藏的其他用户的旅行计划"
+  },
+  "empty": {
+    "title": "还没有旅行",
+    "description": "开始规划您的第一次韩国之旅！",
+    "bookmarks": "还没有收藏",
+    "bookmarksDesc": "发现并保存其他用户的精彩旅行计划"
+  },
+  "profile": {
+    "title": "个人资料",
+    "description": "管理您的个人信息和旅行偏好",
+    "edit": "编辑资料",
+    "fullName": "姓名",
+    "email": "邮箱",
+    "country": "国家",
+    "selectCountry": "选择您的国家",
+    "phone": "电话号码",
+    "phonePlaceholder": "电话号码",
+    "phoneNumber": "电话号码",
+    "language": "语言偏好",
+    "notifications": "通知",
+    "stats": {
+      "tripsCreated": "创建的旅行",
+      "bookmarks": "收藏夹",
+      "avgRating": "平均评分",
+      "activeTrips": "进行中的旅行"
+    }
+  },
+  "header": {
+    "title": "我的旅行",
+    "description": "管理您的旅行计划、偏好设置和已保存的目的地"
+  },
+  "itinerary": {
+    "title": "行程",
+    "actionPrompt": "您想如何处理这个行程？",
+    "confirmSave": "确认并保存到我的页面",
+    "confirmSavePrompt": "确定要确认此行程并保存到我的页面吗？",
+    "modifyRegenerate": "修改并重新生成",
+    "modifyTitle": "修改您的行程",
+    "modifyDescription": "请描述您希望对行程做出的修改。",
+    "additionalRequests": "额外请求或更改",
+    "placeholder": "请告诉我们您想对行程做出的更改或添加。例如：\n- 添加更多美食体验\n- 包含特定景点\n- 更改某些活动的预算级别\n- 添加无障碍需求\n- 更多关注某些兴趣",
+    "regenerateNote": "将根据您的请求重新生成行程",
+    "regenerating": "重新生成中...",
+    "regenerateItinerary": "重新生成行程",
+    "day": "第{{day}}天",
+    "exploring": "探索",
+    "noActivities": "暂无活动安排",
+    "noData": "暂无行程数据",
+    "tripHighlights": "行程亮点",
+    "highlights": {
+      "cultural": "文化景点",
+      "culturalDesc": "宫殿、博物馆和历史街区",
+      "local": "当地体验",
+      "localDesc": "正宗美食和文化活动",
+      "events": "特别活动",
+      "eventsDesc": "季节性节日和促销活动"
+    },
+    "stops": "{{count}}个地点",
+    "recommendedSpots": "{{count}}个推荐地点",
+    "openFullRoute": "打开完整路线",
+    "transport": {
+      "walk": "步行",
+      "transit": "公共交通",
+      "drive": "驾车"
+    },
+    "event": "活动",
+    "map": "地图",
+    "info": "信息",
+    "actions": {
+      "email": "通过邮件发送行程",
+      "download": "下载PDF",
+      "share": "分享给朋友"
+    },
+    "contentNotFound": "未找到内容",
+    "pdfFailed": "PDF生成失败，请重试。"
+  },
+  "status": {
+    "confirmed": "已确认",
+    "upcoming": "即将出行",
+    "ongoing": "进行中",
+    "completed": "已完成"
+  },
+  "labels": {
+    "created": "创建时间",
+    "duration": "时长",
+    "budget": "预算",
+    "cities": "城市",
+    "status": "状态",
+    "interests": "兴趣"
+  },
+  "loading": {
+    "trips": "正在加载您的旅行...",
+    "bookmarks": "正在加载您的收藏...",
+    "itinerary": "正在加载行程..."
+  },
+  "error": {
+    "loadFailed": "加载旅行失败",
+    "bookmarksFailed": "加载收藏失败"
+  },
+  "modal": {
+    "rating": "评分",
+    "views": "浏览量",
+    "likes": "点赞",
+    "createdBy": "由{{name}}创建",
+    "fromCountry": "来自{{country}}",
+    "tripOverview": "旅行概览"
   }
 }

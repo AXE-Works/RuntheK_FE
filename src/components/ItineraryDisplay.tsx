@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -19,6 +20,7 @@ interface ItineraryDisplayProps {
 }
 
 export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }: ItineraryDisplayProps) {
+  const { t } = useTranslation(['trips', 'common', 'tips']);
   const [editedTitle, setEditedTitle] = useState('');
   const [showEditTitle, setShowEditTitle] = useState(false);
   const [editNotes, setEditNotes] = useState('');
@@ -161,72 +163,67 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
               {/* Action Buttons */}
               <div className="pt-3 md:pt-4 border-t border-white/20">
                 <div className="text-center mb-3 md:mb-4">
-                  <p className="text-gray-300 text-xs md:text-sm">What would you like to do with this itinerary?</p>
+                  <p className="text-gray-300 text-xs md:text-sm">{t('trips:itinerary.actionPrompt')}</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 md:gap-3 justify-center">
                   {onConfirm && (
-                    <Button 
-                      size="lg" 
+                    <Button
+                      size="lg"
                       className="bg-black text-white hover:bg-gray-800 text-sm md:text-base h-12 px-8 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all font-black uppercase tracking-wide"
                       onClick={() => {
                         // Confirm and provide feedback
-                        if (confirm('Are you sure you want to confirm this itinerary and save it to My Page?')) {
+                        if (confirm(t('trips:itinerary.confirmSavePrompt'))) {
                             handleConfirmItinerary();
                         }
                       }}
                     >
                       <CheckCircle className="h-5 w-5 mr-2" />
-                      Confirm & Save to My Page
+                      {t('trips:itinerary.confirmSave')}
                     </Button>
                   )}
                   
                   <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
                     <DialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="lg"
                         className="bg-white text-black border-2 border-black hover:bg-black hover:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all text-sm md:text-base h-10 md:h-11"
                       >
                         <Edit2 className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                        Modify & Regenerate
+                        {t('trips:itinerary.modifyRegenerate')}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[500px]">
                       <DialogHeader>
-                        <DialogTitle>Modify Your Itinerary</DialogTitle>
+                        <DialogTitle>{t('trips:itinerary.modifyTitle')}</DialogTitle>
                         <DialogDescription>
-                          Please describe what changes you would like to make to your itinerary.
+                          {t('trips:itinerary.modifyDescription')}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label>Additional requests or changes</Label>
+                          <Label>{t('trips:itinerary.additionalRequests')}</Label>
                           <Textarea
                             value={editNotes}
                             onChange={(e) => setEditNotes(e.target.value)}
-                            placeholder="Tell us what you'd like to change or add to your itinerary. For example:
-- Add more food experiences
-- Include specific attractions
-- Change budget level for certain activities
-- Add accessibility requirements
-- Focus more on certain interests"
+                            placeholder={t('trips:itinerary.placeholder')}
                             className="min-h-[120px]"
                             maxLength={500}
                           />
                           <div className="flex justify-between text-sm text-gray-500">
-                            <span>This will regenerate your itinerary with your requests</span>
+                            <span>{t('trips:itinerary.regenerateNote')}</span>
                             <span>{editNotes.length}/500</span>
                           </div>
                         </div>
                         <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             onClick={() => setShowEditDialog(false)}
                             disabled={isRegenerating}
                           >
-                            Cancel
+                            {t('common:buttons.cancel')}
                           </Button>
-                          <Button 
+                          <Button
                             onClick={handleRegenerateWithNotes}
                             disabled={isRegenerating || editNotes.trim() === ''}
                             className="bg-black hover:bg-gray-800"
@@ -234,12 +231,12 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                             {isRegenerating ? (
                               <>
                                 <Sparkles className="h-4 w-4 mr-2 animate-spin" />
-                                Regenerating...
+                                {t('trips:itinerary.regenerating')}
                               </>
                             ) : (
                               <>
                                 <RotateCcw className="h-4 w-4 mr-2" />
-                                Regenerate Itinerary
+                                {t('trips:itinerary.regenerateItinerary')}
                               </>
                             )}
                           </Button>
@@ -264,22 +261,22 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-gray-900">
               <Star className="h-5 w-5 text-gray-600" />
-              <span>Trip Highlights</span>
+              <span>{t('trips:itinerary.tripHighlights')}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-gray-50 rounded-lg border">
-                <h3 className="font-semibold text-gray-900">Cultural Sites</h3>
-                <p className="text-sm text-gray-600">Palaces, museums, and historic districts</p>
+                <h3 className="font-semibold text-gray-900">{t('trips:itinerary.highlights.cultural')}</h3>
+                <p className="text-sm text-gray-600">{t('trips:itinerary.highlights.culturalDesc')}</p>
               </div>
               <div className="text-center p-4 bg-gray-50 rounded-lg border">
-                <h3 className="font-semibold text-gray-900">Local Experiences</h3>
-                <p className="text-sm text-gray-600">Authentic food and cultural activities</p>
+                <h3 className="font-semibold text-gray-900">{t('trips:itinerary.highlights.local')}</h3>
+                <p className="text-sm text-gray-600">{t('trips:itinerary.highlights.localDesc')}</p>
               </div>
               <div className="text-center p-4 bg-gray-50 rounded-lg border">
-                <h3 className="font-semibold text-gray-900">Special Events</h3>
-                <p className="text-sm text-gray-600">Seasonal festivals and promotions</p>
+                <h3 className="font-semibold text-gray-900">{t('trips:itinerary.highlights.events')}</h3>
+                <p className="text-sm text-gray-600">{t('trips:itinerary.highlights.eventsDesc')}</p>
               </div>
             </div>
           </CardContent>
@@ -304,7 +301,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                     </div>
                     <div>
                         <span className="text-xl md:text-2xl font-black uppercase tracking-tight block">{day.title}</span>
-                        <span className="text-xs md:text-sm font-medium text-gray-500 uppercase tracking-wide">{day.activities.length} Stops • {day.activities.filter((a: any) => !a.activity.toLowerCase().includes('breakfast')).length} Recommended Spots</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-500 uppercase tracking-wide">{t('trips:itinerary.stops', { count: day.activities.length })} • {t('trips:itinerary.recommendedSpots', { count: day.activities.filter((a: any) => !a.activity.toLowerCase().includes('breakfast')).length })}</span>
                     </div>
                   </CardTitle>
                 </div>
@@ -332,7 +329,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                                 className="inline-flex items-center justify-center px-4 py-2 text-xs font-bold border-2 border-black bg-white text-black hover:bg-black hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                             >
                                 <MapPin className="h-3 w-3 mr-2" />
-                                Open Full Route
+                                {t('trips:itinerary.openFullRoute')}
                             </a>
                         </div>
                     </div>
@@ -370,9 +367,9 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                                                 }}
                                             >
                                                 <div className="font-medium">
-                                                    {activity.transportMode === 'walking' && '🚶 Walk'}
-                                                    {activity.transportMode === 'transit' && '🚇 Transit'}
-                                                    {activity.transportMode === 'driving' && '🚗 Drive'}
+                                                    {activity.transportMode === 'walking' && `🚶 ${t('trips:itinerary.transport.walk')}`}
+                                                    {activity.transportMode === 'transit' && `🚇 ${t('trips:itinerary.transport.transit')}`}
+                                                    {activity.transportMode === 'driving' && `🚗 ${t('trips:itinerary.transport.drive')}`}
                                                     {activity.transportDuration && ` · ${activity.transportDuration} min`}
                                                     {activity.transportDistance && ` · ${activity.transportDistance} km`}
                                                     {activity.transportCost && ` · ${activity.transportCost}`}
@@ -415,7 +412,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                                                     </Badge>
                                                     {activity.isEvent && (
                                                         <Badge className="h-5 rounded-none border border-black bg-black text-white text-[10px]">
-                                                            EVENT
+                                                            {t('trips:itinerary.event')}
                                                         </Badge>
                                                     )}
                                                 </div>
@@ -443,7 +440,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                                                 rel="noopener noreferrer"
                                                 className="flex-1 inline-flex items-center justify-center px-2 py-1.5 text-[10px] font-bold border border-black bg-white hover:bg-gray-50"
                                             >
-                                                <MapPin className="h-3 w-3 mr-1" /> Map
+                                                <MapPin className="h-3 w-3 mr-1" /> {t('trips:itinerary.map')}
                                             </a>
                                             <a
                                                 href={generateSearchUrl(activity.activity, activity.location)}
@@ -451,7 +448,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                                                 rel="noopener noreferrer"
                                                 className="flex-1 inline-flex items-center justify-center px-2 py-1.5 text-[10px] font-bold border border-black bg-white hover:bg-gray-50"
                                             >
-                                                <Info className="h-3 w-3 mr-1" /> Info
+                                                <Info className="h-3 w-3 mr-1" /> {t('trips:itinerary.info')}
                                             </a>
                                         </div>
                                     </div>
@@ -476,18 +473,18 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
       >
         <Card className="bg-gray-50 border-gray-200">
           <CardHeader>
-            <CardTitle className="text-gray-900">💡 Travel Tips for Korea</CardTitle>
+            <CardTitle className="text-gray-900">💡 {t('tips:title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
               {(itinerary.travelTips && itinerary.travelTips.length > 0
                 ? itinerary.travelTips
                 : [
-                    'Download Papago or Google Translate for language assistance',
-                    'Get a T-money card for convenient public transportation',
-                    "Many places don't accept international cards - bring cash",
-                    'Tipping is not customary in Korea',
-                    'Free WiFi is widely available in cafes and public areas',
+                    t('tips:items.language'),
+                    t('tips:items.transportation'),
+                    t('tips:items.cash'),
+                    t('tips:items.tipping'),
+                    t('tips:items.wifi'),
                   ]
               ).map((tip, index) => (
                 <li key={index}>{tip}</li>
@@ -504,19 +501,19 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.7 }}
       >
-        <Button 
-          variant="outline" 
-          size="icon" 
+        <Button
+          variant="outline"
+          size="icon"
           className="border-gray-300 text-gray-700 hover:bg-gray-50 h-12 w-12"
-          title="Email Itinerary"
+          title={t('trips:itinerary.actions.email')}
         >
           <Mail className="h-5 w-5" />
         </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
+          <Button
+            variant="outline"
+            size="icon"
             className="border-gray-300 text-gray-700 hover:bg-gray-50 h-12 w-12"
-            title="Download as PDF"
+            title={t('trips:itinerary.actions.download')}
             onClick={async () => {
               try {
                 const html2canvas = (await import('html2canvas')).default;
@@ -524,7 +521,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                 
                 const content = document.querySelector('.max-w-4xl') as HTMLElement;
                 if (!content) {
-                    alert('Content not found');
+                    alert(t('trips:itinerary.contentNotFound'));
                     return;
                 }
                 
@@ -632,17 +629,17 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
               } catch (error) {
                 console.error('PDF Generation Error:', error);
                 document.body.style.cursor = 'default';
-                alert('Failed to generate PDF. Please try again.');
+                alert(t('trips:itinerary.pdfFailed'));
               }
             }}
           >
             <Save className="h-5 w-5" />
           </Button>
-        <Button 
-          variant="outline" 
-          size="icon" 
+        <Button
+          variant="outline"
+          size="icon"
           className="border-gray-300 text-gray-700 hover:bg-gray-50 h-12 w-12"
-          title="Share with Friends"
+          title={t('trips:itinerary.actions.share')}
         >
           <Share2 className="h-5 w-5" />
         </Button>

@@ -31,5 +31,12 @@
     "loadFailed": "加载行程失败",
     "noDestinations": "请至少选择一个目的地",
     "invalidDates": "请选择有效的旅行日期"
+  },
+  "boundary": {
+    "title": "出现问题",
+    "message": "抱歉，发生了意外错误。请刷新页面重试。",
+    "details": "错误详情",
+    "tryAgain": "重试",
+    "refresh": "刷新页面"
   }
 }

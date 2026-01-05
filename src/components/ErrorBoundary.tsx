@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { AlertTriangle } from 'lucide-react';
+import i18n from '../i18n';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -44,16 +45,16 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 text-red-600">
                 <AlertTriangle className="h-5 w-5" />
-                <span>Something went wrong</span>
+                <span>{i18n.t('errors:boundary.title')}</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-600">
-                We're sorry, but something unexpected happened. Please try refreshing the page.
+                {i18n.t('errors:boundary.message')}
               </p>
               {this.state.error && (
                 <details className="bg-gray-100 p-3 rounded text-sm">
-                  <summary className="cursor-pointer font-medium">Error details</summary>
+                  <summary className="cursor-pointer font-medium">{i18n.t('errors:boundary.details')}</summary>
                   <p className="mt-2 text-red-600 font-mono text-xs">
                     {this.state.error.message}
                   </p>
@@ -61,14 +62,14 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               )}
               <div className="flex space-x-2">
                 <Button onClick={this.resetError} className="flex-1">
-                  Try Again
+                  {i18n.t('errors:boundary.tryAgain')}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.reload()} 
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.reload()}
                   className="flex-1"
                 >
-                  Refresh Page
+                  {i18n.t('errors:boundary.refresh')}
                 </Button>
               </div>
             </CardContent>

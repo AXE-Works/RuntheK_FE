@@ -144,20 +144,20 @@ const COUNTRIES = [
 ];
 
 const INTERESTS = [
-  { id: 'culture', label: 'Culture & History', icon: '🏛️' },
-  { id: 'food', label: 'Korean Food', icon: '🍜' },
-  { id: 'shopping', label: 'Shopping', icon: '🛍️' },
-  { id: 'nature', label: 'Nature & Hiking', icon: '🏔️' },
-  { id: 'kculture', label: 'K-Pop & Entertainment', icon: '🎵' },
-  { id: 'nightlife', label: 'Nightlife', icon: '🌃' },
-  { id: 'temples', label: 'Temples & Spirituality', icon: '⛩️' },
-  { id: 'traditional', label: 'Traditional Arts', icon: '🎨' }
+  { id: 'culture', labelKey: 'culture', icon: '🏛️' },
+  { id: 'food', labelKey: 'food', icon: '🍜' },
+  { id: 'shopping', labelKey: 'shopping', icon: '🛍️' },
+  { id: 'nature', labelKey: 'nature', icon: '🏔️' },
+  { id: 'kculture', labelKey: 'kculture', icon: '🎵' },
+  { id: 'nightlife', labelKey: 'nightlife', icon: '🌃' },
+  { id: 'temples', labelKey: 'temples', icon: '⛩️' },
+  { id: 'traditional', labelKey: 'traditional', icon: '🎨' }
 ];
 
 const BUDGET_OPTIONS = [
-  { value: 'budget', label: 'Budget ($50-100/day)', description: 'Hostels, street food, public transport' },
-  { value: 'mid-range', label: 'Mid-range ($100-200/day)', description: 'Hotels, restaurants, some experiences' },
-  { value: 'luxury', label: 'Luxury ($200+/day)', description: 'Premium hotels, fine dining, private tours' }
+  { value: 'budget', labelKey: 'budgetLabel', descKey: 'budgetDesc' },
+  { value: 'mid-range', labelKey: 'midRangeLabel', descKey: 'midRangeDesc' },
+  { value: 'luxury', labelKey: 'luxuryLabel', descKey: 'luxuryDesc' }
 ];
 
 // Mock AI itinerary generation
@@ -573,10 +573,10 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
             <div className="bg-white border-2 border-black p-8 md:p-12 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-2xl w-full text-center relative">
               <div className="relative z-10 space-y-3">
                 <h1 className="text-3xl md:text-5xl font-black text-black uppercase tracking-tighter leading-none">
-                  Find Your <br/> Next Adventure
+                  {t('form:hero.title').split(' ').slice(0, 2).join(' ')} <br/> {t('form:hero.title').split(' ').slice(2).join(' ')}
                 </h1>
                 <p className="text-base md:text-lg text-gray-600 font-bold">
-                  Where will your story begin?
+                  {t('form:hero.subtitle')}
                 </p>
               </div>
               
@@ -601,7 +601,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
           <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
             <h3 className="text-xl font-bold text-black flex items-center gap-3">
               <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">1</div>
-              Basic Information <span className="text-gray-500 font-normal text-sm ml-auto">Optional</span>
+              {t('form:sections.basicInfo')} <span className="text-gray-500 font-normal text-sm ml-auto">{t('form:sections.basicInfoOptional')}</span>
             </h3>
           </div>
           
@@ -610,7 +610,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Start Date */}
               <div className="space-y-2">
-                <Label className="text-sm font-bold text-black uppercase tracking-wide">Start Date</Label>
+                <Label className="text-sm font-bold text-black uppercase tracking-wide">{t('form:labels.startDate')}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -620,7 +620,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                       }`}
                     >
                       <CalendarIcon className="mr-3 h-5 w-5" />
-                      {userInput.startDate ? format(userInput.startDate, "PPP") : "Pick a date"}
+                      {userInput.startDate ? format(userInput.startDate, "PPP") : t('form:labels.pickDate')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent 
@@ -637,21 +637,21 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                     />
                   </PopoverContent>
                 </Popover>
-                <p className="text-xs text-gray-500 font-medium">We'll suggest seasonal events based on this.</p>
+                <p className="text-xs text-gray-500 font-medium">{t('form:labels.seasonalEventsHint')}</p>
               </div>
 
               {/* Duration */}
               <div className="space-y-2">
-                <Label className="text-sm font-bold text-black uppercase tracking-wide">Duration</Label>
+                <Label className="text-sm font-bold text-black uppercase tracking-wide">{t('form:labels.duration')}</Label>
                 <Select value={userInput.duration} onValueChange={(value) => setUserInput(prev => ({ ...prev, duration: value }))}>
                   <SelectTrigger className="w-full h-12 border-2 border-gray-200 hover:border-black transition-all rounded-lg">
-                    <SelectValue placeholder="Select trip duration" />
+                    <SelectValue placeholder={t('form:labels.selectDuration')} />
                   </SelectTrigger>
                   <SelectContent className="z-50 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-lg">
-                    <SelectItem value="3 days">3 days</SelectItem>
-                    <SelectItem value="5 days">5 days</SelectItem>
-                    <SelectItem value="7 days">7 days</SelectItem>
-                    <SelectItem value="10+ days">10+ days</SelectItem>
+                    <SelectItem value="3 days">{t('form:duration.3days')}</SelectItem>
+                    <SelectItem value="5 days">{t('form:duration.5days')}</SelectItem>
+                    <SelectItem value="7 days">{t('form:duration.7days')}</SelectItem>
+                    <SelectItem value="10+ days">{t('form:duration.10days')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -661,7 +661,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
             <div className="space-y-4 pt-6 border-t-2 border-gray-100">
               <Label className="text-sm font-bold text-black uppercase tracking-wide flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                Interested Cities
+                {t('form:labels.interestedCities')}
               </Label>
               
               <div className="flex flex-wrap gap-3">
@@ -685,9 +685,9 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                 })}
               </div>
               <p className="text-xs text-gray-500 font-medium">
-                {userInput.cities.length === 0 
-                  ? "Select cities or leave empty for all recommendations." 
-                  : `${userInput.cities.length} cities selected.`}
+                {userInput.cities.length === 0
+                  ? t('form:cities.selectHint')
+                  : t('form:cities.selected', { count: userInput.cities.length })}
               </p>
             </div>
           </div>
@@ -705,7 +705,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
           <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
             <h3 className="text-xl font-bold text-black flex items-center gap-3">
               <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">2</div>
-              Your Interests
+              {t('form:sections.yourInterests')}
             </h3>
           </div>
           
@@ -727,7 +727,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                   >
                     <div className="text-xl sm:text-2xl">{interest.icon}</div>
                     <p className="text-xs font-bold text-center leading-tight">
-                      {interest.label}
+                      {t(`form:interestsList.${interest.labelKey}`)}
                     </p>
                   </div>
                 );
@@ -748,7 +748,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
           <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
             <h3 className="text-xl font-bold text-black flex items-center gap-3">
               <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">3</div>
-              Budget Range
+              {t('form:sections.budgetRange')}
             </h3>
           </div>
           
@@ -768,9 +768,9 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                       }
                     `}
                   >
-                    <h3 className="font-bold text-lg">{option.label}</h3>
+                    <h3 className="font-bold text-lg">{t(`form:budgetOptions.${option.labelKey}`)}</h3>
                     <p className={`text-sm ${isSelected ? 'text-gray-300' : 'text-gray-500'}`}>
-                      {option.description}
+                      {t(`form:budgetOptions.${option.descKey}`)}
                     </p>
                   </div>
                 );
@@ -791,26 +791,26 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
           <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
             <h3 className="text-xl font-bold text-black flex items-center gap-3">
               <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">4</div>
-              Additional Notes <span className="text-gray-500 font-normal text-sm ml-auto">Optional</span>
+              {t('form:sections.additionalNotes')} <span className="text-gray-500 font-normal text-sm ml-auto">{t('form:sections.basicInfoOptional')}</span>
             </h3>
           </div>
-          
+
           <div className="p-6 space-y-4">
             <div>
               <Label htmlFor="additionalNotes" className="text-sm font-bold text-black uppercase tracking-wide mb-3 block">
-                Tell us more about your preferences
+                {t('form:sections.tellUsMore')}
               </Label>
               <Textarea
                 id="additionalNotes"
                 value={additionalNotes}
                 onChange={(e) => setAdditionalNotes(e.target.value)}
-                placeholder="Any specific requests, dietary restrictions, accessibility needs, or special interests? (e.g., vegetarian food options, wheelchair accessible locations, photography spots, etc.)"
+                placeholder={t('form:placeholders.additionalNotes')}
                 className="min-h-[120px] border-2 border-gray-200 focus:border-black focus:ring-0 rounded-xl p-4 text-base resize-y"
                 maxLength={500}
               />
               <div className="flex justify-between items-center mt-2">
                 <p className="text-xs text-gray-500 font-medium">
-                  This helps us create a more personalized itinerary for your needs
+                  {t('form:notes.hint')}
                 </p>
                 <span className="text-xs text-gray-400 font-mono">
                   {additionalNotes.length}/500

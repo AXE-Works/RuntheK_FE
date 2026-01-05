@@ -22,12 +22,20 @@
     "additionalNotes": "Additional Notes",
     "selectDestinations": "Select Destinations",
     "selectInterests": "Select Interests",
-    "selectBudget": "Select Budget Level"
+    "selectBudget": "Select Budget Level",
+    "pickDate": "Pick a date",
+    "interestedCities": "Interested Cities",
+    "selectDuration": "Select trip duration",
+    "seasonalEventsHint": "We'll suggest seasonal events based on this."
   },
   "placeholders": {
     "searchDestination": "Search for a destination...",
-    "additionalNotes": "Any special requests, dietary restrictions, or preferences...",
+    "additionalNotes": "Any special requests, dietary restrictions, accessibility needs, or special interests? (e.g., vegetarian food options, wheelchair accessible locations, photography spots, etc.)",
     "selectDate": "Select a date"
+  },
+  "cities": {
+    "selected": "{{count}} cities selected.",
+    "selectHint": "Select cities or leave empty for all recommendations."
   },
   "interests": {
     "food": "Food & Cuisine",
@@ -75,5 +83,38 @@
     "buttonDestination": "Create {{destination}} Itinerary",
     "generating": "Generating Your Perfect Korea Trip...",
     "generatingDestination": "Creating Your {{destination}} Adventure..."
+  },
+  "hero": {
+    "title": "Find Your Next Adventure",
+    "subtitle": "Where will your story begin?"
+  },
+  "sections": {
+    "basicInfo": "Basic Information",
+    "basicInfoOptional": "Optional",
+    "yourInterests": "Your Interests",
+    "budgetRange": "Budget Range",
+    "additionalNotes": "Additional Notes",
+    "tellUsMore": "Tell us more about your preferences"
+  },
+  "notes": {
+    "hint": "This helps us create a more personalized itinerary for your needs"
+  },
+  "interestsList": {
+    "culture": "Culture & History",
+    "food": "Korean Food",
+    "shopping": "Shopping",
+    "nature": "Nature & Hiking",
+    "kculture": "K-Pop & Entertainment",
+    "nightlife": "Nightlife",
+    "temples": "Temples & Spirituality",
+    "traditional": "Traditional Arts"
+  },
+  "budgetOptions": {
+    "budgetLabel": "Budget ($50-100/day)",
+    "budgetDesc": "Hostels, street food, public transport",
+    "midRangeLabel": "Mid-range ($100-200/day)",
+    "midRangeDesc": "Hotels, restaurants, some experiences",
+    "luxuryLabel": "Luxury ($200+/day)",
+    "luxuryDesc": "Premium hotels, fine dining, private tours"
   }
 }

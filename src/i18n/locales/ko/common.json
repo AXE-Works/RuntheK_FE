@@ -33,7 +33,12 @@
     "viewDetails": "상세 보기",
     "generateItinerary": "일정 생성",
     "saveTrip": "여행 저장",
-    "shareTrip": "여행 공유"
+    "shareTrip": "여행 공유",
+    "signIn": "로그인",
+    "tryAgain": "다시 시도",
+    "dismiss": "닫기",
+    "saving": "저장 중...",
+    "saveChanges": "변경 사항 저장"
   },
   "tabs": {
     "overview": "개요",
@@ -87,5 +92,33 @@
     "walking": "도보",
     "transit": "대중교통",
     "driving": "자가용"
+  },
+  "footer": {
+    "poweredByAI": "AI 기반",
+    "realTimeUpdates": "실시간 업데이트",
+    "support": "24시간 지원",
+    "copyright": "© 2024 Korea Travel AI v3.0.0",
+    "tagline": "한국의 아름다움을 발견하도록 도와드립니다"
+  },
+  "stats": {
+    "travelersHelped": "{{count}}명의 여행자 지원"
+  },
+  "quotes": {
+    "journey": "모든 여행은 첫 걸음에서 시작됩니다",
+    "discover": "한국의 매력을 발견하세요",
+    "adventure": "고요한 아침의 나라에서 모험이 기다립니다",
+    "memories": "평생 간직할 추억을 만드세요"
+  },
+  "alt": {
+    "travelDecoration": "여행 장식",
+    "travelSuitcase": "여행 가방",
+    "koreanPottery": "한국 도자기",
+    "palace": "궁궐",
+    "bibimbap": "비빔밥",
+    "traditionalFan": "전통 부채",
+    "mask": "탈"
+  },
+  "loading": {
+    "tests": "테스트 실행 중..."
   }
 }

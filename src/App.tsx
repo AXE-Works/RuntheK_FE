@@ -667,7 +667,7 @@ export default function App() {
               {/* Travelers count - Hidden on mobile */}
               <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
                 <Users className="h-4 w-4" />
-                <span>5,234 travelers helped</span>
+                <span>{t('stats.travelersHelped', { count: '5,234' })}</span>
               </div>
 
               {/* User Menu */}
@@ -833,12 +833,12 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center space-y-4">
             <div className="flex justify-center space-x-6 text-sm text-gray-600">
-              <span className="text-[11px]">• Powered by AI</span>
-              <span className="text-[11px]">• Real-time Updates</span>
-              <span className="text-[11px]">• 24/7 Support</span>
+              <span className="text-[11px]">• {t('footer.poweredByAI')}</span>
+              <span className="text-[11px]">• {t('footer.realTimeUpdates')}</span>
+              <span className="text-[11px]">• {t('footer.support')}</span>
             </div>
             <p className="text-sm text-gray-500">
-              © 2024 Korea Travel AI v3.0.0 - Helping you discover the beauty of Korea.
+              {t('footer.copyright')} - {t('footer.tagline')}
             </p>
           </div>
         </div>
