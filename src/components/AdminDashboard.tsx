@@ -15,6 +15,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { ItineraryDetailModal } from './ItineraryDetailModal';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { EventForm } from './EventForm';
+import { AdminItineraryManager } from './AdminItineraryManager';
 import logo from 'figma:asset/2837fdead800498e4b0136649e9bfa4bce6e67ea.png';
 import { 
   Users, 
@@ -530,14 +531,15 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
       >
         <Tabs defaultValue="users" className="w-full">
           <TabsList className="w-full justify-start border-b border-black bg-transparent p-0 h-auto rounded-none mb-8">
-            {['users', 'itineraries', 'events', 'system'].map((tab) => (
-              <TabsTrigger 
+            {['users', 'itineraries', 'recommended', 'events', 'system'].map((tab) => (
+              <TabsTrigger
                 key={tab}
                 value={tab}
                 className="rounded-none border-b-4 border-transparent px-6 py-3 font-bold uppercase tracking-tight data-[state=active]:border-black data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-gray-600 transition-all"
               >
                 {tab === 'users' && '사용자'}
                 {tab === 'itineraries' && '여행 일정'}
+                {tab === 'recommended' && '추천 일정'}
                 {tab === 'events' && '이벤트'}
                 {tab === 'system' && '시스템'}
               </TabsTrigger>
@@ -724,6 +726,11 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                   </motion.div>
                 ))}
             </div>
+          </TabsContent>
+
+          {/* Recommended Itineraries Tab */}
+          <TabsContent value="recommended" className="space-y-6">
+            <AdminItineraryManager currentUser={currentUser} />
           </TabsContent>
 
           {/* Events Tab */}
