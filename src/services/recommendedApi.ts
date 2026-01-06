@@ -1,0 +1,405 @@
+/**
+ * Admin Recommended Itinerary API Service
+ *
+ * Endpoints:
+ * - GET /api/v1/admin/recommended - List recommended itineraries
+ * - GET /api/v1/admin/recommended/{id} - Get itinerary detail
+ * - PATCH /api/v1/admin/recommended/{id}/status - Update status (active/featured)
+ */
+
+import { fetchWithAuth, API_BASE_URL } from '../utils/api';
+
+// ============================================================
+// Types
+// ============================================================
+
+/** Backend duration enum values */
+type DurationEnum = 'THREE_DAYS' | 'FIVE_DAYS' | 'SEVEN_DAYS' | 'TEN_PLUS_DAYS';
+
+/** Backend budget enum values */
+type BudgetEnum = 'BUDGET' | 'MID_RANGE' | 'LUXURY';
+
+/** Pagination info from backend */
+export interface PageInfo {
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+/** Summary statistics */
+export interface RecommendedSummary {
+  totalItineraries: number;
+  activeItineraries: number;
+  totalViewCount: number;
+  totalBookingCount: number;
+}
+
+/** Backend response for list item */
+interface AdminRecommendedResponseRaw {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  duration: DurationEnum;
+  cities: string[];
+  budget: BudgetEnum;
+  interests: string[];
+  averageRating: number;
+  viewCount: number;
+  bookingCount: number;
+  isActive: boolean;
+  isFeatured: boolean;
+  displayOrder: number;
+  daysCount: number;
+  activitiesCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Backend activity response */
+interface ActivityResponseRaw {
+  id: string;
+  activityOrder: number;
+  activityTime: string;
+  activityName: string;
+  location: string;
+  description: string;
+  estimatedCost: string;
+  isEvent: boolean;
+  eventId: string | null;
+  eventType: string | null;
+}
+
+/** Backend day response */
+interface DayResponseRaw {
+  id: string;
+  dayNumber: number;
+  title: string;
+  description: string;
+  activities: ActivityResponseRaw[];
+}
+
+/** Backend response for detail */
+interface AdminRecommendedDetailResponseRaw {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  duration: DurationEnum;
+  cities: string[];
+  budget: BudgetEnum;
+  interests: string[];
+  averageRating: number;
+  viewCount: number;
+  bookingCount: number;
+  isActive: boolean;
+  isFeatured: boolean;
+  displayOrder: number;
+  targetAudience: string | null;
+  seasonTag: string | null;
+  richContent: string | null;
+  days: DayResponseRaw[];
+  createdByAdmin: {
+    id: string;
+    name: string;
+  } | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Backend list response wrapper */
+interface AdminRecommendedListResponseRaw {
+  success: boolean;
+  data: AdminRecommendedResponseRaw[];
+  pagination: PageInfo;
+  summary: RecommendedSummary;
+}
+
+/** Backend detail response wrapper */
+interface AdminRecommendedDetailApiResponse {
+  success: boolean;
+  data: AdminRecommendedDetailResponseRaw;
+}
+
+// ============================================================
+// Frontend Types (matching AdminItineraryManager.tsx)
+// ============================================================
+
+export interface RecommendedActivity {
+  time: string;
+  activity: string;
+  location: string;
+  description: string;
+  estimatedCost: string;
+  isEvent?: boolean;
+  eventType?: string;
+}
+
+export interface RecommendedDay {
+  day: number;
+  title: string;
+  activities: RecommendedActivity[];
+}
+
+export interface RichContent {
+  introduction: string;
+  highlights: string[];
+  tips: string[];
+  includes: string[];
+  excludes: string[];
+  whatToBring: string[];
+  contentBlocks?: any[];
+}
+
+export interface RecommendedItinerary {
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  cities: string[];
+  budget: string;
+  interests: string[];
+  imageUrl: string;
+  rating: number;
+  viewCount: number;
+  bookingCount: number;
+  active: boolean;
+  featured: boolean;
+  displayOrder: number;
+  days: RecommendedDay[];
+  richContent?: RichContent;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecommendedListResult {
+  itineraries: RecommendedItinerary[];
+  pagination: PageInfo;
+  summary: RecommendedSummary;
+}
+
+// ============================================================
+// Converters
+// ============================================================
+
+/** Convert backend duration enum to display string */
+function convertDuration(duration: DurationEnum): string {
+  const map: Record<DurationEnum, string> = {
+    'THREE_DAYS': '3 days',
+    'FIVE_DAYS': '5 days',
+    'SEVEN_DAYS': '7 days',
+    'TEN_PLUS_DAYS': '10+ days',
+  };
+  return map[duration] || duration;
+}
+
+/** Convert backend budget enum to display string */
+function convertBudget(budget: BudgetEnum): string {
+  const map: Record<BudgetEnum, string> = {
+    'BUDGET': 'budget',
+    'MID_RANGE': 'mid-range',
+    'LUXURY': 'luxury',
+  };
+  return map[budget] || budget.toLowerCase();
+}
+
+/** Convert raw list item to frontend type */
+function convertListItem(raw: AdminRecommendedResponseRaw): RecommendedItinerary {
+  return {
+    id: raw.id,
+    title: raw.title,
+    description: raw.description || '',
+    duration: convertDuration(raw.duration),
+    cities: raw.cities || [],
+    budget: convertBudget(raw.budget),
+    interests: raw.interests || [],
+    imageUrl: raw.imageUrl || '',
+    rating: raw.averageRating || 0,
+    viewCount: raw.viewCount || 0,
+    bookingCount: raw.bookingCount || 0,
+    active: raw.isActive,
+    featured: raw.isFeatured,
+    displayOrder: raw.displayOrder || 0,
+    days: [], // List doesn't include days
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
+  };
+}
+
+/** Convert raw detail to frontend type */
+function convertDetail(raw: AdminRecommendedDetailResponseRaw): RecommendedItinerary {
+  // Parse rich content if it's a string
+  let richContent: RichContent | undefined;
+  if (raw.richContent) {
+    try {
+      const parsed = typeof raw.richContent === 'string'
+        ? JSON.parse(raw.richContent)
+        : raw.richContent;
+      richContent = {
+        introduction: parsed.introduction || '',
+        highlights: parsed.highlights || [],
+        tips: parsed.tips || [],
+        includes: parsed.includes || [],
+        excludes: parsed.excludes || [],
+        whatToBring: parsed.whatToBring || [],
+        contentBlocks: parsed.contentBlocks || [],
+      };
+    } catch {
+      richContent = undefined;
+    }
+  }
+
+  return {
+    id: raw.id,
+    title: raw.title,
+    description: raw.description || '',
+    duration: convertDuration(raw.duration),
+    cities: raw.cities || [],
+    budget: convertBudget(raw.budget),
+    interests: raw.interests || [],
+    imageUrl: raw.imageUrl || '',
+    rating: raw.averageRating || 0,
+    viewCount: raw.viewCount || 0,
+    bookingCount: raw.bookingCount || 0,
+    active: raw.isActive,
+    featured: raw.isFeatured,
+    displayOrder: raw.displayOrder || 0,
+    days: (raw.days || []).map(day => ({
+      day: day.dayNumber,
+      title: day.title,
+      activities: (day.activities || []).map(act => ({
+        time: act.activityTime || '',
+        activity: act.activityName,
+        location: act.location || '',
+        description: act.description || '',
+        estimatedCost: act.estimatedCost || '',
+        isEvent: act.isEvent,
+        eventType: act.eventType || undefined,
+      })),
+    })),
+    richContent,
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
+  };
+}
+
+// ============================================================
+// API Functions
+// ============================================================
+
+export interface GetRecommendedListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  duration?: string;
+  budget?: string;
+  sort?: string;
+}
+
+/**
+ * Get list of recommended itineraries (Admin)
+ */
+export async function getRecommendedList(
+  params: GetRecommendedListParams = {}
+): Promise<RecommendedListResult> {
+  const searchParams = new URLSearchParams();
+
+  if (params.page !== undefined) searchParams.set('page', String(params.page));
+  if (params.limit !== undefined) searchParams.set('limit', String(params.limit));
+  if (params.search) searchParams.set('search', params.search);
+  if (params.isActive !== undefined) searchParams.set('isActive', String(params.isActive));
+  if (params.isFeatured !== undefined) searchParams.set('isFeatured', String(params.isFeatured));
+  if (params.duration) searchParams.set('duration', params.duration);
+  if (params.budget) searchParams.set('budget', params.budget);
+  if (params.sort) searchParams.set('sort', params.sort);
+
+  const queryString = searchParams.toString();
+  const url = `${API_BASE_URL}/admin/recommended${queryString ? `?${queryString}` : ''}`;
+
+  const response = await fetchWithAuth(url);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `Failed to fetch recommended itineraries: ${response.status}`);
+  }
+
+  const result: AdminRecommendedListResponseRaw = await response.json();
+
+  return {
+    itineraries: result.data.map(convertListItem),
+    pagination: result.pagination,
+    summary: result.summary,
+  };
+}
+
+/**
+ * Get recommended itinerary detail (Admin)
+ */
+export async function getRecommendedDetail(id: string): Promise<RecommendedItinerary> {
+  const response = await fetchWithAuth(`${API_BASE_URL}/admin/recommended/${id}`);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `Failed to fetch itinerary detail: ${response.status}`);
+  }
+
+  const result: AdminRecommendedDetailApiResponse = await response.json();
+  return convertDetail(result.data);
+}
+
+// ============================================================
+// Status Update
+// ============================================================
+
+export interface UpdateRecommendedStatusParams {
+  isActive?: boolean;
+  isFeatured?: boolean;
+}
+
+export interface UpdateRecommendedStatusResult {
+  id: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  updatedAt: string;
+}
+
+/** Backend response for status update */
+interface UpdateStatusApiResponse {
+  success: boolean;
+  data: {
+    id: string;
+    isActive: boolean;
+    isFeatured: boolean;
+    updatedAt: string;
+  };
+}
+
+/**
+ * Update recommended itinerary status (Admin)
+ */
+export async function updateRecommendedStatus(
+  id: string,
+  params: UpdateRecommendedStatusParams
+): Promise<UpdateRecommendedStatusResult> {
+  const response = await fetchWithAuth(`${API_BASE_URL}/admin/recommended/${id}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `Failed to update status: ${response.status}`);
+  }
+
+  const result: UpdateStatusApiResponse = await response.json();
+  return result.data;
+}

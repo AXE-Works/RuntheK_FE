@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -7,11 +7,11 @@ import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { AdminItineraryEditor } from './AdminItineraryEditor';
 import { motion } from 'motion/react';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Eye, 
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
   Search,
   MapPin,
   Calendar,
@@ -20,285 +20,72 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronUp,
-  Clock
+  Clock,
+  Loader2,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
-
-interface RecommendedItinerary {
-  id: string;
-  title: string;
-  description: string;
-  duration: string;
-  cities: string[];
-  budget: string;
-  interests: string[];
-  imageUrl: string;
-  rating: number;
-  viewCount: number;
-  bookingCount: number;
-  active: boolean;
-  featured: boolean;
-  days: {
-    day: number;
-    title: string;
-    activities: {
-      time: string;
-      activity: string;
-      location: string;
-      description: string;
-      estimatedCost: string;
-      isEvent?: boolean;
-      eventType?: string;
-    }[];
-  }[];
-  richContent?: {
-    introduction: string;
-    highlights: string[];
-    tips: string[];
-    includes: string[];
-    excludes: string[];
-    whatToBring: string[];
-  };
-  createdAt: string;
-  updatedAt: string;
-}
+import {
+  getRecommendedList,
+  getRecommendedDetail,
+  updateRecommendedStatus,
+  type RecommendedItinerary,
+  type RecommendedSummary,
+  type PageInfo
+} from '../services/recommendedApi';
 
 interface AdminItineraryManagerProps {
   currentUser?: any;
 }
 
-// Mock data
-const mockRecommendedItineraries: RecommendedItinerary[] = [
-  {
-    id: 'rec-1',
-    title: 'Seoul Highlights 5 Days',
-    description: '서울의 필수 명소를 둘러보는 5일 코스입니다. 전통과 현대가 공존하는 서울의 매력을 느껴보세요.',
-    duration: '5 days',
-    cities: ['Seoul'],
-    budget: 'mid',
-    interests: ['culture', 'food', 'history'],
-    imageUrl: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=800',
-    rating: 4.8,
-    viewCount: 1234,
-    bookingCount: 89,
-    active: true,
-    featured: true,
-    days: [
-      {
-        day: 1,
-        title: 'Arrival & Traditional Seoul',
-        activities: [
-          {
-            time: '09:00 AM',
-            activity: 'Gyeongbokgung Palace',
-            location: 'Jongno-gu, Seoul',
-            description: 'Visit the largest royal palace',
-            estimatedCost: '$3'
-          },
-          {
-            time: '12:00 PM',
-            activity: 'Traditional Korean Lunch',
-            location: 'Insadong',
-            description: 'Experience authentic Korean cuisine',
-            estimatedCost: '$15-25'
-          }
-        ]
-      }
-    ],
-    richContent: {
-      introduction: 'Discover the heart of Korea in this comprehensive 5-day journey through Seoul.',
-      highlights: ['Gyeongbokgung Palace', 'N Seoul Tower', 'Bukchon Hanok Village'],
-      tips: ['Wear comfortable shoes', 'Book tickets in advance'],
-      includes: ['Professional guide', 'Entrance fees', 'Some meals'],
-      excludes: ['Flight tickets', 'Personal expenses'],
-      whatToBring: ['Camera', 'Comfortable walking shoes', 'Weather-appropriate clothing'],
-      contentBlocks: [
-        {
-          id: 'block-1',
-          type: 'heading',
-          content: 'Welcome to Seoul: The Heart of Korea'
-        },
-        {
-          id: 'block-2',
-          type: 'text',
-          content: 'Seoul is a vibrant metropolis that seamlessly blends ancient traditions with cutting-edge modernity. From historic palaces to trendy shopping districts, from traditional markets to high-tech entertainment venues, Seoul offers an unforgettable experience for every traveler.\n\nThis itinerary will guide you through the must-see attractions while also revealing hidden gems that only locals know about.'
-        },
-        {
-          id: 'block-3',
-          type: 'image',
-          content: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=1200&h=600&fit=crop'
-        },
-        {
-          id: 'block-4',
-          type: 'highlights',
-          content: [
-            'Visit 5 UNESCO World Heritage Sites including Gyeongbokgung Palace',
-            'Experience authentic Korean BBQ in Gangnam district',
-            'Explore trendy Hongdae and Itaewon neighborhoods',
-            'Take Instagram-worthy photos at Bukchon Hanok Village',
-            'Shop for K-beauty products in Myeongdong',
-            'Enjoy panoramic city views from N Seoul Tower'
-          ]
-        },
-        {
-          id: 'block-5',
-          type: 'tips',
-          content: [
-            'Download Kakao Metro app for easy subway navigation',
-            'Get a T-money card at any convenience store',
-            'Most restaurants close between 3-5 PM',
-            'Tipping is not customary in Korea',
-            'Learn basic phrases: "Annyeonghaseyo" (Hello)'
-          ]
-        },
-        {
-          id: 'block-6',
-          type: 'includes',
-          content: [
-            'Professional English-speaking guide',
-            'All entrance fees to palaces and museums',
-            'Korean BBQ lunch experience',
-            'Public transportation passes',
-            'Welcome dinner at traditional restaurant'
-          ]
-        },
-        {
-          id: 'block-7',
-          type: 'excludes',
-          content: [
-            'International flight tickets',
-            'Travel insurance',
-            'Personal expenses and shopping',
-            'Optional activities and tours'
-          ]
-        }
-      ]
-    },
-    createdAt: '2024-01-15',
-    updatedAt: '2024-01-20'
-  },
-  {
-    id: 'rec-2',
-    title: 'Busan Coastal Adventure 4 Days',
-    description: '부산의 아름다운 해변과 해산물 요리를 즐기는 4일 여행 코스입니다.',
-    duration: '4 days',
-    cities: ['Busan'],
-    budget: 'budget',
-    interests: ['nature', 'food', 'beaches'],
-    imageUrl: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800',
-    rating: 4.6,
-    viewCount: 856,
-    bookingCount: 67,
-    active: true,
-    featured: false,
-    days: [
-      {
-        day: 1,
-        title: 'Haeundae Beach & Seafood',
-        activities: [
-          {
-            time: '10:00 AM',
-            activity: 'Haeundae Beach',
-            location: 'Haeundae-gu, Busan',
-            description: 'Relax at Korea\'s most famous beach',
-            estimatedCost: 'Free'
-          }
-        ]
-      }
-    ],
-    richContent: {
-      introduction: 'Experience the vibrant coastal city of Busan.',
-      highlights: ['Haeundae Beach', 'Gamcheon Culture Village', 'Jagalchi Fish Market'],
-      tips: ['Try fresh seafood', 'Visit early morning for best views'],
-      includes: ['Hotel accommodation', 'Breakfast', 'City tour'],
-      excludes: ['Lunch and dinner', 'Personal shopping'],
-      whatToBring: ['Sunscreen', 'Swimsuit', 'Light jacket'],
-      contentBlocks: [
-        {
-          id: 'busan-1',
-          type: 'heading',
-          content: 'Busan: Korea\'s Coastal Gem'
-        },
-        {
-          id: 'busan-2',
-          type: 'text',
-          content: 'Busan is South Korea\'s second-largest city and a paradise for beach lovers and seafood enthusiasts. Known for its stunning beaches, vibrant markets, and colorful hillside villages, Busan offers a perfect blend of urban excitement and natural beauty.\n\nThis 4-day adventure will take you through the best of Busan\'s coastal attractions and cultural landmarks.'
-        },
-        {
-          id: 'busan-3',
-          type: 'image',
-          content: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=1200&h=600&fit=crop'
-        },
-        {
-          id: 'busan-4',
-          type: 'highlights',
-          content: [
-            'Relax at Haeundae Beach, Korea\'s most famous beach',
-            'Explore the colorful Gamcheon Culture Village',
-            'Visit Jagalchi Fish Market for fresh seafood',
-            'Walk along Gwangalli Beach at sunset',
-            'Hike to Haedong Yonggungsa Temple by the sea',
-            'Experience traditional spa culture at a jjimjilbang'
-          ]
-        },
-        {
-          id: 'busan-5',
-          type: 'list',
-          content: [
-            'Budget-friendly accommodation near Haeundae Beach',
-            'Easy public transportation with detailed directions',
-            'Mix of famous attractions and local hidden spots',
-            'Flexible itinerary with options for all weather conditions',
-            'Perfect for solo travelers, couples, and families'
-          ]
-        },
-        {
-          id: 'busan-6',
-          type: 'tips',
-          content: [
-            'Bring sunscreen and beach gear for Haeundae',
-            'Try raw fish (hoe) at Jagalchi Market',
-            'Best time to visit is spring or fall for pleasant weather',
-            'Download Busan Metro app for easy navigation',
-            'Many beach cafes offer beautiful ocean views'
-          ]
-        },
-        {
-          id: 'busan-7',
-          type: 'includes',
-          content: [
-            'Daily breakfast at hotel',
-            'Busan city pass for public transportation',
-            'Entry to Haedong Yonggungsa Temple',
-            'Gamcheon Culture Village walking tour',
-            'Beach equipment rental vouchers'
-          ]
-        },
-        {
-          id: 'busan-8',
-          type: 'excludes',
-          content: [
-            'Lunch and dinner meals',
-            'Private transportation or taxis',
-            'Water sports activities',
-            'Spa and jjimjilbang entrance fees',
-            'Souvenirs and personal shopping'
-          ]
-        }
-      ]
-    },
-    createdAt: '2024-01-10',
-    updatedAt: '2024-01-18'
-  }
-];
-
 export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProps) {
-  const [itineraries, setItineraries] = useState<RecommendedItinerary[]>(mockRecommendedItineraries);
+  // Data state
+  const [itineraries, setItineraries] = useState<RecommendedItinerary[]>([]);
+  const [summary, setSummary] = useState<RecommendedSummary>({
+    totalItineraries: 0,
+    activeItineraries: 0,
+    totalViewCount: 0,
+    totalBookingCount: 0,
+  });
+
+  // UI state
   const [searchTerm, setSearchTerm] = useState('');
   const [showEditor, setShowEditor] = useState(false);
   const [editingItinerary, setEditingItinerary] = useState<RecommendedItinerary | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [expandedItineraries, setExpandedItineraries] = useState<Set<string>>(new Set());
 
+  // Loading/Error state
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+
+  // Fetch itineraries from API
+  const fetchItineraries = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await getRecommendedList({
+        page: 1,
+        limit: 100,
+        sort: '-createdAt',
+      });
+      setItineraries(result.itineraries);
+      setSummary(result.summary);
+    } catch (err) {
+      console.error('Failed to fetch recommended itineraries:', err);
+      setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load data on mount
+  useEffect(() => {
+    fetchItineraries();
+  }, [fetchItineraries]);
+
+  // Client-side filtering (search already loaded data)
   const filteredItineraries = itineraries.filter(item =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -321,26 +108,79 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
     }
   };
 
-  const handleToggleActive = (id: string) => {
-    setItineraries(itineraries.map(item =>
-      item.id === id ? { ...item, active: !item.active } : item
-    ));
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+
+  const handleToggleActive = async (id: string) => {
+    const itinerary = itineraries.find(i => i.id === id);
+    if (!itinerary) return;
+
+    setUpdatingStatus(id);
+    try {
+      const result = await updateRecommendedStatus(id, { isActive: !itinerary.active });
+      setItineraries(itineraries.map(item =>
+        item.id === id ? { ...item, active: result.isActive, updatedAt: result.updatedAt } : item
+      ));
+      // Update summary counts
+      setSummary(prev => ({
+        ...prev,
+        activeItineraries: result.isActive
+          ? prev.activeItineraries + 1
+          : prev.activeItineraries - 1,
+      }));
+    } catch (err) {
+      console.error('Failed to update active status:', err);
+      alert('상태 변경에 실패했습니다.');
+    } finally {
+      setUpdatingStatus(null);
+    }
   };
 
-  const handleToggleFeatured = (id: string) => {
-    setItineraries(itineraries.map(item =>
-      item.id === id ? { ...item, featured: !item.featured } : item
-    ));
+  const handleToggleFeatured = async (id: string) => {
+    const itinerary = itineraries.find(i => i.id === id);
+    if (!itinerary) return;
+
+    setUpdatingStatus(id);
+    try {
+      const result = await updateRecommendedStatus(id, { isFeatured: !itinerary.featured });
+      setItineraries(itineraries.map(item =>
+        item.id === id ? { ...item, featured: result.isFeatured, updatedAt: result.updatedAt } : item
+      ));
+    } catch (err) {
+      console.error('Failed to update featured status:', err);
+      alert('상태 변경에 실패했습니다.');
+    } finally {
+      setUpdatingStatus(null);
+    }
   };
 
-  const toggleExpanded = (id: string) => {
+  const [loadingDetail, setLoadingDetail] = useState<string | null>(null);
+
+  const toggleExpanded = async (id: string) => {
     const newExpanded = new Set(expandedItineraries);
     if (newExpanded.has(id)) {
       newExpanded.delete(id);
+      setExpandedItineraries(newExpanded);
     } else {
+      // Check if we already have days data
+      const itinerary = itineraries.find(i => i.id === id);
+      if (itinerary && itinerary.days.length === 0) {
+        // Fetch detail to get days
+        setLoadingDetail(id);
+        try {
+          const detail = await getRecommendedDetail(id);
+          // Update itinerary with days data
+          setItineraries(prev => prev.map(i =>
+            i.id === id ? { ...i, days: detail.days, richContent: detail.richContent } : i
+          ));
+        } catch (err) {
+          console.error('Failed to fetch itinerary detail:', err);
+        } finally {
+          setLoadingDetail(null);
+        }
+      }
       newExpanded.add(id);
+      setExpandedItineraries(newExpanded);
     }
-    setExpandedItineraries(newExpanded);
   };
 
   const handleSave = (itinerary: RecommendedItinerary) => {
@@ -378,6 +218,33 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
     );
   }
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="h-12 w-12 animate-spin text-gray-400 mb-4" />
+        <p className="text-gray-500 font-medium">추천 일정을 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-red-300 bg-red-50">
+        <AlertCircle className="h-12 w-12 text-red-400 mb-4" />
+        <p className="text-red-600 font-medium mb-4">{error}</p>
+        <Button
+          onClick={fetchItineraries}
+          className="bg-black text-white rounded-none hover:bg-gray-800"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          다시 시도
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -386,22 +253,31 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
           <h2 className="text-2xl font-bold uppercase tracking-tight">추천 여행 일정 관리</h2>
           <p className="text-sm text-gray-600 mt-1">사용자에게 추천할 여행 일정을 생성하고 관리합니다</p>
         </div>
-        <Button
-          onClick={handleCreate}
-          className="bg-black text-white rounded-none hover:bg-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-bold h-12"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          새 추천 일정 만들기
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={fetchItineraries}
+            variant="outline"
+            className="border-2 border-black rounded-none hover:bg-gray-100 h-12"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={handleCreate}
+            className="bg-black text-white rounded-none hover:bg-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-bold h-12"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            새 추천 일정 만들기
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: '총 추천 일정', value: itineraries.length, icon: MapPin },
-          { label: '활성 일정', value: itineraries.filter(i => i.active).length, icon: Star },
-          { label: '총 조회수', value: itineraries.reduce((sum, i) => sum + i.viewCount, 0).toLocaleString(), icon: Eye },
-          { label: '총 예약수', value: itineraries.reduce((sum, i) => sum + i.bookingCount, 0).toLocaleString(), icon: TrendingUp }
+          { label: '총 추천 일정', value: summary.totalItineraries, icon: MapPin },
+          { label: '활성 일정', value: summary.activeItineraries, icon: Star },
+          { label: '총 조회수', value: summary.totalViewCount.toLocaleString(), icon: Eye },
+          { label: '총 예약수', value: summary.totalBookingCount.toLocaleString(), icon: TrendingUp }
         ].map((stat) => (
           <Card key={stat.label} className="border-2 border-black shadow-none rounded-none hover:bg-black hover:text-white transition-colors group">
             <CardContent className="p-4 flex items-center justify-between">
@@ -437,14 +313,24 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
           >
             <div className="border-2 border-black bg-white hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all group h-full flex flex-col">
               {/* Image */}
-              <div className="w-full h-40 bg-gray-200 border-b-2 border-black overflow-hidden relative">
-                <img
-                  src={itinerary.imageUrl}
-                  alt={itinerary.title}
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-full h-48 border-b-2 border-black overflow-hidden relative">
+                {itinerary.imageUrl && !imageErrors.has(itinerary.id) ? (
+                  <img
+                    src={itinerary.imageUrl}
+                    alt={itinerary.title}
+                    className="w-full h-full object-cover"
+                    onError={() => {
+                      setImageErrors(prev => new Set(prev).add(itinerary.id));
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-300 flex flex-col items-center justify-center">
+                    <MapPin className="h-12 w-12 text-gray-400 mb-2" />
+                    <span className="text-sm text-gray-500 font-medium">No Image</span>
+                  </div>
+                )}
                 {/* Badges overlay */}
-                <div className="absolute top-2 left-2 flex gap-1">
+                <div className="absolute top-2 left-2 flex gap-1 z-10">
                   {itinerary.featured && (
                     <Badge className="bg-yellow-400 text-black border border-black text-xs px-1.5 py-0.5">
                       FEATURED
@@ -512,19 +398,27 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
                     variant="outline"
                     size="sm"
                     onClick={() => handleToggleFeatured(itinerary.id)}
+                    disabled={updatingStatus === itinerary.id}
                     className={`h-8 w-8 p-0 border border-black rounded-none ${
                       itinerary.featured ? 'bg-yellow-400' : 'bg-white hover:bg-yellow-100'
                     }`}
                   >
-                    <Star className="h-3 w-3" />
+                    {updatingStatus === itinerary.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Star className="h-3 w-3" />
+                    )}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => toggleExpanded(itinerary.id)}
+                    disabled={loadingDetail === itinerary.id}
                     className="h-8 w-8 p-0 border border-gray-300 rounded-none hover:bg-gray-100"
                   >
-                    {expandedItineraries.has(itinerary.id) ? (
+                    {loadingDetail === itinerary.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : expandedItineraries.has(itinerary.id) ? (
                       <ChevronUp className="h-3 w-3" />
                     ) : (
                       <ChevronDown className="h-3 w-3" />
@@ -542,10 +436,16 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
 
                 {/* Active Toggle */}
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-                  <Label className="text-xs text-gray-500">활성화</Label>
+                  <Label className="text-xs text-gray-500 flex items-center gap-1">
+                    활성화
+                    {updatingStatus === itinerary.id && (
+                      <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
+                    )}
+                  </Label>
                   <Switch
                     checked={itinerary.active}
                     onCheckedChange={() => handleToggleActive(itinerary.id)}
+                    disabled={updatingStatus === itinerary.id}
                   />
                 </div>
               </div>
