@@ -296,3 +296,100 @@ export async function deleteAdminTrip(
 
   return response.json();
 }
+
+// ===== Admin Event Types =====
+
+export interface AdminEvent {
+  id: string;
+  title: string;
+  type: string;
+  imageUrl: string | null;
+  location: string;
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  status: string;
+  targetAudience: string | null;
+  ageRestriction: string | null;
+  expectedParticipants: number | null;
+  createdAt: string;
+}
+
+export interface EventSummary {
+  totalEvents: number;
+  activeEvents: number;
+  upcomingEvents: number;
+}
+
+export interface AdminEventListResponse {
+  success: boolean;
+  data: AdminEvent[];
+  pagination: PageInfo;
+  summary: EventSummary;
+}
+
+export interface GetEventsParams {
+  page?: number;
+  limit?: number;
+  status?: string;
+  type?: string;
+  location?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+// ===== Admin Event API =====
+
+/**
+ * Get admin event list with pagination and filters
+ * GET /api/v1/admin/events
+ *
+ * @param params - Query parameters for pagination and filtering
+ * @returns AdminEventListResponse containing:
+ *   - data: 이벤트 목록
+ *   - pagination: 페이지네이션 정보
+ *   - summary: 요약 통계
+ */
+export async function getAdminEvents(params: GetEventsParams = {}): Promise<AdminEventListResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params.page) queryParams.append('page', params.page.toString());
+  if (params.limit) queryParams.append('limit', params.limit.toString());
+  if (params.status) queryParams.append('status', params.status);
+  if (params.type) queryParams.append('type', params.type);
+  if (params.location) queryParams.append('location', params.location);
+  if (params.dateFrom) queryParams.append('dateFrom', params.dateFrom);
+  if (params.dateTo) queryParams.append('dateTo', params.dateTo);
+
+  const queryString = queryParams.toString();
+  const url = `${API_BASE_URL}/admin/events${queryString ? `?${queryString}` : ''}`;
+
+  const response = await fetchWithAuth(url);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || '이벤트 목록을 불러오는데 실패했습니다');
+  }
+
+  return response.json();
+}
+
+/**
+ * Delete an event
+ * DELETE /api/v1/admin/events/:id
+ */
+export async function deleteAdminEvent(
+  eventId: string
+): Promise<ApiResponse<{ message: string; affectedItineraries: number }>> {
+  const response = await fetchWithAuth(`${API_BASE_URL}/admin/events/${eventId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || '이벤트 삭제에 실패했습니다');
+  }
+
+  return response.json();
+}

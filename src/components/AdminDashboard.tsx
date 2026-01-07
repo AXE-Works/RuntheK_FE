@@ -11,6 +11,10 @@ import {
   deleteAdminTrip,
   AdminTrip,
   AdminTripSummary,
+  getAdminEvents,
+  deleteAdminEvent,
+  AdminEvent,
+  EventSummary,
 } from '../services/adminApi';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -249,6 +253,16 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
   const [tripsLoading, setTripsLoading] = useState(false);
   const [tripsLoaded, setTripsLoaded] = useState(false);
 
+  // Event management states (API)
+  const [adminEvents, setAdminEvents] = useState<AdminEvent[]>([]);
+  const [eventSummary, setEventSummary] = useState<EventSummary>({
+    totalEvents: 0,
+    activeEvents: 0,
+    upcomingEvents: 0,
+  });
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+
   // Fetch users when 'users' tab is selected
   useEffect(() => {
     if (activeTab === 'users' && !usersLoaded) {
@@ -291,7 +305,29 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
     }
   }, [activeTab, tripsLoaded]);
 
-  // Event management states
+  // Fetch events when 'events' tab is selected
+  useEffect(() => {
+    if (activeTab === 'events' && !eventsLoaded) {
+      const fetchEvents = async () => {
+        setEventsLoading(true);
+        try {
+          const response = await getAdminEvents();
+          setAdminEvents(response.data);
+          if (response.summary) {
+            setEventSummary(response.summary);
+          }
+          setEventsLoaded(true);
+        } catch (error) {
+          console.error('Failed to fetch events:', error);
+        } finally {
+          setEventsLoading(false);
+        }
+      };
+      fetchEvents();
+    }
+  }, [activeTab, eventsLoaded]);
+
+  // Event management states (UI)
   const [eventSortBy, setEventSortBy] = useState('latest');
   const [eventCurrentPage, setEventCurrentPage] = useState(1);
   const eventsPerPage = 10;
@@ -333,12 +369,25 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
     status: '확정됨'
   });
 
-  // Calculate Event Statistics
-  const paginatedEvents = events.slice(
+  // Calculate Event Statistics - use API data
+  // Map adminEvents to the format expected by the UI
+  const mappedEvents = adminEvents.map(event => ({
+    id: event.id,
+    title: event.title,
+    type: event.type,
+    imageUrl: event.imageUrl,
+    location: event.location,
+    startDate: event.dateRange.start,
+    endDate: event.dateRange.end,
+    targetAudience: event.targetAudience || event.ageRestriction || '',
+    active: event.status === 'active',
+    status: event.status,
+  }));
+  const paginatedEvents = mappedEvents.slice(
     (eventCurrentPage - 1) * eventsPerPage,
     eventCurrentPage * eventsPerPage
   );
-  const totalEventPages = Math.ceil(events.length / eventsPerPage);
+  const totalEventPages = Math.ceil(mappedEvents.length / eventsPerPage);
 
   const handleCreateEvent = (e: React.FormEvent) => {
     e.preventDefault();
@@ -359,8 +408,14 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
     });
   };
 
-  const handleDeleteEvent = (id: number) => {
-    setEvents(events.filter(e => e.id !== id));
+  const handleDeleteEvent = async (id: string | number) => {
+    try {
+      await deleteAdminEvent(String(id));
+      // Refresh events list
+      setEventsLoaded(false);
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+    }
     setShowDeleteConfirm(null);
   };
 
@@ -788,6 +843,17 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
               </div>
             )}
 
+            {eventsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+                <span className="ml-3 text-gray-600">이벤트 목록을 불러오는 중...</span>
+              </div>
+            ) : paginatedEvents.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                <Calendar className="h-12 w-12 mb-4 opacity-50" />
+                <p>등록된 이벤트가 없습니다.</p>
+              </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {paginatedEvents.map((event) => (
                 <div key={event.id} className={`border-2 border-black bg-white transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] ${!event.active ? 'opacity-50 grayscale' : ''}`}>
@@ -846,6 +912,7 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                 </div>
               ))}
             </div>
+            )}
           </TabsContent>
           
           <TabsContent value="system" className="space-y-6">
