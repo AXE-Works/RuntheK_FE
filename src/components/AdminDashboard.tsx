@@ -1,4 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  getDashboardStats,
+  DashboardStats,
+  getAdminUsers,
+  AdminUser,
+  updateUserStatus as updateUserStatusApi,
+  deleteUser as deleteUserApi,
+  getAdminTrips,
+  getAdminTripSummary,
+  deleteAdminTrip,
+  AdminTrip,
+  AdminTripSummary,
+} from '../services/adminApi';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
@@ -53,15 +66,6 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
-// Mock data
-const mockStats = {
-  totalUsers: 5234,
-  dailySignups: 45,
-  activeUsers: 1234,
-  itinerariesCreated: 8765,
-  eventClickRate: 12.5
-};
-
 // User demographics data
 const mockUserDemographics = {
   countries: [
@@ -91,82 +95,6 @@ const mockAPIStatus = [
   { name: 'Google Maps', status: 'active' },
   { name: '한국관광공사', status: 'active' },
   { name: '데이터베이스', status: 'active' }
-];
-
-// Mock users data
-const mockUsers = [
-  {
-    id: 1,
-    email: 'john@email.com',
-    name: 'John Smith',
-    country: '미국',
-    signupDate: '2024-03-15',
-    lastLogin: '2024-10-28',
-    status: '활성',
-    tripCount: 3,
-    totalSpent: '$3,500',
-    interests: ['culture', 'food']
-  },
-  {
-    id: 2,
-    email: 'sarah@email.com',
-    name: 'Sarah Kim',
-    country: '싱가포르',
-    signupDate: '2024-03-14',
-    lastLogin: '2024-10-29',
-    status: '활성',
-    tripCount: 2,
-    totalSpent: '$2,800',
-    interests: ['kculture', 'shopping']
-  },
-  {
-    id: 3,
-    email: 'mike@email.com',
-    name: 'Mike Johnson',
-    country: '캐나다',
-    signupDate: '2024-03-13',
-    lastLogin: '2024-10-27',
-    status: '활성',
-    tripCount: 1,
-    totalSpent: '$1,200',
-    interests: ['nature', 'adventure']
-  },
-  {
-    id: 4,
-    email: 'emma.wilson@email.com',
-    name: 'Emma Wilson',
-    country: '영국',
-    signupDate: '2024-03-12',
-    lastLogin: '2024-10-30',
-    status: '활성',
-    tripCount: 4,
-    totalSpent: '$5,200',
-    interests: ['culture', 'history', 'food']
-  },
-  {
-    id: 5,
-    email: 'carlos.r@email.com',
-    name: 'Carlos Rodriguez',
-    country: '스페인',
-    signupDate: '2024-03-11',
-    lastLogin: '2024-10-26',
-    status: '활성',
-    tripCount: 2,
-    totalSpent: '$3,100',
-    interests: ['nightlife', 'food']
-  },
-  {
-    id: 6,
-    email: 'akiko.t@email.com',
-    name: 'Akiko Tanaka',
-    country: '일본',
-    signupDate: '2024-03-10',
-    lastLogin: '2024-10-25',
-    status: '활성',
-    tripCount: 5,
-    totalSpent: '$4,800',
-    interests: ['nature', 'wellness']
-  }
 ];
 
 // Mock popular activities
@@ -271,16 +199,98 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
   const [showAddTripForm, setShowAddTripForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
-  
+
+  // Active tab state for lazy loading
+  const [activeTab, setActiveTab] = useState('users');
+
+  // Dashboard stats state (always visible, load on mount)
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    dailySignups: 0,
+    totalTrips: 0,
+    activeUsers: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  // Fetch dashboard stats on mount (always visible header)
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await getDashboardStats();
+        setDashboardStats(response.data);
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   // User management states
-  const [users, setUsers] = useState(mockUsers);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersLoaded, setUsersLoaded] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [showUserDetail, setShowUserDetail] = useState(false);
   const [userSearchTerm, setUserSearchTerm] = useState('');
-  
+
   // Trip search state
   const [tripSearchTerm, setTripSearchTerm] = useState('');
-  
+
+  // Trip management states
+  const [adminTrips, setAdminTrips] = useState<AdminTrip[]>([]);
+  const [tripSummary, setTripSummary] = useState<AdminTripSummary>({
+    totalTrips: 0,
+    activeTrips: 0,
+    completedTrips: 0,
+    averageRating: null,
+  });
+  const [tripsLoading, setTripsLoading] = useState(false);
+  const [tripsLoaded, setTripsLoaded] = useState(false);
+
+  // Fetch users when 'users' tab is selected
+  useEffect(() => {
+    if (activeTab === 'users' && !usersLoaded) {
+      const fetchUsers = async () => {
+        setUsersLoading(true);
+        try {
+          const response = await getAdminUsers();
+          setUsers(response.data);
+          setUsersLoaded(true);
+        } catch (error) {
+          console.error('Failed to fetch users:', error);
+        } finally {
+          setUsersLoading(false);
+        }
+      };
+      fetchUsers();
+    }
+  }, [activeTab, usersLoaded]);
+
+  // Fetch trips when 'itineraries' tab is selected
+  useEffect(() => {
+    if (activeTab === 'itineraries' && !tripsLoaded) {
+      const fetchTrips = async () => {
+        setTripsLoading(true);
+        try {
+          const [tripsResponse, summaryResponse] = await Promise.all([
+            getAdminTrips(),
+            getAdminTripSummary(),
+          ]);
+          setAdminTrips(tripsResponse.data);
+          setTripSummary(summaryResponse.data);
+          setTripsLoaded(true);
+        } catch (error) {
+          console.error('Failed to fetch trips:', error);
+        } finally {
+          setTripsLoading(false);
+        }
+      };
+      fetchTrips();
+    }
+  }, [activeTab, tripsLoaded]);
+
   // Event management states
   const [eventSortBy, setEventSortBy] = useState('latest');
   const [eventCurrentPage, setEventCurrentPage] = useState(1);
@@ -322,70 +332,6 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
     feedback: '',
     status: '확정됨'
   });
-
-  // Add sample trips initially
-  const addSampleTripsInitial = () => {
-    const sampleTrips = [
-      {
-        id: Date.now() + 1,
-        userId: 101,
-        userName: 'Emma Wilson',
-        userEmail: 'emma.wilson@email.com',
-        userCountry: '영국',
-        title: '7 Days Seoul Cultural Experience',
-        duration: '7 days',
-        interests: ['culture', 'history', 'food'],
-        budget: 'mid-range',
-        cities: ['Seoul'],
-        createdAt: '2024-03-20',
-        status: '완료',
-        totalCost: '$1,400-2,000',
-        rating: 4.9,
-        feedback: '한국의 전통 문화를 깊이 체험할 수 있어서 정말 만족했습니다.',
-        confirmed: true,
-        itineraryData: { days: [] }
-      },
-      {
-        id: Date.now() + 2,
-        userId: 102,
-        userName: 'Sarah Kim',
-        userEmail: 'sarah@email.com',
-        userCountry: '싱가포르',
-        title: '5 Days K-Pop & Shopping Tour',
-        duration: '5 days',
-        interests: ['kculture', 'shopping', 'nightlife'],
-        budget: 'luxury',
-        cities: ['Seoul'],
-        createdAt: '2024-03-18',
-        status: '확정됨',
-        totalCost: '$2,000-3,000',
-        rating: 4.5,
-        feedback: 'Great tour!',
-        confirmed: true,
-        itineraryData: { days: [] }
-      }
-    ];
-    localStorage.setItem('confirmedTrips', JSON.stringify(sampleTrips));
-  };
-
-  const getConfirmedTrips = () => {
-    try {
-      const confirmed = localStorage.getItem('confirmedTrips');
-      const trips = confirmed ? JSON.parse(confirmed) : [];
-      if (trips.length === 0) {
-        const hasAddedSamples = localStorage.getItem('hasAddedSampleTrips');
-        if (!hasAddedSamples) {
-          addSampleTripsInitial();
-          localStorage.setItem('hasAddedSampleTrips', 'true');
-          const newConfirmed = localStorage.getItem('confirmedTrips');
-          return newConfirmed ? JSON.parse(newConfirmed) : [];
-        }
-      }
-      return trips;
-    } catch {
-      return [];
-    }
-  };
 
   // Calculate Event Statistics
   const paginatedEvents = events.slice(
@@ -429,17 +375,38 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
     setShowItineraryDetail(true);
   };
 
+  const handleDeleteTrip = async (tripId: string) => {
+    try {
+      await deleteAdminTrip(tripId);
+      setAdminTrips(adminTrips.filter(t => t.id !== tripId));
+      // Update summary after delete
+      setTripSummary(prev => ({
+        ...prev,
+        totalTrips: prev.totalTrips - 1,
+      }));
+    } catch (error) {
+      console.error('Failed to delete trip:', error);
+    }
+  };
+
   const clearAllTrips = () => {
     if (window.confirm('정말 모든 여행 일정을 삭제하시겠습니까?')) {
-      localStorage.removeItem('confirmedTrips');
-      window.location.reload();
+      // Note: This would require a batch delete API endpoint
+      // For now, we'll just clear local state
+      setAdminTrips([]);
+      setTripSummary({
+        totalTrips: 0,
+        activeTrips: 0,
+        completedTrips: 0,
+        averageRating: null,
+      });
     }
   };
 
   const handleAddTrip = () => {
-    const trips = getConfirmedTrips();
-    const trip = { ...newTrip, id: Date.now(), createdAt: new Date().toISOString().split('T')[0], confirmed: true };
-    localStorage.setItem('confirmedTrips', JSON.stringify([trip, ...trips]));
+    // TODO: Implement create trip API call (POST /api/v1/admin/trips)
+    // For now, just close the form
+    console.log('Add trip feature requires API integration');
     setShowAddTripForm(false);
     setNewTrip({
       userName: '', userEmail: '', userCountry: '', title: '', duration: '',
@@ -447,24 +414,55 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
     });
   };
 
-  const handleDeleteUser = (userId: number) => {
-    setUsers(users.filter(u => u.id !== userId));
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      await deleteUserApi(userId);
+      setUsers(users.filter(u => u.id !== userId));
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      // Fallback: remove from local state anyway for demo
+      setUsers(users.filter(u => u.id !== userId));
+    }
   };
 
-  const handleViewUserDetail = (user: any) => {
+  const handleViewUserDetail = (user: AdminUser) => {
     setSelectedUser(user);
     setShowUserDetail(true);
   };
 
-  const handleToggleUserStatus = (userId: number) => {
-    setUsers(users.map(u => 
-      u.id === userId ? { ...u, status: u.status === '활성' ? '비활성' : '활성' } : u
-    ));
+  const handleToggleUserStatus = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    const newStatus = user.status === 'active' ? 'inactive' : 'active';
+
+    try {
+      await updateUserStatusApi(userId, newStatus);
+      setUsers(users.map(u =>
+        u.id === userId ? { ...u, status: newStatus } : u
+      ));
+    } catch (error) {
+      console.error('Failed to update user status:', error);
+      // Fallback: update local state anyway for demo
+      setUsers(users.map(u =>
+        u.id === userId ? { ...u, status: newStatus } : u
+      ));
+    }
+  };
+
+  // Format date for display (ISO string to YYYY-MM-DD)
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '-';
+    return dateString.split('T')[0];
+  };
+
+  // Get status display text
+  const getStatusDisplay = (status: string) => {
+    return status === 'active' ? '활성' : '비활성';
   };
 
   const getUserTrips = (email: string) => {
-    const trips = getConfirmedTrips();
-    return trips.filter((t: any) => t.userEmail === email || t.userName === selectedUser?.name); // Fallback to name matching if email not found
+    return adminTrips.filter((t) => t.userEmail === email || t.userName === selectedUser?.name);
   };
 
   const filteredUsers = users.filter(user => 
@@ -498,17 +496,17 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
       </motion.div>
 
       {/* Stats Grid */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.1 }}
         className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12"
       >
         {[
-          { key: 'totalUsers', label: '총 사용자', value: mockStats.totalUsers },
-          { key: 'dailySignups', label: '일일 가입', value: mockStats.dailySignups },
-          { key: 'itinerariesCreated', label: '생성된 일정', value: mockStats.itinerariesCreated },
-          { key: 'activeUsers', label: '활성 사용자', value: mockStats.activeUsers }
+          { key: 'totalUsers', label: '총 사용자', value: dashboardStats.totalUsers },
+          { key: 'dailySignups', label: '일일 가입', value: dashboardStats.dailySignups },
+          { key: 'totalTrips', label: '생성된 일정', value: dashboardStats.totalTrips },
+          { key: 'activeUsers', label: '활성 사용자', value: dashboardStats.activeUsers }
         ].map((stat) => (
           <Card key={stat.key} className="border-2 border-black shadow-none rounded-none hover:bg-black hover:text-white transition-colors group">
             <CardHeader className="pb-2">
@@ -517,7 +515,13 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-black">{stat.value.toLocaleString()}</div>
+              <div className="text-3xl font-black">
+                {statsLoading ? (
+                  <span className="animate-pulse">--</span>
+                ) : (
+                  stat.value.toLocaleString()
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -529,7 +533,7 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <Tabs defaultValue="users" className="w-full">
+        <Tabs defaultValue="users" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full justify-start border-b border-black bg-transparent p-0 h-auto rounded-none mb-8">
             {['users', 'itineraries', 'recommended', 'events', 'system'].map((tab) => (
               <TabsTrigger
@@ -572,33 +576,49 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                 <span>상태</span>
                 <span className="text-center">관리</span>
               </div>
-              
-              {filteredUsers.map((user) => (
-                <div key={user.id} className="border-t border-black p-4 grid grid-cols-1 md:grid-cols-6 gap-4 items-center hover:bg-gray-50 transition-colors">
-                  <span className="truncate font-medium">{user.email}</span>
-                  <span>{user.name}</span>
-                  <span>{user.country}</span>
-                  <span className="text-sm text-gray-500">{user.signupDate}</span>
-                  <div className="flex items-center gap-2">
-                     <Switch 
-                        checked={user.status === '활성'} 
-                        onCheckedChange={() => handleToggleUserStatus(user.id)}
-                        className="data-[state=checked]:bg-green-500"
-                     />
-                     <span className={`text-xs font-bold ${user.status === '활성' ? 'text-green-600' : 'text-gray-400'}`}>
-                        {user.status}
-                     </span>
-                  </div>
-                  <div className="flex justify-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleViewUserDetail(user)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+
+              {usersLoading ? (
+                <div className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+                  <p className="text-gray-500">사용자 목록을 불러오는 중...</p>
                 </div>
-              ))}
+              ) : filteredUsers.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  {userSearchTerm ? '검색 결과가 없습니다.' : '등록된 사용자가 없습니다.'}
+                </div>
+              ) : (
+                filteredUsers.map((user) => (
+                  <div key={user.id} className="border-t border-black p-4 grid grid-cols-1 md:grid-cols-6 gap-4 items-center hover:bg-gray-50 transition-colors">
+                    <span className="truncate font-medium">{user.email}</span>
+                    <span>{user.name}</span>
+                    <span>{user.country || '-'}</span>
+                    <span className="text-sm text-gray-500">{formatDate(user.signupDate)}</span>
+                    <div className="flex items-center gap-2">
+                       <Switch
+                          checked={user.status === 'active'}
+                          onCheckedChange={() => handleToggleUserStatus(user.id)}
+                          className="data-[state=checked]:bg-green-500"
+                       />
+                       <span className={`text-xs font-bold ${user.status === 'active' ? 'text-green-600' : 'text-gray-400'}`}>
+                          {getStatusDisplay(user.status)}
+                       </span>
+                    </div>
+                    <div className="flex justify-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleViewUserDetail(user)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleDeleteUser(user.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </TabsContent>
 
@@ -639,10 +659,10 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
             {/* Stats Banner */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                {[
-                 { label: '총 여행', value: getConfirmedTrips().length, icon: Calendar },
-                 { label: '완료됨', value: getConfirmedTrips().filter((t: any) => t.status === '완료').length, icon: CheckCircle },
-                 { label: '진행중', value: getConfirmedTrips().filter((t: any) => t.status === '진행중').length, icon: Clock },
-                 { label: '평균 평점', value: '4.8', icon: Star }
+                 { label: '총 여행', value: tripSummary.totalTrips, icon: Calendar },
+                 { label: '완료됨', value: tripSummary.completedTrips, icon: CheckCircle },
+                 { label: '진행중', value: tripSummary.activeTrips, icon: Clock },
+                 { label: '평균 평점', value: tripSummary.averageRating ?? '-', icon: Star }
                ].map((stat) => (
                  <div key={stat.label} className="bg-gray-50 p-4 border border-black flex items-center justify-between group hover:bg-black hover:text-white transition-colors">
                     <div>
@@ -656,75 +676,82 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
 
             {/* Content Grid */}
             <div className="grid gap-4">
-              {getConfirmedTrips()
-                .filter((itinerary: any) => {
-                  if (!tripSearchTerm) return true;
-                  const searchLower = tripSearchTerm.toLowerCase();
-                  return (
-                    itinerary.userName?.toLowerCase().includes(searchLower) ||
-                    itinerary.title?.toLowerCase().includes(searchLower)
-                  );
-                })
-                .map((itinerary: any, index: number) => (
-                  <motion.div
-                    key={itinerary.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <div className="group border border-gray-200 hover:border-black bg-white p-6 transition-all hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                      <div className="flex flex-col md:flex-row gap-6 justify-between">
-                        <div className="space-y-3 flex-1">
-                           <div className="flex items-center gap-3">
-                              <h3 className="text-lg font-bold text-black">{itinerary.title}</h3>
-                              <Badge variant="outline" className="rounded-none border-black text-black">{itinerary.status}</Badge>
-                              {itinerary.rating > 0 && (
-                                <span className="flex items-center text-sm font-bold">
-                                  <Star className="h-4 w-4 fill-black text-black mr-1" />
-                                  {itinerary.rating}
-                                </span>
-                              )}
-                           </div>
-                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                              <div>
-                                <span className="block text-xs uppercase tracking-wider text-gray-400">사용자</span>
-                                {itinerary.userName}
-                              </div>
-                              <div>
-                                <span className="block text-xs uppercase tracking-wider text-gray-400">기간</span>
-                                {itinerary.duration}
-                              </div>
-                              <div>
-                                <span className="block text-xs uppercase tracking-wider text-gray-400">예산</span>
-                                {itinerary.totalCost}
-                              </div>
-                              <div>
-                                <span className="block text-xs uppercase tracking-wider text-gray-400">날짜</span>
-                                {itinerary.createdAt}
-                              </div>
-                           </div>
-                           {itinerary.interests && (
-                             <div className="flex gap-2 pt-2">
-                               {itinerary.interests.map((tag: string) => (
-                                 <span key={tag} className="text-xs bg-gray-100 px-2 py-1 font-medium text-gray-600 uppercase tracking-wide">
-                                   #{tag}
-                                 </span>
-                               ))}
+              {tripsLoading ? (
+                <div className="text-center py-8 text-gray-500">로딩 중...</div>
+              ) : adminTrips.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">등록된 여행 일정이 없습니다.</div>
+              ) : (
+                adminTrips
+                  .filter((trip) => {
+                    if (!tripSearchTerm) return true;
+                    const searchLower = tripSearchTerm.toLowerCase();
+                    return (
+                      trip.userName?.toLowerCase().includes(searchLower) ||
+                      trip.title?.toLowerCase().includes(searchLower) ||
+                      trip.cities?.some(city => city.toLowerCase().includes(searchLower))
+                    );
+                  })
+                  .map((trip, index) => (
+                    <motion.div
+                      key={trip.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <div className="group border border-gray-200 hover:border-black bg-white p-6 transition-all hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                        <div className="flex flex-col md:flex-row gap-6 justify-between">
+                          <div className="space-y-3 flex-1">
+                             <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-bold text-black">{trip.title}</h3>
+                                <Badge variant="outline" className="rounded-none border-black text-black">{trip.status}</Badge>
+                                {trip.averageRating && trip.averageRating > 0 && (
+                                  <span className="flex items-center text-sm font-bold">
+                                    <Star className="h-4 w-4 fill-black text-black mr-1" />
+                                    {trip.averageRating}
+                                  </span>
+                                )}
                              </div>
-                           )}
-                        </div>
-                        <div className="flex items-center">
-                           <Button 
-                             onClick={() => handleViewItinerary(itinerary)}
-                             className="w-full md:w-auto rounded-none border-2 border-black bg-transparent text-black hover:bg-black hover:text-white font-bold transition-all"
-                           >
-                             상세보기
-                           </Button>
+                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                                <div>
+                                  <span className="block text-xs uppercase tracking-wider text-gray-400">사용자</span>
+                                  {trip.userName}
+                                </div>
+                                <div>
+                                  <span className="block text-xs uppercase tracking-wider text-gray-400">기간</span>
+                                  {trip.duration}
+                                </div>
+                                <div>
+                                  <span className="block text-xs uppercase tracking-wider text-gray-400">예산</span>
+                                  {trip.totalEstimatedCost || trip.budget}
+                                </div>
+                                <div>
+                                  <span className="block text-xs uppercase tracking-wider text-gray-400">날짜</span>
+                                  {trip.confirmedAt?.split('T')[0] || '-'}
+                                </div>
+                             </div>
+                             {trip.interests && trip.interests.length > 0 && (
+                               <div className="flex gap-2 pt-2">
+                                 {trip.interests.map((tag: string) => (
+                                   <span key={tag} className="text-xs bg-gray-100 px-2 py-1 font-medium text-gray-600 uppercase tracking-wide">
+                                     #{tag}
+                                   </span>
+                                 ))}
+                               </div>
+                             )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                             <Button
+                               onClick={() => handleViewItinerary(trip)}
+                               className="w-full md:w-auto rounded-none border-2 border-black bg-transparent text-black hover:bg-black hover:text-white font-bold transition-all"
+                             >
+                               상세보기
+                             </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))
+              )}
             </div>
           </TabsContent>
 
