@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Upload } from 'lucide-react';
+import { Upload, Loader2 } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { motion } from 'motion/react';
 
@@ -16,9 +16,10 @@ interface EventFormProps {
   editingEvent: any;
   onSubmit: () => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
-export function EventForm({ newEvent, setNewEvent, editingEvent, onSubmit, onCancel }: EventFormProps) {
+export function EventForm({ newEvent, setNewEvent, editingEvent, onSubmit, onCancel, isSubmitting = false }: EventFormProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -310,18 +311,27 @@ export function EventForm({ newEvent, setNewEvent, editingEvent, onSubmit, onCan
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={onCancel}
+              disabled={isSubmitting}
               className="border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               취소
             </Button>
-            <Button 
+            <Button
               onClick={onSubmit}
-              className="bg-black text-white hover:bg-gray-800"
+              disabled={isSubmitting}
+              className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
             >
-              {editingEvent ? '이벤트 수정' : '이벤트 생성'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  저장 중...
+                </>
+              ) : (
+                editingEvent ? '이벤트 수정' : '이벤트 생성'
+              )}
             </Button>
           </div>
         </CardContent>

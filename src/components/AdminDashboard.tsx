@@ -15,6 +15,10 @@ import {
   deleteAdminEvent,
   AdminEvent,
   EventSummary,
+  submitEventForm,
+  EventFormData,
+  getAdminEventDetail,
+  convertDetailToForm,
 } from '../services/adminApi';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -389,23 +393,43 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
   );
   const totalEventPages = Math.ceil(mappedEvents.length / eventsPerPage);
 
-  const handleCreateEvent = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    const event = {
-      ...newEvent,
-      id: events.length + 1,
-      impressions: 0,
-      clicks: 0,
-      priority: '중간',
-    };
-    setEvents([event, ...events]);
-    setShowEventForm(false);
-    setNewEvent({
-      title: '', type: '시즌 이벤트', location: '', targetAudience: '', startDate: '', endDate: '',
-      budget: 0, expectedParticipants: 0, conditions: '', description: '', organizer: '',
-      contactEmail: '', website: '', requirements: '', ageRestriction: '', weatherDependency: '',
-      active: true, frequency: 50, relevance: 50, imageUrl: ''
-    });
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      // API 호출하여 이벤트 생성/수정
+      const result = await submitEventForm(
+        newEvent as EventFormData,
+        editingEvent?.id ? String(editingEvent.id) : undefined
+      );
+
+      if (result.success) {
+        // 성공 시 이벤트 목록 새로고침
+        setEventsLoaded(false);
+        setShowEventForm(false);
+        setEditingEvent(null);
+
+        // 폼 초기화
+        setNewEvent({
+          title: '', type: '시즌 이벤트', location: '', targetAudience: '', startDate: '', endDate: '',
+          budget: 0, expectedParticipants: 0, conditions: '', description: '', organizer: '',
+          contactEmail: '', website: '', requirements: '', ageRestriction: '', weatherDependency: '',
+          active: true, frequency: 50, relevance: 50, imageUrl: ''
+        });
+
+        console.log(editingEvent ? '이벤트 수정 완료' : '이벤트 생성 완료:', result.data);
+      }
+    } catch (error) {
+      console.error('이벤트 저장 실패:', error);
+      alert(error instanceof Error ? error.message : '이벤트 저장에 실패했습니다');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeleteEvent = async (id: string | number) => {
@@ -839,6 +863,7 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                      setShowEventForm(false);
                      setEditingEvent(null);
                    }}
+                   isSubmitting={isSubmitting}
                  />
               </div>
             )}
