@@ -9,7 +9,7 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
-import { getRecommendedTrips, RecommendedTripResponse, RecommendedDayResponse } from '../services/tripApi';
+import { getRecommendedTrips, getRecommendedTripDetail, RecommendedTripResponse, RecommendedDayResponse } from '../services/tripApi';
 
 // Mock user-generated travel course data
 const USER_GENERATED_COURSES = [
@@ -394,6 +394,7 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
   const [editingBanner, setEditingBanner] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<BannerData>>({});
   const [detailBanner, setDetailBanner] = useState<BannerData | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -415,30 +416,23 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
 
         if (apiTrips.length > 0) {
           // Transform API response to BannerData format
+          // Note: days are not included in list response, will be fetched on detail view
           const apiBanners: BannerData[] = apiTrips.map((trip, index) => ({
             id: trip.id,
             title: trip.title,
-            subtitle: trip.subtitle || `Explore Korea's ${trip.category?.toLowerCase() || 'travel'} experiences`,
-            image: trip.image || BANNER_IMAGES[index % BANNER_IMAGES.length],
+            subtitle: trip.subtitle || trip.description || `Explore Korea's ${trip.category?.toLowerCase() || 'travel'} experiences`,
+            image: trip.image || trip.imageUrl || BANNER_IMAGES[index % BANNER_IMAGES.length],
             duration: trip.duration,
-            visitors: formatVisitors(trip.visitors || 0),
-            rating: trip.rating || 0,
-            highlights: trip.highlights || [],
+            visitors: formatVisitors(trip.visitors || trip.viewCount || 0),
+            rating: trip.rating || trip.averageRating || 0,
+            highlights: trip.highlights || trip.interests || [],
             category: trip.category || 'Cultural',
             isEditable: false, // API data is not editable
-            startDate: trip.startDate,
+            startDate: null,
             budget: trip.budget,
             cities: trip.cities || [],
-            // Map API days to detailedSchedule format
-            detailedSchedule: trip.days?.map((day: RecommendedDayResponse) => ({
-              day: day.day,
-              title: day.title,
-              activities: day.activities.map(act => ({
-                time: act.time || '',
-                name: act.name,
-                description: act.description || ''
-              }))
-            })),
+            // detailedSchedule will be loaded when clicking detail button
+            detailedSchedule: undefined,
           }));
           setBanners(apiBanners);
         } else {
@@ -524,16 +518,49 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
     }
   };
 
-  const handleBannerDetail = (banner: BannerData) => {
-    // For API data, detailedSchedule is not available
-    // For mock data, try to find the full course data with detailed schedule
-    if (banner.detailedSchedule) {
+  const handleBannerDetail = async (banner: BannerData) => {
+    // For mock data with existing schedule, use it directly
+    if (banner.detailedSchedule && banner.detailedSchedule.length > 0) {
       setDetailBanner(banner);
-    } else {
-      // Try to find from mock data (for fallback scenario)
-      const fullCourse = USER_GENERATED_COURSES.find(c => String(c.id) === banner.id);
-      setDetailBanner(fullCourse ? { ...banner, detailedSchedule: fullCourse.detailedSchedule } : banner);
+      return;
     }
+
+    // For API data (IDs starting with "rec_"), fetch detail from API
+    if (banner.id.startsWith('rec_')) {
+      setDetailLoading(true);
+      setDetailBanner(banner); // Show dialog immediately with loading state
+
+      try {
+        const detail = await getRecommendedTripDetail(banner.id);
+
+        // Transform API response to banner format with detailed schedule
+        const detailedBanner: BannerData = {
+          ...banner,
+          subtitle: detail.description || banner.subtitle,
+          detailedSchedule: detail.days?.map((day: RecommendedDayResponse) => ({
+            day: day.dayNumber,
+            title: day.title,
+            activities: day.activities.map(act => ({
+              time: act.activityTime || '',
+              name: act.activityName,
+              description: act.description || ''
+            }))
+          })) || []
+        };
+
+        setDetailBanner(detailedBanner);
+      } catch (err) {
+        console.error('[SuggestedBanners] Failed to fetch detail:', err);
+        // Keep the banner without detailed schedule (will show TBD message)
+      } finally {
+        setDetailLoading(false);
+      }
+      return;
+    }
+
+    // Fallback: Try to find from mock data
+    const fullCourse = USER_GENERATED_COURSES.find(c => String(c.id) === banner.id);
+    setDetailBanner(fullCourse ? { ...banner, detailedSchedule: fullCourse.detailedSchedule } : banner);
   };
 
   // Loading skeleton component
@@ -681,9 +708,13 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-2">Tour Overview</h4>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
-                      <p className="text-gray-500 text-sm">TBD - Description coming soon</p>
-                    </div>
+                    {detailBanner.subtitle ? (
+                      <p className="text-gray-700 text-sm leading-relaxed">{detailBanner.subtitle}</p>
+                    ) : (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                        <p className="text-gray-500 text-sm">TBD - Description coming soon</p>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -758,7 +789,13 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
               {/* Detailed Schedule Section */}
               <div className="border-t border-gray-200 pt-6">
                 <h4 className="font-semibold text-gray-900 mb-4">Detailed Travel Schedule</h4>
-                {detailBanner.detailedSchedule && detailBanner.detailedSchedule.length > 0 ? (
+                {detailLoading ? (
+                  /* Loading state */
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-3" />
+                    <p className="text-gray-500 text-sm">Loading detailed schedule...</p>
+                  </div>
+                ) : detailBanner.detailedSchedule && detailBanner.detailedSchedule.length > 0 ? (
                   <div className="space-y-6">
                     {detailBanner.detailedSchedule.map((daySchedule: any) => (
                       <div key={daySchedule.day} className="bg-gray-50 rounded-lg p-5">

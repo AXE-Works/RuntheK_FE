@@ -518,62 +518,101 @@ export async function removeBookmark(tripId: string): Promise<void> {
 // ===== Recommended Trips API (Public) =====
 
 /**
- * Recommended trip response from BE
+ * Recommended trip response from BE (PublicRecommendedResponse)
+ * 관리자가 생성한 추천 여행일정
  */
 export interface RecommendedTripResponse {
   id: string;
   title: string;
-  subtitle: string;
-  image: string | null;
-  duration: string;
-  visitors: number;
-  rating: number;
-  highlights: string[];
-  category: string;
-  startDate: string | null;
-  budget: string;
+  description: string | null;
+  imageUrl: string | null;
+  duration: string;           // "5 days" format
   cities: string[];
-  days?: RecommendedDayResponse[];
+  budget: string;             // "budget" | "mid-range" | "luxury"
+  interests: string[];
+  averageRating: number | null;
+  viewCount: number;
+  bookingCount: number;
+  isFeatured: boolean;
+  category: string;           // Derived from first interest
+  daysCount: number;
+  // Legacy aliases for backward compatibility with UI components
+  subtitle?: string;          // Maps to description
+  image?: string | null;      // Maps to imageUrl
+  visitors?: number;          // Maps to viewCount
+  rating?: number;            // Maps to averageRating
+  highlights?: string[];      // Maps to interests
 }
 
 /**
- * Day schedule in recommended trips
+ * Day schedule in recommended trips (for detail view)
+ * Matches BE RecommendedDayResponse
  */
 export interface RecommendedDayResponse {
-  day: number;
+  id: string;
+  dayNumber: number;
   title: string;
+  description: string | null;
   activities: RecommendedActivityResponse[];
 }
 
 /**
  * Activity in recommended trips
+ * Matches BE RecommendedActivityResponse
  */
 export interface RecommendedActivityResponse {
-  time: string | null;
-  name: string;
+  id: string;
+  activityOrder: number;
+  activityTime: string | null;  // LocalTime from BE (HH:mm format)
+  activityName: string;
+  location: string | null;
   description: string | null;
+  estimatedCost: string | null;
+  isEvent: boolean;
+  eventId: string | null;
+  eventType: string | null;
+}
+
+/**
+ * Recommended trip detail response (PublicRecommendedDetailResponse)
+ */
+export interface RecommendedTripDetailResponse extends RecommendedTripResponse {
+  targetAudience: string | null;
+  seasonTag: string | null;
+  days: RecommendedDayResponse[];
+  richContent: string | null;
+}
+
+/**
+ * Transform BE response to include legacy UI aliases
+ */
+function transformRecommendedResponse(item: RecommendedTripResponse): RecommendedTripResponse {
+  return {
+    ...item,
+    // Legacy aliases for backward compatibility
+    subtitle: item.description ?? undefined,
+    image: item.imageUrl,
+    visitors: item.viewCount,
+    rating: item.averageRating ?? undefined,
+    highlights: item.interests,
+  };
 }
 
 /**
  * Get recommended trips (public endpoint - no authentication required)
  *
- * GET /api/v1/trips/recommended
+ * GET /api/v1/recommended
  *
  * @param limit - Number of trips to return (default: 8, max: 20)
- * @param category - Optional category filter
- * @returns Array of recommended trips
+ * @returns Array of recommended trips from admin-created itineraries
  */
 export async function getRecommendedTrips(
-  limit: number = 8,
-  category?: string
+  limit: number = 8
 ): Promise<RecommendedTripResponse[]> {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (category) {
-    params.append('category', category);
-  }
 
   // Public endpoint - no auth required
-  const response = await fetch(`${API_BASE_URL}/trips/recommended?${params}`);
+  const response = await fetch(`${API_BASE_URL}/recommended?${params}`);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -583,5 +622,41 @@ export async function getRecommendedTrips(
 
   const result = await response.json();
   console.log('[Trip API] Fetched recommended trips:', result);
-  return result.data ?? [];
+
+  // Transform to include legacy aliases for UI compatibility
+  const data = result.data ?? [];
+  return data.map(transformRecommendedResponse);
+}
+
+/**
+ * Get recommended trip detail (public endpoint)
+ *
+ * GET /api/v1/recommended/:id
+ *
+ * @param id - Recommended itinerary ID
+ * @returns Detailed recommended trip with days and activities
+ */
+export async function getRecommendedTripDetail(
+  id: string
+): Promise<RecommendedTripDetailResponse> {
+  const response = await fetch(`${API_BASE_URL}/recommended/${id}`);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error('[Trip API] Failed to fetch recommended trip detail:', errorData);
+    throw new Error(errorData.error?.message || 'Failed to fetch recommended trip detail');
+  }
+
+  const result = await response.json();
+  console.log('[Trip API] Fetched recommended trip detail:', result);
+
+  const item = result.data;
+  return {
+    ...item,
+    subtitle: item.description ?? undefined,
+    image: item.imageUrl,
+    visitors: item.viewCount,
+    rating: item.averageRating ?? undefined,
+    highlights: item.interests,
+  };
 }
