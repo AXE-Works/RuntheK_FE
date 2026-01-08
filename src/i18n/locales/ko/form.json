@@ -64,10 +64,12 @@
     "luxuryDesc": "일 20만원+ - 프리미엄 호텔, 파인 다이닝, 프라이빗 투어"
   },
   "duration": {
+    "1day": "1일",
+    "2days": "2일",
     "3days": "3일",
     "5days": "5일",
     "7days": "7일",
-    "10days": "10일 이상"
+    "10days": "10일"
   },
   "validation": {
     "selectDestination": "최소 하나의 여행지를 선택하세요",

@@ -64,10 +64,12 @@
     "luxuryDesc": "$200+/day - Premium hotels, fine dining, private tours"
   },
   "duration": {
+    "1day": "1 day",
+    "2days": "2 days",
     "3days": "3 days",
     "5days": "5 days",
     "7days": "7 days",
-    "10days": "10+ days"
+    "10days": "10 days"
   },
   "validation": {
     "selectDestination": "Please select at least one destination",

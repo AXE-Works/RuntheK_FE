@@ -648,10 +648,12 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                     <SelectValue placeholder={t('form:labels.selectDuration')} />
                   </SelectTrigger>
                   <SelectContent className="z-50 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-lg">
+                    <SelectItem value="1 day">{t('form:duration.1day')}</SelectItem>
+                    <SelectItem value="2 days">{t('form:duration.2days')}</SelectItem>
                     <SelectItem value="3 days">{t('form:duration.3days')}</SelectItem>
                     <SelectItem value="5 days">{t('form:duration.5days')}</SelectItem>
                     <SelectItem value="7 days">{t('form:duration.7days')}</SelectItem>
-                    <SelectItem value="10+ days">{t('form:duration.10days')}</SelectItem>
+                    <SelectItem value="10 days">{t('form:duration.10days')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
