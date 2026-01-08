@@ -37,6 +37,7 @@ import { ItineraryDetailModal } from './ItineraryDetailModal';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { EventForm } from './EventForm';
 import { AdminItineraryManager } from './AdminItineraryManager';
+import PromptManagement from './PromptManagement';
 import logo from 'figma:asset/2837fdead800498e4b0136649e9bfa4bce6e67ea.png';
 import { 
   Users, 
@@ -1038,6 +1039,9 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                   <span>23:59</span>
                </div>
             </div>
+
+            {/* AI Prompt Management */}
+            <PromptManagement />
           </TabsContent>
         </Tabs>
       </motion.div>
