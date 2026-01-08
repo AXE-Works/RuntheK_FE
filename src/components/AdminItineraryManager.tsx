@@ -29,10 +29,15 @@ import {
   getRecommendedList,
   getRecommendedDetail,
   updateRecommendedStatus,
+  createRecommendedItinerary,
+  updateRecommendedItinerary,
+  deleteRecommendedItinerary,
   type RecommendedItinerary,
   type RecommendedSummary,
-  type PageInfo
+  type PageInfo,
+  type CreateRecommendedRequest
 } from '../services/recommendedApi';
+import { toast } from 'sonner';
 
 interface AdminItineraryManagerProps {
   currentUser?: any;
@@ -102,9 +107,34 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
     setShowEditor(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('이 추천 여행 일정을 삭제하시겠습니까?')) {
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('이 추천 여행 일정을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    setDeleting(id);
+    try {
+      await deleteRecommendedItinerary(id);
       setItineraries(itineraries.filter(item => item.id !== id));
+      // Update summary
+      const deletedItem = itineraries.find(i => i.id === id);
+      if (deletedItem) {
+        setSummary(prev => ({
+          ...prev,
+          totalItineraries: prev.totalItineraries - 1,
+          activeItineraries: deletedItem.active ? prev.activeItineraries - 1 : prev.activeItineraries,
+          totalViewCount: prev.totalViewCount - deletedItem.viewCount,
+          totalBookingCount: prev.totalBookingCount - deletedItem.bookingCount,
+        }));
+      }
+      toast.success('추천 일정이 삭제되었습니다');
+    } catch (err) {
+      console.error('Failed to delete itinerary:', err);
+      toast.error('삭제에 실패했습니다: ' + (err instanceof Error ? err.message : '알 수 없는 오류'));
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -183,26 +213,68 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
     }
   };
 
-  const handleSave = (itinerary: RecommendedItinerary) => {
-    if (editingItinerary) {
-      // Update existing
-      setItineraries(itineraries.map(item =>
-        item.id === editingItinerary.id ? { ...itinerary, updatedAt: new Date().toISOString().split('T')[0] } : item
-      ));
-    } else {
-      // Create new
-      const newItinerary = {
-        ...itinerary,
-        id: `rec-${Date.now()}`,
-        viewCount: 0,
-        bookingCount: 0,
-        createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0]
-      };
-      setItineraries([newItinerary, ...itineraries]);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async (itinerary: RecommendedItinerary) => {
+    setSaving(true);
+
+    // Convert RecommendedItinerary to CreateRecommendedRequest format
+    const request: CreateRecommendedRequest = {
+      title: itinerary.title,
+      description: itinerary.description,
+      imageUrl: itinerary.imageUrl,
+      duration: itinerary.duration,
+      cities: itinerary.cities,
+      budget: itinerary.budget,
+      interests: itinerary.interests,
+      isActive: itinerary.active,
+      isFeatured: itinerary.featured,
+      displayOrder: itinerary.displayOrder,
+      days: itinerary.days.map(day => ({
+        day: day.day,
+        title: day.title,
+        activities: day.activities.map(act => ({
+          time: act.time,
+          activity: act.activity,
+          location: act.location,
+          description: act.description,
+          estimatedCost: act.estimatedCost,
+        })),
+      })),
+      richContent: itinerary.richContent ? {
+        introduction: itinerary.richContent.introduction,
+        contentBlocks: itinerary.richContent.contentBlocks,
+      } : undefined,
+    };
+
+    try {
+      if (editingItinerary) {
+        // Update existing
+        const updated = await updateRecommendedItinerary(editingItinerary.id, request);
+        setItineraries(itineraries.map(item =>
+          item.id === editingItinerary.id ? updated : item
+        ));
+        toast.success('추천 일정이 수정되었습니다');
+      } else {
+        // Create new
+        const created = await createRecommendedItinerary(request);
+        setItineraries([created, ...itineraries]);
+        // Update summary
+        setSummary(prev => ({
+          ...prev,
+          totalItineraries: prev.totalItineraries + 1,
+          activeItineraries: created.active ? prev.activeItineraries + 1 : prev.activeItineraries,
+        }));
+        toast.success('새 추천 일정이 생성되었습니다');
+      }
+      setShowEditor(false);
+      setEditingItinerary(null);
+    } catch (err) {
+      console.error('Failed to save itinerary:', err);
+      toast.error('저장에 실패했습니다: ' + (err instanceof Error ? err.message : '알 수 없는 오류'));
+    } finally {
+      setSaving(false);
     }
-    setShowEditor(false);
-    setEditingItinerary(null);
   };
 
   if (showEditor) {
@@ -428,9 +500,14 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
                     variant="outline"
                     size="sm"
                     onClick={() => handleDelete(itinerary.id)}
-                    className="h-8 w-8 p-0 border border-red-400 text-red-600 rounded-none hover:bg-red-600 hover:text-white"
+                    disabled={deleting === itinerary.id}
+                    className="h-8 w-8 p-0 border border-red-400 text-red-600 rounded-none hover:bg-red-600 hover:text-white disabled:opacity-50"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    {deleting === itinerary.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-3 w-3" />
+                    )}
                   </Button>
                 </div>
 

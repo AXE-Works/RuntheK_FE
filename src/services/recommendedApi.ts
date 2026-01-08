@@ -403,3 +403,187 @@ export async function updateRecommendedStatus(
   const result: UpdateStatusApiResponse = await response.json();
   return result.data;
 }
+
+// ============================================================
+// Create / Update / Delete
+// ============================================================
+
+/** Convert display duration to backend enum */
+function convertDurationToEnum(duration: string): DurationEnum {
+  const normalized = duration.toLowerCase().replace(/\s+/g, '');
+  if (normalized.includes('3') || normalized.includes('three')) return 'THREE_DAYS';
+  if (normalized.includes('5') || normalized.includes('five')) return 'FIVE_DAYS';
+  if (normalized.includes('7') || normalized.includes('seven')) return 'SEVEN_DAYS';
+  if (normalized.includes('10') || normalized.includes('ten')) return 'TEN_PLUS_DAYS';
+  return 'FIVE_DAYS'; // default
+}
+
+/** Convert display budget to backend enum */
+function convertBudgetToEnum(budget: string): BudgetEnum {
+  const normalized = budget.toLowerCase().replace(/[_-]/g, '');
+  if (normalized === 'budget' || normalized === 'low') return 'BUDGET';
+  if (normalized.includes('mid') || normalized === 'medium') return 'MID_RANGE';
+  if (normalized === 'luxury' || normalized === 'high') return 'LUXURY';
+  return 'MID_RANGE'; // default
+}
+
+/** Convert "09:00 AM" to "09:00" format */
+function convertTimeTo24Hour(time: string): string {
+  const match = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  if (!match) return '09:00';
+
+  let hours = parseInt(match[1]);
+  const minutes = match[2];
+  const period = match[3]?.toUpperCase();
+
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+
+  return `${hours.toString().padStart(2, '0')}:${minutes}`;
+}
+
+/** Request type for creating/updating recommended itinerary */
+export interface CreateRecommendedRequest {
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  duration: string;
+  cities: string[];
+  budget: string;
+  interests: string[];
+  isActive?: boolean;
+  isFeatured?: boolean;
+  displayOrder?: number;
+  targetAudience?: string;
+  seasonTag?: string;
+  days: {
+    day: number;
+    title: string;
+    description?: string;
+    activities: {
+      time: string;
+      activity: string;
+      location?: string;
+      description?: string;
+      estimatedCost?: string;
+    }[];
+  }[];
+  richContent?: {
+    introduction?: string;
+    contentBlocks?: {
+      id: string;
+      type: string;
+      content: string | string[];
+      title?: string;
+    }[];
+    conclusion?: string;
+  };
+}
+
+/** Convert frontend request to backend format */
+function convertToBackendRequest(params: CreateRecommendedRequest) {
+  return {
+    title: params.title,
+    description: params.description || '',
+    imageUrl: params.imageUrl || '',
+    duration: convertDurationToEnum(params.duration),
+    cities: params.cities,
+    budget: convertBudgetToEnum(params.budget),
+    interests: params.interests,
+    isActive: params.isActive ?? false,
+    isFeatured: params.isFeatured ?? false,
+    displayOrder: params.displayOrder ?? 0,
+    targetAudience: params.targetAudience || null,
+    seasonTag: params.seasonTag || null,
+    days: params.days.map(day => ({
+      day: day.day,
+      title: day.title,
+      description: day.description || '',
+      activities: day.activities.map(act => ({
+        time: convertTimeTo24Hour(act.time),
+        activity: act.activity,
+        location: act.location || '',
+        description: act.description || '',
+        estimatedCost: act.estimatedCost || '',
+      })),
+    })),
+    richContent: params.richContent ? {
+      introduction: params.richContent.introduction || '',
+      contentBlocks: params.richContent.contentBlocks?.map(block => ({
+        id: block.id,
+        type: block.type,
+        content: Array.isArray(block.content) ? block.content.join('\n') : block.content,
+        title: block.title || '',
+      })) || [],
+      conclusion: params.richContent.conclusion || '',
+    } : null,
+  };
+}
+
+/**
+ * Create a new recommended itinerary (Admin)
+ */
+export async function createRecommendedItinerary(
+  params: CreateRecommendedRequest
+): Promise<RecommendedItinerary> {
+  const backendRequest = convertToBackendRequest(params);
+
+  const response = await fetchWithAuth(`${API_BASE_URL}/admin/recommended`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(backendRequest),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `Failed to create itinerary: ${response.status}`);
+  }
+
+  const result = await response.json();
+  // Response may be wrapped in { success: true, data: ... } or direct
+  const data = result.data || result;
+  return convertDetail(data);
+}
+
+/**
+ * Update an existing recommended itinerary (Admin)
+ */
+export async function updateRecommendedItinerary(
+  id: string,
+  params: CreateRecommendedRequest
+): Promise<RecommendedItinerary> {
+  const backendRequest = convertToBackendRequest(params);
+
+  const response = await fetchWithAuth(`${API_BASE_URL}/admin/recommended/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(backendRequest),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `Failed to update itinerary: ${response.status}`);
+  }
+
+  const result = await response.json();
+  const data = result.data || result;
+  return convertDetail(data);
+}
+
+/**
+ * Delete a recommended itinerary (Admin)
+ */
+export async function deleteRecommendedItinerary(id: string): Promise<void> {
+  const response = await fetchWithAuth(`${API_BASE_URL}/admin/recommended/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `Failed to delete itinerary: ${response.status}`);
+  }
+}

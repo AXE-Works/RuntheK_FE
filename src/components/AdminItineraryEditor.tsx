@@ -9,9 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { motion } from 'motion/react';
-import { 
-  Plus, 
-  Trash2, 
+import {
+  Plus,
+  Trash2,
   ArrowLeft,
   MapPin,
   DollarSign,
@@ -30,6 +30,8 @@ import {
   XCircle,
   Package
 } from 'lucide-react';
+import { generateSchedule, ScheduleApiError } from '../services/scheduleApi';
+import { toast } from 'sonner';
 
 interface Activity {
   time: string;
@@ -114,70 +116,31 @@ const INTEREST_OPTIONS = [
   { id: 'traditional', label: 'Traditional Arts', icon: '🎨' }
 ];
 
-// AI 생성 Mock 함수
-const generateAIItinerary = async (data: {
-  title: string;
-  duration: string;
-  cities: string[];
-  budget: string;
-  interests: string[];
-}): Promise<Day[]> => {
-  // Simulate AI processing
-  await new Promise(resolve => setTimeout(resolve, 2500));
+// Budget 매핑: AdminItineraryEditor -> scheduleApi
+const BUDGET_TO_API: Record<string, string> = {
+  'budget': 'budget',
+  'mid': 'mid-range',
+  'luxury': 'luxury',
+};
 
-  const numDays = parseInt(data.duration) || 5;
-  const days: Day[] = [];
-
-  // Mock activities based on interests
-  const activityPool: { [key: string]: Activity[] } = {
-    culture: [
-      { time: '09:00 AM', activity: 'Visit Gyeongbokgung Palace', location: 'Jongno-gu, Seoul', description: 'Explore the largest royal palace', estimatedCost: '$3' },
-      { time: '02:00 PM', activity: 'Bukchon Hanok Village', location: 'Jongno-gu, Seoul', description: 'Traditional Korean houses', estimatedCost: 'Free' }
-    ],
-    food: [
-      { time: '12:00 PM', activity: 'Korean BBQ Lunch', location: 'Gangnam, Seoul', description: 'Authentic Korean barbecue experience', estimatedCost: '$20-30' },
-      { time: '06:00 PM', activity: 'Gwangjang Market Food Tour', location: 'Jongno-gu, Seoul', description: 'Traditional Korean street food', estimatedCost: '$15-25' }
-    ],
-    nature: [
-      { time: '10:00 AM', activity: 'Namsan Mountain Hike', location: 'Jung-gu, Seoul', description: 'Scenic hike with city views', estimatedCost: 'Free' },
-      { time: '03:00 PM', activity: 'Han River Park', location: 'Various locations, Seoul', description: 'Riverside relaxation and activities', estimatedCost: 'Free' }
-    ],
-    shopping: [
-      { time: '02:00 PM', activity: 'Myeongdong Shopping', location: 'Jung-gu, Seoul', description: 'K-beauty and fashion shopping', estimatedCost: '$50-100' },
-      { time: '04:00 PM', activity: 'Gangnam Underground Shopping', location: 'Gangnam, Seoul', description: 'Trendy fashion and accessories', estimatedCost: '$30-80' }
-    ],
-    nightlife: [
-      { time: '08:00 PM', activity: 'Hongdae Night Scene', location: 'Mapo-gu, Seoul', description: 'Live music and club culture', estimatedCost: '$20-40' },
-      { time: '09:00 PM', activity: 'Itaewon Night Tour', location: 'Yongsan-gu, Seoul', description: 'International dining and bars', estimatedCost: '$30-50' }
-    ],
-    kculture: [
-      { time: '11:00 AM', activity: 'K-pop Dance Class', location: 'Gangnam, Seoul', description: 'Learn K-pop choreography', estimatedCost: '$25' },
-      { time: '03:00 PM', activity: 'K-Drama Filming Locations', location: 'Various, Seoul', description: 'Visit famous drama scenes', estimatedCost: '$15' }
-    ]
-  };
-
-  for (let i = 0; i < numDays; i++) {
-    const dayActivities: Activity[] = [];
-    
-    // Add 3-4 activities per day based on selected interests
-    const selectedInterests = data.interests.length > 0 ? data.interests : ['culture', 'food'];
-    const numActivities = 3 + Math.floor(Math.random() * 2);
-    
-    for (let j = 0; j < numActivities; j++) {
-      const interest = selectedInterests[j % selectedInterests.length];
-      const pool = activityPool[interest] || activityPool['culture'];
-      const activity = pool[Math.floor(Math.random() * pool.length)];
-      dayActivities.push({ ...activity });
-    }
-
-    days.push({
-      day: i + 1,
-      title: `Day ${i + 1} - ${data.cities[i % data.cities.length] || 'Seoul'}`,
-      activities: dayActivities
-    });
-  }
-
-  return days;
+// AI 응답을 Day[] 형식으로 변환
+const convertAIResponseToDays = (itineraryData: {
+  days: { day: number; title: string; activities: {
+    time: string; activity: string; location: string;
+    description: string; estimatedCost: string;
+  }[] }[]
+}): Day[] => {
+  return itineraryData.days.map(day => ({
+    day: day.day,
+    title: day.title,
+    activities: day.activities.map(act => ({
+      time: act.time,
+      activity: act.activity,
+      location: act.location,
+      description: act.description,
+      estimatedCost: act.estimatedCost || '',
+    })),
+  }));
 };
 
 export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItineraryEditorProps) {
@@ -352,27 +315,34 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
 
   const handleGenerateAI = async () => {
     if (cities.length === 0) {
-      alert('도시를 최소 1개 선택해주세요!');
+      toast.error('도시를 최소 1개 선택해주세요!');
       return;
     }
     if (interests.length === 0) {
-      alert('관심사를 최소 1개 선택해주세요!');
+      toast.error('관심사를 최소 1개 선택해주세요!');
       return;
     }
 
     setIsGenerating(true);
-    
+
     try {
-      const generatedDays = await generateAIItinerary({
-        title,
-        duration,
-        cities,
-        budget,
-        interests
+      // startDate 파싱 (string -> Date)
+      const parsedStartDate = startDate ? new Date(startDate) : new Date();
+
+      // AI API 호출
+      const result = await generateSchedule({
+        startDate: parsedStartDate,
+        duration: `${duration} days`,
+        cities: cities,
+        budget: BUDGET_TO_API[budget] || 'mid-range',
+        interests: interests,
+        language: 'en',
       });
-      
+
+      // AI 응답을 Day[] 형식으로 변환
+      const generatedDays = convertAIResponseToDays(result.itinerary);
       setDays(generatedDays);
-      
+
       // Auto-fill some fields if empty
       if (!title) {
         setTitle(`${duration} Days ${cities[0]} Adventure`);
@@ -383,11 +353,27 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
       if (!imageUrl) {
         setImageUrl('https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=800');
       }
-      
+
       setHasGenerated(true);
       setActiveTab('edit');
+      toast.success('일정이 성공적으로 생성되었습니다!');
     } catch (error) {
-      alert('일정 생성 중 오류가 발생했습니다.');
+      // 상세한 에러 처리
+      if (error instanceof ScheduleApiError) {
+        switch (error.code) {
+          case 'TIMEOUT':
+            toast.error('AI 서비스 응답 시간 초과. 잠시 후 다시 시도해주세요.');
+            break;
+          case 'NETWORK_ERROR':
+            toast.error('AI 서비스에 연결할 수 없습니다. 네트워크를 확인해주세요.');
+            break;
+          default:
+            toast.error(error.message || '일정 생성 중 오류가 발생했습니다.');
+        }
+      } else {
+        toast.error('예기치 않은 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+      console.error('AI Schedule generation error:', error);
     } finally {
       setIsGenerating(false);
     }
@@ -484,6 +470,11 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
   };
 
   // AI Spot Suggestion Functions
+  // TODO: AI 스팟 추천 기능 - 백엔드 AI 서비스 엔드포인트 구현 후 연동 필요
+  // - 현재: Mock 데이터 (하드코딩된 카페/식당/박물관 추천)
+  // - 목표: 실제 AI 서비스에 프롬프트 전송 후 맞춤 장소 추천 받기
+  // - 필요 엔드포인트: POST /api/v1/ai/spot-recommendation (예상)
+  // - 요청 파라미터: prompt, currentLocation, interests, budget 등
   const generateActivitySuggestions = async (prompt: string, currentActivity: Activity) => {
     if (!prompt.trim()) {
       alert('프롬프트를 입력해주세요!');
@@ -491,9 +482,11 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
     }
 
     setIsLoadingAI(true);
-    
+
     try {
-      // Simulate AI processing
+      // TODO: 실제 AI API 호출로 교체
+      // const suggestions = await generateSpotRecommendation({ prompt, ... });
+      // Simulate AI processing (Mock)
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Mock AI suggestions based on prompt
