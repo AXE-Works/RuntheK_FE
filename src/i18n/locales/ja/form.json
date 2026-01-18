@@ -26,11 +26,12 @@
     "pickDate": "日付を選択",
     "interestedCities": "興味のある都市",
     "selectDuration": "旅行期間を選択",
-    "seasonalEventsHint": "選択した日程に合わせて季節イベントをおすすめします。"
+    "seasonalEventsHint": "選択した日程に合わせて季節イベントをおすすめします。",
+    "startDateHint": "季節に合わせたおすすめに役立ちます"
   },
   "placeholders": {
     "searchDestination": "目的地を検索...",
-    "additionalNotes": "特別なリクエスト、食事制限、バリアフリー対応、特別な興味など（例：ベジタリアン対応、車椅子アクセス可能な場所、フォトスポットなど）",
+    "additionalNotes": "例：他の都市、同行者、食べ物の好み、予算感、その他考慮すべきこと",
     "selectDate": "日付を選択"
   },
   "cities": {
@@ -79,7 +80,7 @@
     "dateRequired": "旅行開始日を選択してください"
   },
   "generate": {
-    "button": "韓国旅行プランを作成",
+    "button": "プランを作成",
     "buttonDestination": "{{destination}}プランを作成",
     "generating": "完璧な韓国旅行を作成中...",
     "generatingDestination": "{{destination}}の旅を作成中..."
@@ -89,32 +90,41 @@
     "subtitle": "あなたの物語はどこから始まる？"
   },
   "sections": {
-    "basicInfo": "基本情報",
+    "basicInfo": "いつ旅行しますか？",
     "basicInfoOptional": "任意",
-    "yourInterests": "興味",
-    "budgetRange": "予算範囲",
-    "additionalNotes": "追加リクエスト",
+    "whereToGo": "どこに行きたいですか？",
+    "yourInterests": "何に興味がありますか？",
+    "travelStyle": "どんなスタイルで旅行したいですか？",
+    "additionalNotes": "知っておくべきことはありますか？",
     "tellUsMore": "好みを教えてください"
+  },
+  "destinations": {
+    "seoul": "ソウル",
+    "busan": "釜山",
+    "jeju": "済州",
+    "gyeongju": "慶州",
+    "suwon": "水原",
+    "notSure": "まだ決めていない",
+    "customPlaceholder": "他の都市名を入力...",
+    "addButton": "追加"
   },
   "notes": {
     "hint": "よりパーソナライズされた旅程作成に役立ちます"
   },
   "interestsList": {
-    "culture": "文化・歴史",
     "food": "韓国料理",
-    "shopping": "ショッピング",
-    "nature": "自然・ハイキング",
+    "local": "ローカル体験",
     "kculture": "K-POP・エンタメ",
-    "nightlife": "ナイトライフ",
-    "temples": "寺院・スピリチュアル",
-    "traditional": "伝統芸術"
+    "shopping": "ショッピング・ビューティー",
+    "culture": "文化・歴史",
+    "nature": "自然・絶景スポット"
   },
-  "budgetOptions": {
-    "budgetLabel": "格安 (1日5,000〜10,000円)",
-    "budgetDesc": "ゲストハウス、屋台、公共交通",
-    "midRangeLabel": "中級 (1日10,000〜20,000円)",
-    "midRangeDesc": "ホテル、レストラン、一部体験",
-    "luxuryLabel": "ラグジュアリー (1日20,000円以上)",
-    "luxuryDesc": "高級ホテル、高級レストラン、プライベートツアー"
+  "travelStyleOptions": {
+    "relaxedLabel": "ゆったり",
+    "relaxedDesc": "のんびりペース、少ない予定、自由時間多め",
+    "balancedLabel": "バランス",
+    "balancedDesc": "アクティビティと休憩のバランス",
+    "packedLabel": "充実",
+    "packedDesc": "盛りだくさん、毎日を最大限に活用"
   }
 }

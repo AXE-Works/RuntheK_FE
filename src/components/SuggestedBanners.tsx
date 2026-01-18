@@ -579,9 +579,9 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
     >
       {/* Header */}
       <div className="text-center space-y-2">
-        <h3 className="text-lg md:text-2xl font-bold text-gray-900">Suggested Korea Travel Experiences</h3>
+        <h3 className="text-lg md:text-2xl font-bold text-gray-900">Curated Korea Travel Experiences</h3>
         <p className="text-xs md:text-base text-gray-600 max-w-2xl mx-auto">
-          Discover popular travel routes created by real travelers. Click any experience to auto-fill your travel form!
+          By RunTheK — local editors based in Korea
         </p>
       </div>
 
@@ -611,45 +611,72 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
           <p className="text-sm mt-1">Check back later for curated travel experiences!</p>
         </div>
       ) : (
-        <>
-          {/* Top Row - 4 Banners */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
-            {banners.slice(0, 4).map((banner, index) => (
-              <BannerCard
-                key={banner.id}
-                banner={banner}
-                index={index}
-                isEditing={editingBanner === banner.id}
-                editForm={editForm}
-                onEdit={handleEditBanner}
-                onSave={handleSaveEdit}
-                onCancel={handleCancelEdit}
-                onClick={handleBannerClick}
-                onFormChange={setEditForm}
-                onDetail={handleBannerDetail}
-              />
+        /* Auto-scrolling Carousel */
+        <div className="relative overflow-hidden">
+          <style>{`
+            @keyframes marquee {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .carousel-track {
+              display: flex;
+              width: fit-content;
+              animation: marquee 40s linear infinite;
+            }
+            .carousel-track:hover {
+              animation-play-state: paused;
+            }
+          `}</style>
+          <div className="carousel-track">
+            {/* First set of banners */}
+            {banners.map((banner, index) => (
+              <div key={banner.id} style={{ flexShrink: 0, width: '280px', padding: '0 8px' }}>
+                <BannerCard
+                  banner={banner}
+                  index={index}
+                  isEditing={editingBanner === banner.id}
+                  editForm={editForm}
+                  onEdit={handleEditBanner}
+                  onSave={handleSaveEdit}
+                  onCancel={handleCancelEdit}
+                  onClick={handleBannerClick}
+                  onFormChange={setEditForm}
+                  onDetail={handleBannerDetail}
+                />
+              </div>
+            ))}
+            {/* Duplicate set for seamless loop */}
+            {banners.map((banner, index) => (
+              <div key={`dup-${banner.id}`} style={{ flexShrink: 0, width: '280px', padding: '0 8px' }}>
+                <BannerCard
+                  banner={banner}
+                  index={index + banners.length}
+                  isEditing={false}
+                  editForm={{}}
+                  onEdit={handleEditBanner}
+                  onSave={handleSaveEdit}
+                  onCancel={handleCancelEdit}
+                  onClick={handleBannerClick}
+                  onFormChange={setEditForm}
+                  onDetail={handleBannerDetail}
+                />
+              </div>
             ))}
           </div>
-
-          {/* Bottom Row - 4 Banners */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
-            {banners.slice(4, 8).map((banner, index) => (
-              <BannerCard
-                key={banner.id}
-                banner={banner}
-                index={index + 4}
-                isEditing={editingBanner === banner.id}
-                editForm={editForm}
-                onEdit={handleEditBanner}
-                onSave={handleSaveEdit}
-                onCancel={handleCancelEdit}
-                onClick={handleBannerClick}
-                onFormChange={setEditForm}
-                onDetail={handleBannerDetail}
-              />
-            ))}
-          </div>
-        </>
+          {/* Gradient overlays for smooth fade effect - using bg-gray-50 (#f9fafb) */}
+          <div
+            className="absolute left-0 top-0 bottom-0 w-10 md:w-16 pointer-events-none z-10"
+            style={{
+              background: 'linear-gradient(to right, rgba(249,250,251,1) 0%, rgba(249,250,251,0.8) 30%, rgba(249,250,251,0.4) 60%, rgba(249,250,251,0) 100%)'
+            }}
+          />
+          <div
+            className="absolute right-0 top-0 bottom-0 w-10 md:w-16 pointer-events-none z-10"
+            style={{
+              background: 'linear-gradient(to left, rgba(249,250,251,1) 0%, rgba(249,250,251,0.8) 30%, rgba(249,250,251,0.4) 60%, rgba(249,250,251,0) 100%)'
+            }}
+          />
+        </div>
       )}
 
       {/* Auto-generation Info */}

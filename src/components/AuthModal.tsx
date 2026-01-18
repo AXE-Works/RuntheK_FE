@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
 import { Mail, Lock, User, Globe, Check, AlertCircle } from 'lucide-react';
-import logo from 'figma:asset/2837fdead800498e4b0136649e9bfa4bce6e67ea.png';
+import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
 
 // Google Identity Services types
 declare global {
@@ -535,7 +535,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   <Input
                     id="login-email"
                     type="email"
-                    placeholder={t('auth:login.email')}
+                    placeholder={t('auth:login.emailPlaceholder')}
                     className="pl-10 border-gray-300"
                     value={loginForm.email}
                     onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
@@ -637,7 +637,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder={t('auth:signup.email')}
+                    placeholder={t('auth:login.emailPlaceholder')}
                     className="pl-10 border-gray-300"
                     value={signupForm.email}
                     onChange={(e) => setSignupForm(prev => ({ ...prev, email: e.target.value }))}

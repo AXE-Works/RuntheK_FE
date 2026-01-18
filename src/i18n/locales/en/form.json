@@ -26,11 +26,12 @@
     "pickDate": "Pick a date",
     "interestedCities": "Interested Cities",
     "selectDuration": "Select trip duration",
-    "seasonalEventsHint": "We'll suggest seasonal events based on this."
+    "seasonalEventsHint": "We'll suggest seasonal events based on this.",
+    "startDateHint": "Helps adjust recommendations by season"
   },
   "placeholders": {
     "searchDestination": "Search for a destination...",
-    "additionalNotes": "Any special requests, dietary restrictions, accessibility needs, or special interests? (e.g., vegetarian food options, wheelchair accessible locations, photography spots, etc.)",
+    "additionalNotes": "e.g. other cities, who you're traveling with, food preferences, budget comfort, or anything you'd like us to consider",
     "selectDate": "Select a date"
   },
   "cities": {
@@ -81,7 +82,7 @@
     "dateRequired": "Please select a travel start date"
   },
   "generate": {
-    "button": "Generate My Korea Itinerary",
+    "button": "Generate my plan",
     "buttonDestination": "Create {{destination}} Itinerary",
     "generating": "Generating Your Perfect Korea Trip...",
     "generatingDestination": "Creating Your {{destination}} Adventure..."
@@ -91,32 +92,41 @@
     "subtitle": "Where will your story begin?"
   },
   "sections": {
-    "basicInfo": "Basic Information",
+    "basicInfo": "When are you traveling?",
     "basicInfoOptional": "Optional",
-    "yourInterests": "Your Interests",
-    "budgetRange": "Budget Range",
-    "additionalNotes": "Additional Notes",
+    "whereToGo": "Where do you want to go?",
+    "yourInterests": "What are you interested in?",
+    "travelStyle": "How do you like to travel?",
+    "additionalNotes": "Anything we should know?",
     "tellUsMore": "Tell us more about your preferences"
+  },
+  "destinations": {
+    "seoul": "Seoul",
+    "busan": "Busan",
+    "jeju": "Jeju",
+    "gyeongju": "Gyeongju",
+    "suwon": "Suwon",
+    "notSure": "Not sure yet",
+    "customPlaceholder": "Enter other city name...",
+    "addButton": "Add"
   },
   "notes": {
     "hint": "This helps us create a more personalized itinerary for your needs"
   },
   "interestsList": {
-    "culture": "Culture & History",
     "food": "Korean Food",
-    "shopping": "Shopping",
-    "nature": "Nature & Hiking",
-    "kculture": "K-Pop & Entertainment",
-    "nightlife": "Nightlife",
-    "temples": "Temples & Spirituality",
-    "traditional": "Traditional Arts"
+    "local": "Local Experiences",
+    "kculture": "K-pop & Entertainment",
+    "shopping": "Shopping & Beauty",
+    "culture": "Culture & History",
+    "nature": "Nature & Scenic Spots"
   },
-  "budgetOptions": {
-    "budgetLabel": "Budget ($50-100/day)",
-    "budgetDesc": "Hostels, street food, public transport",
-    "midRangeLabel": "Mid-range ($100-200/day)",
-    "midRangeDesc": "Hotels, restaurants, some experiences",
-    "luxuryLabel": "Luxury ($200+/day)",
-    "luxuryDesc": "Premium hotels, fine dining, private tours"
+  "travelStyleOptions": {
+    "relaxedLabel": "Relaxed",
+    "relaxedDesc": "Leisurely pace, fewer activities, more free time",
+    "balancedLabel": "Balanced",
+    "balancedDesc": "Mix of activities and downtime",
+    "packedLabel": "Packed",
+    "packedDesc": "Action-packed, maximize every moment"
   }
 }

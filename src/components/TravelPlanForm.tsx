@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { UserInput, ItineraryData } from '../App';
 import { motion } from 'motion/react';
 import { SuggestedBanners } from './SuggestedBanners';
+import { TravelGuideAccordion } from './TravelGuideAccordion';
 import { PopularDestinations } from './PopularDestinations';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { format } from 'date-fns';
@@ -35,22 +36,13 @@ interface TravelPlanFormProps {
   language?: 'ko' | 'en' | 'ja' | 'zh';
 }
 
-const KOREAN_CITIES = [
-  'Seoul Gangnam',
-  'Seoul Gangbuk',
-  'Busan',
-  'Jeju Island',
-  'Gyeongju',
-  'Incheon',
-  'Daegu',
-  'Suwon (Gyeonggi)',
-  'Seongnam/Pangyo (Gyeonggi)',
-  'Chuncheon (Gangwon)',
-  'Gangneung (Gangwon)',
-  'Pyeongchang (Gangwon)',
-  'Jeonju (Jeolla)',
-  'Yeosu (Jeolla)',
-  'Gwangju (Jeolla)'
+const DESTINATION_OPTIONS = [
+  { id: 'seoul', labelKey: 'seoul' },
+  { id: 'busan', labelKey: 'busan' },
+  { id: 'jeju', labelKey: 'jeju' },
+  { id: 'gyeongju', labelKey: 'gyeongju' },
+  { id: 'suwon', labelKey: 'suwon' },
+  { id: 'notSure', labelKey: 'notSure' }
 ];
 
 const COUNTRIES = [
@@ -144,20 +136,18 @@ const COUNTRIES = [
 ];
 
 const INTERESTS = [
-  { id: 'culture', labelKey: 'culture', icon: '🏛️' },
   { id: 'food', labelKey: 'food', icon: '🍜' },
-  { id: 'shopping', labelKey: 'shopping', icon: '🛍️' },
-  { id: 'nature', labelKey: 'nature', icon: '🏔️' },
+  { id: 'local', labelKey: 'local', icon: '🏘️' },
   { id: 'kculture', labelKey: 'kculture', icon: '🎵' },
-  { id: 'nightlife', labelKey: 'nightlife', icon: '🌃' },
-  { id: 'temples', labelKey: 'temples', icon: '⛩️' },
-  { id: 'traditional', labelKey: 'traditional', icon: '🎨' }
+  { id: 'shopping', labelKey: 'shopping', icon: '🛍️' },
+  { id: 'culture', labelKey: 'culture', icon: '🏛️' },
+  { id: 'nature', labelKey: 'nature', icon: '🏔️' }
 ];
 
-const BUDGET_OPTIONS = [
-  { value: 'budget', labelKey: 'budgetLabel', descKey: 'budgetDesc' },
-  { value: 'mid-range', labelKey: 'midRangeLabel', descKey: 'midRangeDesc' },
-  { value: 'luxury', labelKey: 'luxuryLabel', descKey: 'luxuryDesc' }
+const TRAVEL_STYLE_OPTIONS = [
+  { value: 'relaxed', labelKey: 'relaxedLabel', descKey: 'relaxedDesc' },
+  { value: 'balanced', labelKey: 'balancedLabel', descKey: 'balancedDesc' },
+  { value: 'packed', labelKey: 'packedLabel', descKey: 'packedDesc' }
 ];
 
 // Mock AI itinerary generation
@@ -419,6 +409,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
   });
   const [isFromDestination, setIsFromDestination] = useState(false);
   const [additionalNotes, setAdditionalNotes] = useState('');
+  const [customCity, setCustomCity] = useState('');
 
   // Auto-fill nationality from user profile
   useEffect(() => {
@@ -489,21 +480,56 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
     }
   }, [selectedDestination, isFromDestination]);
 
+  const MAX_INTERESTS = 3;
+
   const handleInterestToggle = (interestId: string) => {
+    setUserInput(prev => {
+      const isAlreadySelected = prev.interests.includes(interestId);
+
+      // 이미 선택된 경우 제거
+      if (isAlreadySelected) {
+        return {
+          ...prev,
+          interests: prev.interests.filter(id => id !== interestId)
+        };
+      }
+
+      // 최대 개수 도달 시 추가 불가
+      if (prev.interests.length >= MAX_INTERESTS) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        interests: [...prev.interests, interestId]
+      };
+    });
+  };
+
+  const handleDestinationToggle = (destinationId: string) => {
     setUserInput(prev => ({
       ...prev,
-      interests: prev.interests.includes(interestId)
-        ? prev.interests.filter(id => id !== interestId)
-        : [...prev.interests, interestId]
+      cities: prev.cities.includes(destinationId)
+        ? prev.cities.filter(c => c !== destinationId)
+        : [...prev.cities, destinationId]
     }));
   };
 
-  const handleCityToggle = (city: string) => {
+  const handleAddCustomCity = () => {
+    const trimmedCity = customCity.trim();
+    if (trimmedCity && !userInput.cities.includes(trimmedCity)) {
+      setUserInput(prev => ({
+        ...prev,
+        cities: [...prev.cities, trimmedCity]
+      }));
+      setCustomCity('');
+    }
+  };
+
+  const handleRemoveCustomCity = (city: string) => {
     setUserInput(prev => ({
       ...prev,
-      cities: prev.cities.includes(city)
-        ? prev.cities.filter(c => c !== city)
-        : [...prev.cities, city]
+      cities: prev.cities.filter(c => c !== city)
     }));
   };
 
@@ -525,11 +551,14 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
 
     setIsGenerating(true);
 
+    // Convert 'notSure' to 'seoul' for API request
+    const citiesToSend = userInput.cities.map(city => city === 'notSure' ? 'seoul' : city);
+
     try {
       const result = await generateSchedule({
         startDate: userInput.startDate,
         duration: userInput.duration,
-        cities: userInput.cities,
+        cities: citiesToSend,
         budget: userInput.budget,
         interests: userInput.interests,
         additionalNotes: additionalNotes,
@@ -606,12 +635,19 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
           </div>
           
           <div className="p-6 space-y-8">
-            {/* Date & Duration Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Start Date */}
-              <div className="space-y-2">
-                <Label className="text-sm font-bold text-black uppercase tracking-wide">{t('form:labels.startDate')}</Label>
-                <Popover>
+            {/* Date & Duration Section */}
+            <div className="space-y-4">
+              <Label className="text-sm font-bold text-black uppercase tracking-wide flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                {t('form:labels.startDateHint')}
+              </Label>
+
+              {/* Date & Duration Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Start Date */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold text-black uppercase tracking-wide">{t('form:labels.startDate')}</Label>
+                  <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -658,39 +694,77 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                 </Select>
               </div>
             </div>
+            </div>
 
-            {/* Cities Selection */}
+            {/* Destination Selection */}
             <div className="space-y-4 pt-6 border-t-2 border-gray-100">
               <Label className="text-sm font-bold text-black uppercase tracking-wide flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                {t('form:labels.interestedCities')}
+                {t('form:sections.whereToGo')}
               </Label>
-              
+
               <div className="flex flex-wrap gap-3">
-                {KOREAN_CITIES.map((city) => {
-                  const isSelected = userInput.cities.includes(city);
+                {DESTINATION_OPTIONS.map((dest) => {
+                  const isSelected = userInput.cities.includes(dest.id);
                   return (
                     <div
-                      key={city}
-                      onClick={() => handleCityToggle(city)}
+                      key={dest.id}
+                      onClick={() => handleDestinationToggle(dest.id)}
                       className={`
-                        cursor-pointer px-3 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 border-2
-                        ${isSelected 
-                          ? 'bg-black text-white border-black shadow-[2px_2px_0px_0px_rgba(100,100,100,1)] translate-x-[-2px] translate-y-[-2px]' 
+                        cursor-pointer px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 border-2
+                        ${isSelected
+                          ? 'bg-black text-white border-black shadow-[2px_2px_0px_0px_rgba(100,100,100,1)] translate-x-[-2px] translate-y-[-2px]'
                           : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black'
                         }
                       `}
                     >
-                      {city}
+                      {t(`form:destinations.${dest.labelKey}`)}
                     </div>
                   );
                 })}
               </div>
-              <p className="text-xs text-gray-500 font-medium">
-                {userInput.cities.length === 0
-                  ? t('form:cities.selectHint')
-                  : t('form:cities.selected', { count: userInput.cities.length })}
-              </p>
+
+              {/* Custom city input */}
+              <div className="flex gap-2 items-center mt-4">
+                <Input
+                  type="text"
+                  placeholder={t('form:destinations.customPlaceholder')}
+                  value={customCity}
+                  onChange={(e) => setCustomCity(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCity()}
+                  className="flex-1 h-10 border-2 border-gray-200 rounded-lg text-sm focus:border-black"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddCustomCity}
+                  disabled={!customCity.trim()}
+                  className="h-10 px-4 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 disabled:opacity-50"
+                >
+                  {t('form:destinations.addButton')}
+                </Button>
+              </div>
+
+              {/* Custom cities display */}
+              {userInput.cities.filter(c => !DESTINATION_OPTIONS.some(d => d.id === c)).length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {userInput.cities
+                    .filter(city => !DESTINATION_OPTIONS.some(d => d.id === city))
+                    .map((city) => (
+                      <div
+                        key={city}
+                        className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium"
+                      >
+                        {city}
+                        <button
+                          onClick={() => handleRemoveCustomCity(city)}
+                          className="ml-1 text-gray-500 hover:text-black"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -708,22 +782,28 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
             <h3 className="text-xl font-bold text-black flex items-center gap-3">
               <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">2</div>
               {t('form:sections.yourInterests')}
+              <span className="text-sm font-medium text-gray-500 ml-auto">
+                {userInput.interests.length}/{MAX_INTERESTS}
+              </span>
             </h3>
           </div>
-          
+
           <div className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {INTERESTS.map((interest) => {
                 const isSelected = userInput.interests.includes(interest.id);
+                const isDisabled = !isSelected && userInput.interests.length >= MAX_INTERESTS;
                 return (
                   <div
                     key={interest.id}
-                    onClick={() => handleInterestToggle(interest.id)}
+                    onClick={() => !isDisabled && handleInterestToggle(interest.id)}
                     className={`
-                      cursor-pointer transition-all duration-200 border-2 rounded-xl p-2 flex flex-col items-center justify-center gap-2 h-20
+                      transition-all duration-200 border-2 rounded-xl p-2 flex flex-col items-center justify-center gap-2 h-20
                       ${isSelected
-                        ? 'bg-black text-white border-black shadow-[3px_3px_0px_0px_rgba(100,100,100,1)] translate-x-[-2px] translate-y-[-2px]'
-                        : 'bg-white text-gray-900 border-gray-200 hover:border-black hover:shadow-sm'
+                        ? 'cursor-pointer bg-black text-white border-black shadow-[3px_3px_0px_0px_rgba(100,100,100,1)] translate-x-[-2px] translate-y-[-2px]'
+                        : isDisabled
+                          ? 'cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200 opacity-50'
+                          : 'cursor-pointer bg-white text-gray-900 border-gray-200 hover:border-black hover:shadow-sm'
                       }
                     `}
                   >
@@ -750,13 +830,13 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
           <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
             <h3 className="text-xl font-bold text-black flex items-center gap-3">
               <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">3</div>
-              {t('form:sections.budgetRange')}
+              {t('form:sections.travelStyle')}
             </h3>
           </div>
-          
+
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {BUDGET_OPTIONS.map((option) => {
+              {TRAVEL_STYLE_OPTIONS.map((option) => {
                 const isSelected = userInput.budget === option.value;
                 return (
                   <div
@@ -770,9 +850,9 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                       }
                     `}
                   >
-                    <h3 className="font-bold text-lg">{t(`form:budgetOptions.${option.labelKey}`)}</h3>
+                    <h3 className="font-bold text-lg">{t(`form:travelStyleOptions.${option.labelKey}`)}</h3>
                     <p className={`text-sm ${isSelected ? 'text-gray-300' : 'text-gray-500'}`}>
-                      {t(`form:budgetOptions.${option.descKey}`)}
+                      {t(`form:travelStyleOptions.${option.descKey}`)}
                     </p>
                   </div>
                 );
@@ -879,6 +959,9 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
 
       {/* Suggested Banners Section */}
       <SuggestedBanners onBannerSelect={onDestinationSelect} />
+
+      {/* Travel Guide Accordion Section (SEO) */}
+      <TravelGuideAccordion />
     </div>
   );
 }

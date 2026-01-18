@@ -26,11 +26,12 @@
     "pickDate": "选择日期",
     "interestedCities": "感兴趣的城市",
     "selectDuration": "选择旅行时长",
-    "seasonalEventsHint": "我们将根据您选择的日期推荐季节性活动。"
+    "seasonalEventsHint": "我们将根据您选择的日期推荐季节性活动。",
+    "startDateHint": "帮助根据季节调整推荐"
   },
   "placeholders": {
     "searchDestination": "搜索目的地...",
-    "additionalNotes": "有特殊要求、饮食限制、无障碍需求或特别兴趣吗？（例如：素食选项、轮椅可达地点、摄影景点等）",
+    "additionalNotes": "例如：其他城市、同行人员、饮食偏好、预算舒适度，或任何您希望我们考虑的事项",
     "selectDate": "选择日期"
   },
   "cities": {
@@ -79,7 +80,7 @@
     "dateRequired": "请选择旅行开始日期"
   },
   "generate": {
-    "button": "生成我的韩国行程",
+    "button": "生成我的计划",
     "buttonDestination": "生成{{destination}}行程",
     "generating": "正在生成您的完美韩国之旅...",
     "generatingDestination": "正在生成{{destination}}之旅..."
@@ -89,32 +90,41 @@
     "subtitle": "您的故事将从哪里开始？"
   },
   "sections": {
-    "basicInfo": "基本信息",
+    "basicInfo": "什么时候旅行？",
     "basicInfoOptional": "选填",
-    "yourInterests": "您的兴趣",
-    "budgetRange": "预算范围",
-    "additionalNotes": "附加说明",
+    "whereToGo": "您想去哪里？",
+    "yourInterests": "您对什么感兴趣？",
+    "travelStyle": "您喜欢怎样的旅行方式？",
+    "additionalNotes": "有什么需要我们了解的吗？",
     "tellUsMore": "告诉我们您的偏好"
+  },
+  "destinations": {
+    "seoul": "首尔",
+    "busan": "釜山",
+    "jeju": "济州",
+    "gyeongju": "庆州",
+    "suwon": "水原",
+    "notSure": "还没决定",
+    "customPlaceholder": "输入其他城市名称...",
+    "addButton": "添加"
   },
   "notes": {
     "hint": "这有助于我们为您制定更个性化的行程"
   },
   "interestsList": {
-    "culture": "文化历史",
     "food": "韩国美食",
-    "shopping": "购物",
-    "nature": "自然徒步",
+    "local": "当地体验",
     "kculture": "K-POP娱乐",
-    "nightlife": "夜生活",
-    "temples": "寺庙灵修",
-    "traditional": "传统艺术"
+    "shopping": "购物美妆",
+    "culture": "文化历史",
+    "nature": "自然风景"
   },
-  "budgetOptions": {
-    "budgetLabel": "经济型 (每天350-700元)",
-    "budgetDesc": "青旅、街头美食、公共交通",
-    "midRangeLabel": "中档 (每天700-1400元)",
-    "midRangeDesc": "酒店、餐厅、部分体验",
-    "luxuryLabel": "豪华 (每天1400元以上)",
-    "luxuryDesc": "高档酒店、精致餐饮、私人定制游"
+  "travelStyleOptions": {
+    "relaxedLabel": "悠闲",
+    "relaxedDesc": "慢节奏，少量活动，充足自由时间",
+    "balancedLabel": "均衡",
+    "balancedDesc": "活动与休息的平衡搭配",
+    "packedLabel": "充实",
+    "packedDesc": "行程紧凑，充分利用每一刻"
   }
 }
