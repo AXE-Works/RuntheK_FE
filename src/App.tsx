@@ -26,7 +26,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Seo } from './components/seo/Seo';
+import { buildHomeSeo } from './lib/seo/buildDestinationSeo';
 import { TravelPlanForm } from './components/TravelPlanForm';
 import { ItineraryDisplay } from './components/ItineraryDisplay';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -169,6 +172,20 @@ export default function App() {
   ];
 
   const { t, i18n } = useTranslation();
+  const location = useLocation();
+
+  // Handle navigation from RegionPage or DestinationPage
+  useEffect(() => {
+    if (location.state?.fromRegion || location.state?.fromDestination) {
+      setShowHero(false);
+      setActiveTab('plan');
+      if (location.state.destination) {
+        setSelectedDestination({ name: location.state.destination });
+      }
+      // Clear state to prevent re-trigger on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Sync language state with i18n
   useEffect(() => {
@@ -606,11 +623,17 @@ export default function App() {
   }
 
   if (showHero && !currentItinerary) {
-    return <HeroSection onStartPlanning={handleStartPlanning} />;
+    return (
+      <>
+        <Seo {...buildHomeSeo()} />
+        <HeroSection onStartPlanning={handleStartPlanning} />
+      </>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Seo {...buildHomeSeo()} />
       {/* Header */}
       <motion.header 
         className="bg-white shadow-sm border-b border-gray-200"

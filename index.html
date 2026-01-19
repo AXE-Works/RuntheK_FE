@@ -1,18 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index, follow" />
 
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <meta name="description" content="Automatically generate Korean itineraries based on your interests, budget, and schedule. Curated with local insight for how you experience Korea." />
-      <title>Korean Experience Planner, Based on Your Taste | RunTheK</title>
-      <!-- Google Identity Services -->
-      <script src="https://accounts.google.com/gsi/client" async defer></script>
-    </head>
+    <!-- Primary Meta Tags -->
+    <title>Korean Experience Planner, Based on Your Taste | RunTheK</title>
+    <meta name="description" content="Plan your perfect Korea trip with AI-powered itineraries. Get personalized recommendations for Seoul, Busan, Jeju and more based on your interests, budget, and schedule." />
+    <link rel="canonical" href="https://runthek.com/" />
 
-    <body>
-      <div id="root"></div>
-      <script type="module" src="/src/main.tsx"></script>
-    </body>
-  </html>
-  
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://runthek.com/" />
+    <meta property="og:title" content="Korean Experience Planner, Based on Your Taste | RunTheK" />
+    <meta property="og:description" content="Plan your perfect Korea trip with AI-powered itineraries. Get personalized recommendations for Seoul, Busan, Jeju and more based on your interests, budget, and schedule." />
+    <meta property="og:image" content="https://runthek.com/og-image.png" />
+    <meta property="og:site_name" content="RunTheK" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://runthek.com/" />
+    <meta name="twitter:title" content="Korean Experience Planner, Based on Your Taste | RunTheK" />
+    <meta name="twitter:description" content="Plan your perfect Korea trip with AI-powered itineraries. Get personalized recommendations for Seoul, Busan, Jeju and more based on your interests, budget, and schedule." />
+    <meta name="twitter:image" content="https://runthek.com/og-image.png" />
+
+    <!-- Hreflang Tags -->
+    <link rel="alternate" hreflang="en" href="https://runthek.com/" />
+    <link rel="alternate" hreflang="ko" href="https://runthek.com/" />
+    <link rel="alternate" hreflang="x-default" href="https://runthek.com/" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://runthek.com/#organization",
+          "name": "RunTheK",
+          "url": "https://runthek.com",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://runthek.com/logo.png"
+          },
+          "sameAs": []
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://runthek.com/#website",
+          "url": "https://runthek.com",
+          "name": "RunTheK",
+          "description": "AI-powered Korean travel planning assistant",
+          "publisher": {
+            "@id": "https://runthek.com/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://runthek.com/?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://runthek.com/#webapp",
+          "name": "RunTheK Travel Planner",
+          "description": "Plan your perfect Korea trip with AI-powered itineraries. Get personalized recommendations based on your interests, budget, and schedule.",
+          "url": "https://runthek.com",
+          "applicationCategory": "TravelApplication",
+          "operatingSystem": "Web Browser",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "AI-powered itinerary generation",
+            "Personalized travel recommendations",
+            "Multi-city trip planning",
+            "Budget-based suggestions",
+            "Interest-based activities"
+          ],
+          "screenshot": "https://runthek.com/og-image.png"
+        }
+      ]
+    }
+    </script>
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

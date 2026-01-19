@@ -23,7 +23,8 @@ import {
   Clock,
   Loader2,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Globe
 } from 'lucide-react';
 import {
   getRecommendedList,
@@ -178,6 +179,24 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
     } catch (err) {
       console.error('Failed to update featured status:', err);
       alert('상태 변경에 실패했습니다.');
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
+  const handleToggleSeoVisible = async (id: string) => {
+    const itinerary = itineraries.find(i => i.id === id);
+    if (!itinerary) return;
+
+    setUpdatingStatus(id);
+    try {
+      const result = await updateRecommendedStatus(id, { seoVisible: !itinerary.seoVisible });
+      setItineraries(itineraries.map(item =>
+        item.id === id ? { ...item, seoVisible: result.seoVisible, updatedAt: result.updatedAt } : item
+      ));
+    } catch (err) {
+      console.error('Failed to update SEO visible status:', err);
+      alert('SEO 노출 상태 변경에 실패했습니다.');
     } finally {
       setUpdatingStatus(null);
     }
@@ -576,6 +595,24 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
                     />
                     <Label className="text-xs font-bold cursor-pointer whitespace-nowrap flex items-center gap-1">
                       {itinerary.active ? '활성화' : '비활성화'}
+                      {updatingStatus === itinerary.id && (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      )}
+                    </Label>
+                  </div>
+                  <div className={`flex items-center gap-2 px-3 py-2 border-2 rounded-none ${
+                    itinerary.seoVisible
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-400 bg-gray-100'
+                  }`}>
+                    <Switch
+                      checked={itinerary.seoVisible}
+                      onCheckedChange={() => handleToggleSeoVisible(itinerary.id)}
+                      disabled={updatingStatus === itinerary.id}
+                    />
+                    <Label className="text-xs font-bold cursor-pointer whitespace-nowrap flex items-center gap-1">
+                      <Globe className="h-3 w-3" />
+                      {itinerary.seoVisible ? 'SEO 노출' : 'SEO 숨김'}
                       {updatingStatus === itinerary.id && (
                         <Loader2 className="h-3 w-3 animate-spin" />
                       )}

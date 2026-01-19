@@ -52,6 +52,7 @@ interface AdminRecommendedResponseRaw {
   bookingCount: number;
   isActive: boolean;
   isFeatured: boolean;
+  seoVisible: boolean;
   displayOrder: number;
   daysCount: number;
   activitiesCount: number;
@@ -97,6 +98,7 @@ interface AdminRecommendedDetailResponseRaw {
   bookingCount: number;
   isActive: boolean;
   isFeatured: boolean;
+  seoVisible: boolean;
   displayOrder: number;
   targetAudience: string | null;
   seasonTag: string | null;
@@ -169,6 +171,7 @@ export interface RecommendedItinerary {
   bookingCount: number;
   active: boolean;
   featured: boolean;
+  seoVisible: boolean;
   displayOrder: number;
   days: RecommendedDay[];
   richContent?: RichContent;
@@ -223,6 +226,7 @@ function convertListItem(raw: AdminRecommendedResponseRaw): RecommendedItinerary
     bookingCount: raw.bookingCount || 0,
     active: raw.isActive,
     featured: raw.isFeatured,
+    seoVisible: raw.seoVisible ?? true,
     displayOrder: raw.displayOrder || 0,
     days: [], // List doesn't include days
     createdAt: raw.createdAt,
@@ -267,6 +271,7 @@ function convertDetail(raw: AdminRecommendedDetailResponseRaw): RecommendedItine
     bookingCount: raw.bookingCount || 0,
     active: raw.isActive,
     featured: raw.isFeatured,
+    seoVisible: raw.seoVisible ?? true,
     displayOrder: raw.displayOrder || 0,
     days: (raw.days || []).map(day => ({
       day: day.dayNumber,
@@ -360,12 +365,14 @@ export async function getRecommendedDetail(id: string): Promise<RecommendedItine
 export interface UpdateRecommendedStatusParams {
   isActive?: boolean;
   isFeatured?: boolean;
+  seoVisible?: boolean;
 }
 
 export interface UpdateRecommendedStatusResult {
   id: string;
   isActive: boolean;
   isFeatured: boolean;
+  seoVisible: boolean;
   updatedAt: string;
 }
 
@@ -376,6 +383,7 @@ interface UpdateStatusApiResponse {
     id: string;
     isActive: boolean;
     isFeatured: boolean;
+    seoVisible: boolean;
     updatedAt: string;
   };
 }
@@ -586,4 +594,136 @@ export async function deleteRecommendedItinerary(id: string): Promise<void> {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error?.message || `Failed to delete itinerary: ${response.status}`);
   }
+}
+
+// ============================================================
+// Public API Functions (No Auth Required)
+// ============================================================
+
+/** Public itinerary detail response from backend */
+interface PublicRecommendedDetailResponseRaw {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  duration: string; // Already formatted as "3 days", etc.
+  cities: string[];
+  budget: string; // Already formatted as "budget", "mid-range", "luxury"
+  interests: string[];
+  averageRating: number;
+  viewCount: number;
+  bookingCount: number;
+  targetAudience: string | null;
+  seasonTag: string | null;
+  days: {
+    dayNumber: number;
+    title: string;
+    description: string;
+    activities: {
+      activityOrder: number;
+      activityTime: string;
+      activityName: string;
+      location: string;
+      description: string;
+      estimatedCost: string;
+    }[];
+  }[];
+  richContent: string | null;
+  category: string;
+  isFeatured: boolean;
+}
+
+/** Public itinerary detail for frontend */
+export interface PublicRecommendedItinerary {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  duration: string;
+  cities: string[];
+  budget: string;
+  interests: string[];
+  averageRating: number;
+  viewCount: number;
+  bookingCount: number;
+  targetAudience: string | null;
+  seasonTag: string | null;
+  days: RecommendedDay[];
+  richContent?: RichContent;
+  category: string;
+  isFeatured: boolean;
+}
+
+/** Convert public detail response to frontend type */
+function convertPublicDetail(raw: PublicRecommendedDetailResponseRaw): PublicRecommendedItinerary {
+  // Parse rich content if it's a string
+  let richContent: RichContent | undefined;
+  if (raw.richContent) {
+    try {
+      const parsed = typeof raw.richContent === 'string'
+        ? JSON.parse(raw.richContent)
+        : raw.richContent;
+      richContent = {
+        introduction: parsed.introduction || '',
+        highlights: parsed.highlights || [],
+        tips: parsed.tips || [],
+        includes: parsed.includes || [],
+        excludes: parsed.excludes || [],
+        whatToBring: parsed.whatToBring || [],
+        contentBlocks: parsed.contentBlocks || [],
+      };
+    } catch {
+      richContent = undefined;
+    }
+  }
+
+  return {
+    id: raw.id,
+    title: raw.title,
+    description: raw.description || '',
+    imageUrl: raw.imageUrl || '',
+    duration: raw.duration,
+    cities: raw.cities || [],
+    budget: raw.budget,
+    interests: raw.interests || [],
+    averageRating: raw.averageRating || 0,
+    viewCount: raw.viewCount || 0,
+    bookingCount: raw.bookingCount || 0,
+    targetAudience: raw.targetAudience,
+    seasonTag: raw.seasonTag,
+    days: (raw.days || []).map(day => ({
+      day: day.dayNumber,
+      title: day.title,
+      activities: (day.activities || []).map(act => ({
+        time: act.activityTime || '',
+        activity: act.activityName,
+        location: act.location || '',
+        description: act.description || '',
+        estimatedCost: act.estimatedCost || '',
+      })),
+    })),
+    richContent,
+    category: raw.category || 'Travel',
+    isFeatured: raw.isFeatured,
+  };
+}
+
+/**
+ * Get recommended itinerary detail (Public - no auth required)
+ * Used for destination pages to show tour details
+ */
+export async function getPublicRecommendedDetail(id: string): Promise<PublicRecommendedItinerary> {
+  const response = await fetch(`${API_BASE_URL}/recommended/${id}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `Failed to fetch itinerary detail: ${response.status}`);
+  }
+
+  const result: { success: boolean; data: PublicRecommendedDetailResponseRaw } = await response.json();
+  return convertPublicDetail(result.data);
 }
