@@ -33,6 +33,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { MyTrip } from './components/MyTrip';
 import { HeroSection } from './components/HeroSection';
 import { AuthModal } from './components/AuthModal';
+import { BannerDetailPage } from './components/BannerDetailPage';
 import { Button } from './components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
@@ -156,6 +157,7 @@ export default function App() {
   const [events, setEvents] = useState(mockEvents);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [language, setLanguage] = useState<'ko' | 'en' | 'ja' | 'zh'>('en');
+  const [selectedBannerDetail, setSelectedBannerDetail] = useState<any>(null);
 
   const languageOptions = [
     { code: 'ko' as const, label: '한국어', flag: '🇰🇷' },
@@ -554,9 +556,15 @@ export default function App() {
     setSelectedDestination(destination);
     setShowHero(false);
     setActiveTab("plan");
-    
+
     // Clear any existing itinerary
     setCurrentItinerary(null);
+    // Clear banner detail page if open
+    setSelectedBannerDetail(null);
+  };
+
+  const handleBannerDetail = (banner: any) => {
+    setSelectedBannerDetail(banner);
   };
 
   const handleUpdateUser = (updatedUser: any) => {
@@ -730,6 +738,14 @@ export default function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        {/* Banner Detail Page - Full Screen */}
+        {selectedBannerDetail ? (
+          <BannerDetailPage
+            banner={selectedBannerDetail}
+            onBack={() => setSelectedBannerDetail(null)}
+            onApplyToTrip={handleDestinationSelect}
+          />
+        ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full max-w-lg mx-auto mb-6 sm:mb-8 bg-gray-100">
             <TabsTrigger value="plan" className="data-[state=active]:bg-white data-[state=active]:text-black text-sm sm:text-base">
@@ -770,6 +786,7 @@ export default function App() {
                   currentUser={currentUser}
                   events={events}
                   language={language}
+                  onBannerDetailView={handleBannerDetail}
                 />
               </motion.div>
             ) : (
@@ -819,13 +836,14 @@ export default function App() {
           </TabsContent>
 
           <TabsContent value="admin">
-            <AdminDashboard 
-              currentUser={currentUser} 
+            <AdminDashboard
+              currentUser={currentUser}
               events={events}
               setEvents={setEvents}
             />
           </TabsContent>
         </Tabs>
+        )}
       </main>
 
       {/* Footer */}

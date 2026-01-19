@@ -368,6 +368,7 @@ const BANNER_IMAGES = [
 
 interface SuggestedBannersProps {
   onBannerSelect?: (banner: any) => void;
+  onBannerDetailView?: (banner: any) => void;
 }
 
 interface BannerData {
@@ -385,11 +386,13 @@ interface BannerData {
   startDate?: string | null;
   budget?: string;
   cities?: string[];
-  // Mock data schedule (not available from API)
+  // Rich content from API (parsed JSON array)
+  richContent?: any[];
+  // Schedule data (from API or mock)
   detailedSchedule?: any[];
 }
 
-export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
+export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: SuggestedBannersProps) {
   const [banners, setBanners] = useState<BannerData[]>([]);
   const [editingBanner, setEditingBanner] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<BannerData>>({});
@@ -519,6 +522,70 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
   };
 
   const handleBannerDetail = async (banner: BannerData) => {
+    // If onBannerDetailView is provided, use full page view instead of modal
+    if (onBannerDetailView) {
+      // For mock data with existing schedule, use it directly
+      if (banner.detailedSchedule && banner.detailedSchedule.length > 0) {
+        onBannerDetailView(banner);
+        return;
+      }
+
+      // For API data (IDs starting with "rec_"), fetch detail from API
+      if (banner.id.startsWith('rec_')) {
+        setDetailLoading(true);
+
+        try {
+          const detail = await getRecommendedTripDetail(banner.id);
+
+          // Parse richContent if it's a JSON string
+          let parsedRichContent: any[] | undefined;
+          if (detail.richContent) {
+            try {
+              parsedRichContent = JSON.parse(detail.richContent);
+            } catch {
+              // If not valid JSON, ignore
+              console.log('[SuggestedBanners] richContent is not valid JSON');
+            }
+          }
+
+          // Transform API response to banner format with detailed schedule
+          const detailedBanner: BannerData = {
+            ...banner,
+            subtitle: detail.description || banner.subtitle,
+            richContent: parsedRichContent,
+            detailedSchedule: detail.days?.map((day: RecommendedDayResponse) => ({
+              day: day.dayNumber,
+              title: day.title,
+              activities: day.activities.map(act => ({
+                time: act.activityTime || '',
+                name: act.activityName,
+                location: act.location || '',
+                description: act.description || '',
+                price: act.estimatedCost || '',
+                isEvent: act.isEvent || false,
+                eventType: act.eventType || ''
+              }))
+            })) || []
+          };
+
+          onBannerDetailView(detailedBanner);
+        } catch (err) {
+          console.error('[SuggestedBanners] Failed to fetch detail:', err);
+          // Show banner without detailed schedule
+          onBannerDetailView(banner);
+        } finally {
+          setDetailLoading(false);
+        }
+        return;
+      }
+
+      // Fallback: Try to find from mock data
+      const fullCourse = USER_GENERATED_COURSES.find(c => String(c.id) === banner.id);
+      onBannerDetailView(fullCourse ? { ...banner, detailedSchedule: fullCourse.detailedSchedule } : banner);
+      return;
+    }
+
+    // Fallback: Show modal dialog (for backwards compatibility)
     // For mock data with existing schedule, use it directly
     if (banner.detailedSchedule && banner.detailedSchedule.length > 0) {
       setDetailBanner(banner);
@@ -533,17 +600,32 @@ export function SuggestedBanners({ onBannerSelect }: SuggestedBannersProps) {
       try {
         const detail = await getRecommendedTripDetail(banner.id);
 
+        // Parse richContent if it's a JSON string
+        let parsedRichContent: any[] | undefined;
+        if (detail.richContent) {
+          try {
+            parsedRichContent = JSON.parse(detail.richContent);
+          } catch {
+            console.log('[SuggestedBanners] richContent is not valid JSON');
+          }
+        }
+
         // Transform API response to banner format with detailed schedule
         const detailedBanner: BannerData = {
           ...banner,
           subtitle: detail.description || banner.subtitle,
+          richContent: parsedRichContent,
           detailedSchedule: detail.days?.map((day: RecommendedDayResponse) => ({
             day: day.dayNumber,
             title: day.title,
             activities: day.activities.map(act => ({
               time: act.activityTime || '',
               name: act.activityName,
-              description: act.description || ''
+              location: act.location || '',
+              description: act.description || '',
+              price: act.estimatedCost || '',
+              isEvent: act.isEvent || false,
+              eventType: act.eventType || ''
             }))
           })) || []
         };

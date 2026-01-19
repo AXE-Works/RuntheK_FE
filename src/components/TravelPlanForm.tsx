@@ -34,6 +34,7 @@ interface TravelPlanFormProps {
   currentUser?: any;
   events?: any[];
   language?: 'ko' | 'en' | 'ja' | 'zh';
+  onBannerDetailView?: (banner: any) => void;
 }
 
 const DESTINATION_OPTIONS = [
@@ -397,7 +398,7 @@ const generateMockItinerary = (userInput: UserInput, availableEvents: any[] = []
   };
 };
 
-export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenerating, selectedDestination, onDestinationSelect, currentUser, events = [], language = 'en' }: TravelPlanFormProps) {
+export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenerating, selectedDestination, onDestinationSelect, currentUser, events = [], language = 'en', onBannerDetailView }: TravelPlanFormProps) {
   const { t } = useTranslation(['form', 'common']);
   const [userInput, setUserInput] = useState<UserInput>({
     duration: '',
@@ -958,7 +959,10 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
       </motion.div>
 
       {/* Suggested Banners Section */}
-      <SuggestedBanners onBannerSelect={onDestinationSelect} />
+      <SuggestedBanners
+        onBannerSelect={onDestinationSelect}
+        onBannerDetailView={onBannerDetailView}
+      />
 
       {/* Travel Guide Accordion Section (SEO) */}
       <TravelGuideAccordion />
