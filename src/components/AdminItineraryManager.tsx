@@ -374,8 +374,8 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
         />
       </div>
 
-      {/* Itineraries Grid - 3 Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Itineraries List */}
+      <div className="space-y-4">
         {filteredItineraries.map((itinerary, index) => (
           <motion.div
             key={itinerary.id}
@@ -383,185 +383,237 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
           >
-            <div className="border-2 border-black bg-white hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all group h-full flex flex-col">
-              {/* Image */}
-              <div className="w-full h-48 border-b-2 border-black overflow-hidden relative">
-                {itinerary.imageUrl && !imageErrors.has(itinerary.id) ? (
-                  <img
-                    src={itinerary.imageUrl}
-                    alt={itinerary.title}
-                    className="w-full h-full object-cover"
-                    onError={() => {
-                      setImageErrors(prev => new Set(prev).add(itinerary.id));
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-300 flex flex-col items-center justify-center">
-                    <MapPin className="h-12 w-12 text-gray-400 mb-2" />
-                    <span className="text-sm text-gray-500 font-medium">No Image</span>
-                  </div>
-                )}
-                {/* Badges overlay */}
-                <div className="absolute top-2 left-2 flex gap-1 z-10">
-                  {itinerary.featured && (
-                    <Badge className="bg-yellow-400 text-black border border-black text-xs px-1.5 py-0.5">
-                      FEATURED
-                    </Badge>
+            <div className="border-2 border-black bg-white p-6 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all group">
+              <div className="flex flex-row gap-6 items-start">
+                {/* Image */}
+                <div
+                  className="bg-gray-200 border-2 border-black overflow-hidden"
+                  style={{ width: '192px', height: '128px', minWidth: '192px', maxWidth: '192px', minHeight: '128px', maxHeight: '128px', flexShrink: 0, flexGrow: 0 }}
+                >
+                  {itinerary.imageUrl && !imageErrors.has(itinerary.id) ? (
+                    <img
+                      src={itinerary.imageUrl}
+                      alt={itinerary.title}
+                      className="w-full h-full object-cover"
+                      onError={() => {
+                        setImageErrors(prev => new Set(prev).add(itinerary.id));
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-300 flex flex-col items-center justify-center">
+                      <MapPin className="h-8 w-8 text-gray-400 mb-1" />
+                      <span className="text-xs text-gray-500 font-medium">No Image</span>
+                    </div>
                   )}
-                  <Badge
-                    className={`border border-black text-xs px-1.5 py-0.5 ${
-                      itinerary.active ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    {itinerary.active ? '활성' : '비활성'}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-4 flex-1 flex flex-col">
-                <h3 className="text-sm font-bold mb-1 line-clamp-1">{itinerary.title}</h3>
-                <p className="text-xs text-gray-600 mb-3 line-clamp-2">{itinerary.description}</p>
-
-                {/* Meta info - compact 2x2 grid */}
-                <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-gray-400" />
-                    <span className="font-medium">{itinerary.duration}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-gray-400" />
-                    <span className="font-medium truncate">{itinerary.cities[0]}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-3 w-3 text-yellow-500" />
-                    <span className="font-medium">{itinerary.rating.toFixed(1)}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Eye className="h-3 w-3 text-gray-400" />
-                    <span className="font-medium">{itinerary.viewCount}</span>
-                  </div>
                 </div>
 
-                {/* Interest tags */}
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {itinerary.interests.slice(0, 3).map((interest) => (
-                    <span
-                      key={interest}
-                      className="text-[10px] bg-gray-100 px-1.5 py-0.5 font-medium text-gray-500 uppercase"
+                {/* Content */}
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-xl font-bold">{itinerary.title}</h3>
+                        {itinerary.featured && (
+                          <Badge className="bg-yellow-400 text-black border-2 border-black rounded-none hover:bg-yellow-400">
+                            FEATURED
+                          </Badge>
+                        )}
+                        <Badge
+                          variant={itinerary.active ? 'default' : 'outline'}
+                          className={`border-2 border-black rounded-none ${
+                            itinerary.active ? 'bg-green-500 text-white hover:bg-green-500' : 'bg-gray-200 text-gray-600'
+                          }`}
+                        >
+                          {itinerary.active ? '활성' : '비활성'}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600">{itinerary.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-row items-center gap-6 text-sm">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3 text-gray-400" />
+                      <span className="text-xs text-gray-400">기간</span>
+                      <span className="font-bold">{itinerary.duration}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-gray-400" />
+                      <span className="text-xs text-gray-400">도시</span>
+                      <span className="font-bold">{itinerary.cities.join(', ')}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-3 w-3 text-gray-400" />
+                      <span className="text-xs text-gray-400">예산</span>
+                      <span className="font-bold uppercase">{itinerary.budget}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-3 w-3 text-gray-400" />
+                      <span className="text-xs text-gray-400">평점</span>
+                      <span className="font-bold">{itinerary.rating.toFixed(1)} ⭐</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Eye className="h-3 w-3 text-gray-400" />
+                      <span className="text-xs text-gray-400">조회/예약</span>
+                      <span className="font-bold">{itinerary.viewCount} / {itinerary.bookingCount}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {itinerary.interests.map((interest) => (
+                      <span
+                        key={interest}
+                        className="text-xs bg-gray-100 px-2 py-1 font-medium text-gray-600 uppercase tracking-wide"
+                      >
+                        #{interest}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* View Schedule Button */}
+                  <div className="pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleExpanded(itinerary.id)}
+                      disabled={loadingDetail === itinerary.id}
+                      className="border-2 border-gray-300 rounded-none hover:bg-gray-100 font-bold w-full"
                     >
-                      #{interest}
-                    </span>
-                  ))}
+                      {loadingDetail === itinerary.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          로딩 중...
+                        </>
+                      ) : expandedItineraries.has(itinerary.id) ? (
+                        <>
+                          <ChevronUp className="h-4 w-4 mr-2" />
+                          일정 숨기기
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4 mr-2" />
+                          일정 보기 ({parseInt(itinerary.duration) || itinerary.days.length || 0}일)
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Expanded Schedule */}
+                  {expandedItineraries.has(itinerary.id) && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-4 pt-4 border-t-2 border-gray-200 space-y-4"
+                    >
+                      {itinerary.days.map((day) => (
+                        <div key={day.day} className="border-2 border-black bg-gray-50 p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 bg-black text-white flex items-center justify-center font-black text-lg">
+                              {day.day}
+                            </div>
+                            <h4 className="font-bold text-lg">{day.title}</h4>
+                          </div>
+                          <div className="space-y-3">
+                            {day.activities.map((activity, actIdx) => (
+                              <div
+                                key={actIdx}
+                                className={`flex gap-3 p-3 border-2 border-gray-300 ${
+                                  activity.isEvent ? 'bg-yellow-100' : 'bg-white'
+                                }`}
+                              >
+                                <div className="flex-shrink-0">
+                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                                    activity.isEvent ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'
+                                  }`}>
+                                    {actIdx + 1}
+                                  </div>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Clock className="h-3 w-3 text-gray-500" />
+                                    <span className="text-xs font-bold">{activity.time}</span>
+                                    {activity.isEvent && (
+                                      <Badge className="bg-black text-white text-xs">EVENT</Badge>
+                                    )}
+                                  </div>
+                                  <h5 className="font-bold text-sm mb-1">{activity.activity}</h5>
+                                  <div className="flex items-start gap-1 mb-1">
+                                    <MapPin className="h-3 w-3 text-gray-500 mt-0.5 flex-shrink-0" />
+                                    <span className="text-xs text-gray-600">{activity.location}</span>
+                                  </div>
+                                  <p className="text-xs text-gray-600 mb-2">{activity.description}</p>
+                                  <div className="flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3 text-gray-500" />
+                                    <span className="text-xs font-bold text-gray-700">{activity.estimatedCost}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
                 </div>
 
-                {/* Actions - compact horizontal */}
-                <div className="mt-auto pt-3 border-t border-gray-200 flex items-center gap-1">
+                {/* Actions */}
+                <div className="flex flex-col gap-2 justify-start">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleEdit(itinerary)}
-                    className="flex-1 h-8 border border-black rounded-none hover:bg-black hover:text-white text-xs font-bold"
+                    className="border-2 border-black rounded-none hover:bg-black hover:text-white font-bold"
                   >
-                    <Edit className="h-3 w-3 mr-1" />
+                    <Edit className="h-4 w-4 mr-2" />
                     수정
                   </Button>
+                  <div className="flex items-center gap-2 px-3 py-2 border-2 border-black rounded-none bg-white">
+                    <Switch
+                      checked={itinerary.active}
+                      onCheckedChange={() => handleToggleActive(itinerary.id)}
+                      disabled={updatingStatus === itinerary.id}
+                    />
+                    <Label className="text-xs font-bold cursor-pointer whitespace-nowrap flex items-center gap-1">
+                      {itinerary.active ? '활성화' : '비활성화'}
+                      {updatingStatus === itinerary.id && (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      )}
+                    </Label>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleToggleFeatured(itinerary.id)}
                     disabled={updatingStatus === itinerary.id}
-                    className={`h-8 w-8 p-0 border border-black rounded-none ${
-                      itinerary.featured ? 'bg-yellow-400' : 'bg-white hover:bg-yellow-100'
+                    className={`border-2 border-black rounded-none font-bold ${
+                      itinerary.featured
+                        ? 'bg-yellow-400 text-black hover:bg-yellow-500'
+                        : 'bg-white text-black hover:bg-yellow-100'
                     }`}
                   >
                     {updatingStatus === itinerary.id ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                     ) : (
-                      <Star className="h-3 w-3" />
+                      <Star className="h-4 w-4 mr-1" />
                     )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleExpanded(itinerary.id)}
-                    disabled={loadingDetail === itinerary.id}
-                    className="h-8 w-8 p-0 border border-gray-300 rounded-none hover:bg-gray-100"
-                  >
-                    {loadingDetail === itinerary.id ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : expandedItineraries.has(itinerary.id) ? (
-                      <ChevronUp className="h-3 w-3" />
-                    ) : (
-                      <ChevronDown className="h-3 w-3" />
-                    )}
+                    {itinerary.featured ? '추천됨' : '추천'}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleDelete(itinerary.id)}
                     disabled={deleting === itinerary.id}
-                    className="h-8 w-8 p-0 border border-red-400 text-red-600 rounded-none hover:bg-red-600 hover:text-white disabled:opacity-50"
+                    className="border-2 border-red-600 text-red-600 rounded-none hover:bg-red-600 hover:text-white font-bold"
                   >
                     {deleting === itinerary.id ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2 className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
-
-                {/* Active Toggle */}
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-                  <Label className="text-xs text-gray-500 flex items-center gap-1">
-                    활성화
-                    {updatingStatus === itinerary.id && (
-                      <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
-                    )}
-                  </Label>
-                  <Switch
-                    checked={itinerary.active}
-                    onCheckedChange={() => handleToggleActive(itinerary.id)}
-                    disabled={updatingStatus === itinerary.id}
-                  />
-                </div>
               </div>
-
-              {/* Expanded Schedule - Full width below card */}
-              {expandedItineraries.has(itinerary.id) && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="border-t-2 border-black bg-gray-50 p-3 space-y-2"
-                >
-                  {itinerary.days.map((day) => (
-                    <div key={day.day} className="border border-black bg-white p-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 bg-black text-white flex items-center justify-center font-bold text-xs">
-                          {day.day}
-                        </div>
-                        <h4 className="font-bold text-xs">{day.title}</h4>
-                      </div>
-                      <div className="space-y-1">
-                        {day.activities.slice(0, 2).map((activity, actIdx) => (
-                          <div
-                            key={actIdx}
-                            className="flex items-center gap-2 text-xs text-gray-600"
-                          >
-                            <Clock className="h-3 w-3 text-gray-400" />
-                            <span className="font-medium">{activity.time}</span>
-                            <span className="truncate">{activity.activity}</span>
-                          </div>
-                        ))}
-                        {day.activities.length > 2 && (
-                          <p className="text-xs text-gray-400">+{day.activities.length - 2} more activities</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
             </div>
           </motion.div>
         ))}
