@@ -2,10 +2,60 @@
   "title": "Travel Tips for Korea",
   "subtitle": "Essential tips for your Korea adventure",
   "items": {
-    "language": "Download Papago or Google Translate for language assistance",
-    "transportation": "Get a T-money card for convenient public transportation",
-    "cash": "Many places don't accept international cards - bring cash",
-    "tipping": "Tipping is not customary in Korea",
-    "wifi": "Free WiFi is widely available in cafes and public areas"
+    "language": "Download Papago or Google Translate for language support.",
+    "transportation": "Get a T-money card for convenient public transport.",
+    "cash": "Many places don't accept foreign cards - carry cash.",
+    "tipping": "Tipping is not customary in Korea.",
+    "wifi": "Free WiFi is widely available in cafes and public areas."
+  },
+  "dynamic": {
+    "common": {
+      "tmoney": "T-money cards work on buses, subways, and taxis. Get one at any convenience store.",
+      "cash": "Many local shops and traditional markets only accept cash - carry Korean won.",
+      "operatingHours": "Most shops and attractions open at 10-11 AM. Plan morning activities accordingly."
+    },
+    "city": {
+      "seoul": {
+        "rushHour": "Avoid rush hour (8-9 AM, 6-7 PM) on subway lines 2 and 9 - they get extremely crowded.",
+        "stairsDistance": "Seoul involves lots of walking and stairs. Wear comfortable shoes and pace yourself."
+      },
+      "busan": {
+        "coastalWind": "Coastal areas can be windy even on warm days. Bring a light jacket for Haeundae Beach.",
+        "hills": "Many attractions like Gamcheon Village are on steep hills. Plan for extra walking time."
+      },
+      "jeju": {
+        "carRental": "Public transport on Jeju is limited. Renting a car is highly recommended for flexibility.",
+        "weatherChange": "Jeju weather changes quickly. Always carry rain gear, especially near Hallasan."
+      },
+      "gyeongju": {
+        "historicSites": "Historic sites are spread out. Allow at least 2-3 hours for Bulguksa Temple and Seokguram Grotto.",
+        "bikeRental": "Rent a bike to explore the tombs area - it's flat and bike-friendly with dedicated paths."
+      },
+      "gangneung": {
+        "coffeeStreet": "Visit Anmok Coffee Street for scenic ocean views and Korea's famous coffee culture.",
+        "seafood": "Try fresh seafood at Jumunjin Market - it's fresher and cheaper than tourist areas."
+      },
+      "other": {
+        "localTransport": "In smaller cities, buses may run less frequently. Check schedules on Kakao Map or Naver Map.",
+        "translation": "Papago (Korean translation app) works better than Google Translate for Korean text."
+      }
+    },
+    "season": {
+      "summer": {
+        "heatHumidity": "Summer is hot and humid (30-35°C). Stay hydrated, use sunscreen, and plan indoor breaks."
+      },
+      "winter": {
+        "iceEarlySunset": "Winter is cold and dry. Watch for ice on sidewalks and note that sunset is around 5:30 PM."
+      },
+      "rainy": {
+        "indoorAlternatives": "Rainy season (장마) brings heavy rain. Have indoor backup plans like museums or shopping malls."
+      },
+      "spring": {
+        "cherryBlossomCrowds": "Cherry blossom spots get very crowded in April. Visit early morning for better photos."
+      },
+      "fall": {
+        "perfectWeather": "Fall has perfect weather for outdoor activities. Don't miss the autumn foliage at Namsan or Nami Island."
+      }
+    }
   }
 }

@@ -145,6 +145,8 @@ export default function App() {
   const [currentItinerary, setCurrentItinerary] = useState<ItineraryData | null>(null);
   const [rawAIResponse, setRawAIResponse] = useState<ScheduleGenerateResponse | null>(null);
   const [userBudget, setUserBudget] = useState<string>('mid-range');
+  const [userStartDate, setUserStartDate] = useState<Date | undefined>(undefined);
+  const [userSelectedCities, setUserSelectedCities] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [activeTab, setActiveTab] = useState("plan");
@@ -233,7 +235,9 @@ export default function App() {
   const handleItineraryGenerated = (
     itinerary: ItineraryData,
     rawResponse?: ScheduleGenerateResponse,
-    budget?: string
+    budget?: string,
+    startDate?: Date,
+    cities?: string[]
   ) => {
     setCurrentItinerary(itinerary);
     if (rawResponse) {
@@ -241,6 +245,12 @@ export default function App() {
     }
     if (budget) {
       setUserBudget(budget);
+    }
+    if (startDate) {
+      setUserStartDate(startDate);
+    }
+    if (cities) {
+      setUserSelectedCities(cities);
     }
   };
 
@@ -814,11 +824,13 @@ export default function App() {
                   </div>
                 </div>
                 
-                <ItineraryDisplay 
+                <ItineraryDisplay
                   itinerary={currentItinerary}
                   onEdit={handleNewPlan}
                   onConfirm={handleConfirmItinerary}
                   onRegenerate={handleRegenerateItinerary}
+                  startDate={userStartDate}
+                  selectedCities={userSelectedCities}
                 />
               </motion.div>
             )}

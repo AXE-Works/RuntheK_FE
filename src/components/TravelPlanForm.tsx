@@ -25,7 +25,9 @@ interface TravelPlanFormProps {
   onItineraryGenerated: (
     itinerary: ItineraryData,
     rawResponse?: ScheduleGenerateResponse,
-    budget?: string
+    budget?: string,
+    startDate?: Date,
+    cities?: string[]
   ) => void;
   isGenerating: boolean;
   setIsGenerating: (generating: boolean) => void;
@@ -565,8 +567,8 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
         additionalNotes: additionalNotes,
         language: language,
       });
-      // Pass itinerary, raw AI response, and user budget to parent
-      onItineraryGenerated(result.itinerary, result.rawAIResponse, result.userBudget);
+      // Pass itinerary, raw AI response, user budget, startDate, and cities to parent
+      onItineraryGenerated(result.itinerary, result.rawAIResponse, result.userBudget, userInput.startDate, citiesToSend);
       toast.success(t('common:messages.itineraryGenerated'));
     } catch (error) {
       if (error instanceof ScheduleApiError) {

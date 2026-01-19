@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -11,15 +11,18 @@ import { ItineraryData } from '../App';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ItineraryMap } from './ItineraryMap';
+import { getTranslatedTips } from '../lib/travelTips';
 
 interface ItineraryDisplayProps {
   itinerary: ItineraryData;
   onEdit: () => void;
   onConfirm?: (itinerary: ItineraryData) => void;
   onRegenerate?: (additionalNotes: string) => void;
+  startDate?: Date;
+  selectedCities?: string[];
 }
 
-export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }: ItineraryDisplayProps) {
+export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, startDate, selectedCities }: ItineraryDisplayProps) {
   const { t } = useTranslation(['trips', 'common', 'tips']);
   const [editedTitle, setEditedTitle] = useState('');
   const [showEditTitle, setShowEditTitle] = useState(false);
@@ -27,6 +30,18 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [activeMapState, setActiveMapState] = useState<{ dayIndex: number; activityIndex: number; location: string } | null>(null);
+
+  // Dynamic travel tips based on itinerary, destination, and season
+  const dynamicTips = useMemo(() => {
+    return getTranslatedTips(
+      {
+        itinerary,
+        startDate,
+        cities: selectedCities,
+      },
+      t
+    );
+  }, [itinerary, startDate, selectedCities, t]);
 
   const generateGoogleMapsUrl = (location: string) => {
     const query = encodeURIComponent(`${location}, South Korea`);
@@ -480,13 +495,15 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
             <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
               {(itinerary.travelTips && itinerary.travelTips.length > 0
                 ? itinerary.travelTips
-                : [
-                    t('tips:items.language'),
-                    t('tips:items.transportation'),
-                    t('tips:items.cash'),
-                    t('tips:items.tipping'),
-                    t('tips:items.wifi'),
-                  ]
+                : dynamicTips.length > 0
+                  ? dynamicTips
+                  : [
+                      t('tips:items.language'),
+                      t('tips:items.transportation'),
+                      t('tips:items.cash'),
+                      t('tips:items.tipping'),
+                      t('tips:items.wifi'),
+                    ]
               ).map((tip, index) => (
                 <li key={index}>{tip}</li>
               ))}
