@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
-import { MapPin, Clock, Star, ExternalLink, CheckCircle, Edit2, RotateCcw, Info, MessageSquare, Sparkles, Mail, Save, Share2, Footprints, Train, Car } from 'lucide-react';
+import { MapPin, Clock, Star, ExternalLink, CheckCircle, Edit2, RotateCcw, Info, MessageSquare, Sparkles, Footprints, Train, Car } from 'lucide-react';
 import { ItineraryData } from '../App';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -30,6 +30,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, s
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [activeMapState, setActiveMapState] = useState<{ dayIndex: number; activityIndex: number; location: string } | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   // Dynamic travel tips based on itinerary, destination, and season
   const dynamicTips = useMemo(() => {
@@ -116,8 +117,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, s
           </div>
           <CardContent className="relative p-4 md:p-6 z-10">
             <div className="space-y-3 md:space-y-4">
-              <div className="flex justify-between items-start">
-                <div className="space-y-2 w-full max-w-2xl">
+              <div className="space-y-2 w-full max-w-2xl">
                   {/* Editable Title Section */}
                   <div className="group relative flex items-center gap-2 h-[40px]">
                     {showEditTitle ? (
@@ -173,9 +173,8 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, s
                   <p className="text-sm text-gray-300">
                     A {extractDays(itinerary.duration)}-day plan focused on {formatInterests(itinerary.interests)}—based on your travel pace and location flow.
                   </p>
-                </div>
               </div>
-              
+
               {/* Action Buttons */}
               <div className="pt-3 md:pt-4 border-t border-white/20">
                 <div className="text-center mb-3 md:mb-4">
@@ -186,18 +185,47 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, s
                     <Button
                       size="lg"
                       className="bg-black text-white hover:bg-gray-800 text-sm md:text-base h-12 px-8 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all font-black uppercase tracking-wide"
-                      onClick={() => {
-                        // Confirm and provide feedback
-                        if (confirm(t('trips:itinerary.confirmSavePrompt'))) {
-                            handleConfirmItinerary();
-                        }
-                      }}
+                      onClick={() => setShowConfirmDialog(true)}
                     >
                       <CheckCircle className="h-5 w-5 mr-2" />
                       {t('trips:itinerary.confirmSave')}
                     </Button>
                   )}
-                  
+
+                  {/* Confirm Save Dialog */}
+                  <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                    <DialogContent className="max-w-sm p-6">
+                      <DialogHeader className="pb-2">
+                        <DialogTitle className="flex items-center gap-2 text-base">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          {t('trips:itinerary.confirmSave')}
+                        </DialogTitle>
+                        <DialogDescription className="text-sm">
+                          {t('trips:itinerary.confirmSavePrompt')}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex justify-end space-x-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowConfirmDialog(false)}
+                        >
+                          {t('common:buttons.cancel')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-black hover:bg-gray-800"
+                          onClick={() => {
+                            handleConfirmItinerary();
+                            setShowConfirmDialog(false);
+                          }}
+                        >
+                          {t('common:buttons.confirm')}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
                   <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
                     <DialogTrigger asChild>
                       <Button
@@ -261,38 +289,6 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, s
                     </DialogContent>
                   </Dialog>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Key Highlights */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-      >
-        <Card className="border-gray-200 bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-gray-900">
-              <Star className="h-5 w-5 text-gray-600" />
-              <span>{t('trips:itinerary.tripHighlights')}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-gray-50 rounded-lg border">
-                <h3 className="font-semibold text-gray-900">{t('trips:itinerary.highlights.cultural')}</h3>
-                <p className="text-sm text-gray-600">{t('trips:itinerary.highlights.culturalDesc')}</p>
-              </div>
-              <div className="text-center p-4 bg-gray-50 rounded-lg border">
-                <h3 className="font-semibold text-gray-900">{t('trips:itinerary.highlights.local')}</h3>
-                <p className="text-sm text-gray-600">{t('trips:itinerary.highlights.localDesc')}</p>
-              </div>
-              <div className="text-center p-4 bg-gray-50 rounded-lg border">
-                <h3 className="font-semibold text-gray-900">{t('trips:itinerary.highlights.events')}</h3>
-                <p className="text-sm text-gray-600">{t('trips:itinerary.highlights.eventsDesc')}</p>
               </div>
             </div>
           </CardContent>
@@ -434,9 +430,11 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, s
                                                 </div>
                                                 <h4 className="font-bold text-base leading-tight">{activity.activity}</h4>
                                             </div>
-                                            <span className="text-xs font-bold bg-gray-100 px-2 py-1 border border-black whitespace-nowrap">
-                                                {activity.estimatedCost}
-                                            </span>
+                                            {activity.estimatedCost && (
+                                                <span className="text-xs font-bold bg-gray-100 px-2 py-1 border border-black whitespace-nowrap">
+                                                    {activity.estimatedCost}
+                                                </span>
+                                            )}
                                         </div>
                                         
                                         <div className="flex items-center text-xs font-bold text-gray-500 mb-2 truncate">
@@ -481,6 +479,38 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, s
         ))}
       </div>
 
+      {/* Key Highlights */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+      >
+        <Card className="border-gray-200 bg-white shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-gray-900">
+              <Star className="h-5 w-5 text-gray-600" />
+              <span>{t('trips:itinerary.tripHighlights')}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-gray-50 rounded-lg border">
+                <h3 className="font-semibold text-gray-900">{t('trips:itinerary.highlights.cultural')}</h3>
+                <p className="text-sm text-gray-600">{t('trips:itinerary.highlights.culturalDesc')}</p>
+              </div>
+              <div className="text-center p-4 bg-gray-50 rounded-lg border">
+                <h3 className="font-semibold text-gray-900">{t('trips:itinerary.highlights.local')}</h3>
+                <p className="text-sm text-gray-600">{t('trips:itinerary.highlights.localDesc')}</p>
+              </div>
+              <div className="text-center p-4 bg-gray-50 rounded-lg border">
+                <h3 className="font-semibold text-gray-900">{t('trips:itinerary.highlights.events')}</h3>
+                <p className="text-sm text-gray-600">{t('trips:itinerary.highlights.eventsDesc')}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Travel Tips */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -510,157 +540,6 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, s
             </ul>
           </CardContent>
         </Card>
-      </motion.div>
-
-      {/* Quick Actions */}
-      <motion.div
-        className="flex justify-center space-x-4 pt-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.7 }}
-      >
-        <Button
-          variant="outline"
-          size="icon"
-          className="border-gray-300 text-gray-700 hover:bg-gray-50 h-12 w-12"
-          title={t('trips:itinerary.actions.email')}
-        >
-          <Mail className="h-5 w-5" />
-        </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 h-12 w-12"
-            title={t('trips:itinerary.actions.download')}
-            onClick={async () => {
-              try {
-                const html2canvas = (await import('html2canvas')).default;
-                const { jsPDF } = await import('jspdf');
-                
-                const content = document.querySelector('.max-w-4xl') as HTMLElement;
-                if (!content) {
-                    alert(t('trips:itinerary.contentNotFound'));
-                    return;
-                }
-                
-                document.body.style.cursor = 'wait';
-
-                // Robust style inliner to survive "oklch" errors
-                const inlineAllStyles = (source: HTMLElement, target: HTMLElement) => {
-                    const computed = window.getComputedStyle(source);
-                    
-                    // We must copy pretty much everything to be safe if we are nuking stylesheets
-                    const styleProps = [
-                        'color', 'background', 'backgroundColor', 'backgroundImage', 'backgroundSize', 'backgroundPosition', 'backgroundRepeat',
-                        'border', 'borderTop', 'borderRight', 'borderBottom', 'borderLeft',
-                        'borderColor', 'borderRadius', 'borderWidth', 'borderStyle',
-                        'font', 'fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'lineHeight', 'textAlign', 'textTransform', 'textDecoration', 'letterSpacing',
-                        'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
-                        'margin', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft',
-                        'display', 'position', 'top', 'left', 'right', 'bottom', 'width', 'height', 'minWidth', 'minHeight', 'maxWidth', 'maxHeight',
-                        'flex', 'flexDirection', 'flexWrap', 'justifyContent', 'alignItems', 'alignContent', 'gap', 'order', 'flexGrow', 'flexShrink', 'flexBasis',
-                        'grid', 'gridTemplateColumns', 'gridTemplateRows', 'gridGap',
-                        'opacity', 'visibility', 'zIndex', 'boxShadow', 'overflow', 'whiteSpace', 'verticalAlign',
-                        'transform', 'transformOrigin', 'float', 'clear', 'listStyle'
-                    ];
-
-                    styleProps.forEach(prop => {
-                        const val = computed[prop as any];
-                        if (val) {
-                             // CRITICAL: Check if value contains "oklch". If so, we are in trouble because 
-                             // getComputedStyle SHOULD have resolved it. If it didn't, we skip it or force black.
-                             if (typeof val === 'string' && val.includes('oklch')) {
-                                 // Fallback for browsers that might return unresolved vars (rare but possible)
-                                 (target.style as any)[prop] = '#000000'; 
-                             } else {
-                                 (target.style as any)[prop] = val;
-                             }
-                        }
-                    });
-
-                    // Recursion
-                    for (let i = 0; i < source.children.length; i++) {
-                        if (target.children[i]) {
-                            inlineAllStyles(source.children[i] as HTMLElement, target.children[i] as HTMLElement);
-                        }
-                    }
-                };
-
-                const canvas = await html2canvas(content, {
-                  scale: 2,
-                  useCORS: true,
-                  logging: false,
-                  windowWidth: 1280,
-                  ignoreElements: (element) => element.tagName === 'IFRAME',
-                  onclone: (clonedDoc) => {
-                    // 1. NUKE ALL STYLESHEETS
-                    // This is the only way to guarantee html2canvas doesn't try to parse 
-                    // the Tailwind CSS file containing "oklch"
-                    const styles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
-                    styles.forEach(s => s.remove());
-
-                    const clonedContent = clonedDoc.querySelector('.max-w-4xl') as HTMLElement;
-                    if (clonedContent) {
-                      // 2. Expand scrollable areas
-                      const scrollables = clonedContent.querySelectorAll('.overflow-y-auto, [class*="max-h-"]');
-                      scrollables.forEach((el) => {
-                        (el as HTMLElement).style.overflow = 'visible';
-                        (el as HTMLElement).style.height = 'auto';
-                        (el as HTMLElement).style.maxHeight = 'none';
-                      });
-
-                      // 3. INLINE ALL COMPUTED STYLES
-                      // Since we removed stylesheets, we must manually apply all computed styles 
-                      // from the original document to the clone.
-                      inlineAllStyles(content, clonedContent);
-                      
-                      // 4. Force white background just in case
-                      clonedContent.style.backgroundColor = '#ffffff';
-                      clonedContent.style.color = '#000000';
-                    }
-                  }
-                });
-                
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-                const imgWidth = pdfWidth;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                
-                let heightLeft = imgHeight;
-                let position = 0;
-                
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pdfHeight;
-                
-                while (heightLeft >= 0) {
-                  position = heightLeft - imgHeight;
-                  pdf.addPage();
-                  pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                  heightLeft -= pdfHeight;
-                }
-                
-                pdf.save('RuntheK_Itinerary.pdf');
-                document.body.style.cursor = 'default';
-                
-              } catch (error) {
-                console.error('PDF Generation Error:', error);
-                document.body.style.cursor = 'default';
-                alert(t('trips:itinerary.pdfFailed'));
-              }
-            }}
-          >
-            <Save className="h-5 w-5" />
-          </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="border-gray-300 text-gray-700 hover:bg-gray-50 h-12 w-12"
-          title={t('trips:itinerary.actions.share')}
-        >
-          <Share2 className="h-5 w-5" />
-        </Button>
       </motion.div>
     </div>
   );

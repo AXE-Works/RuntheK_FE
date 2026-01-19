@@ -116,10 +116,10 @@
   },
   "itinerary": {
     "title": "Itinerary",
-    "actionPrompt": "What would you like to do with this itinerary?",
-    "confirmSave": "Confirm & Save to My Page",
+    "actionPrompt": "Does this plan work for you?",
+    "confirmSave": "Save this itinerary",
     "confirmSavePrompt": "Are you sure you want to confirm this itinerary and save it to My Page?",
-    "modifyRegenerate": "Modify & Regenerate",
+    "modifyRegenerate": "Refine this plan",
     "modifyTitle": "Modify Your Itinerary",
     "modifyDescription": "Please describe what changes you would like to make to your itinerary.",
     "additionalRequests": "Additional requests or changes",
