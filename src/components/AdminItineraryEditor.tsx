@@ -8,14 +8,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
+import { Calendar } from './ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { motion } from 'motion/react';
+import { format } from 'date-fns';
 import {
   Plus,
   Trash2,
   ArrowLeft,
   MapPin,
   DollarSign,
-  Calendar,
+  Calendar as CalendarIcon,
   Star,
   Sparkles,
   Wand2,
@@ -28,7 +32,8 @@ import {
   Lightbulb,
   CheckCircle2,
   XCircle,
-  Package
+  Package,
+  X
 } from 'lucide-react';
 import { generateSchedule, ScheduleApiError } from '../services/scheduleApi';
 import { toast } from 'sonner';
@@ -92,35 +97,37 @@ interface AdminItineraryEditorProps {
   onCancel: () => void;
 }
 
-const KOREAN_CITIES = [
-  'Seoul Gangnam',
-  'Seoul Gangbuk',
-  'Busan',
-  'Jeju Island',
-  'Gyeongju',
-  'Incheon',
-  'Daegu',
-  'Suwon (Gyeonggi)',
-  'Jeonju (Jeolla)',
-  'Yeosu (Jeolla)'
+const DESTINATION_OPTIONS = [
+  { id: 'seoul', label: 'Seoul' },
+  { id: 'busan', label: 'Busan' },
+  { id: 'jeju', label: 'Jeju Island' },
+  { id: 'gyeongju', label: 'Gyeongju' },
+  { id: 'suwon', label: 'Suwon' },
+  { id: 'notSure', label: 'Not Sure' }
 ];
 
 const INTEREST_OPTIONS = [
-  { id: 'culture', label: 'Culture & History', icon: '🏛️' },
   { id: 'food', label: 'Korean Food', icon: '🍜' },
-  { id: 'shopping', label: 'Shopping', icon: '🛍️' },
-  { id: 'nature', label: 'Nature & Hiking', icon: '🏔️' },
+  { id: 'local', label: 'Local Experience', icon: '🏘️' },
   { id: 'kculture', label: 'K-Pop & Entertainment', icon: '🎵' },
-  { id: 'nightlife', label: 'Nightlife', icon: '🌃' },
-  { id: 'temples', label: 'Temples & Spirituality', icon: '⛩️' },
-  { id: 'traditional', label: 'Traditional Arts', icon: '🎨' }
+  { id: 'shopping', label: 'Shopping', icon: '🛍️' },
+  { id: 'culture', label: 'Culture & History', icon: '🏛️' },
+  { id: 'nature', label: 'Nature & Hiking', icon: '🏔️' }
 ];
 
-// Budget 매핑: AdminItineraryEditor -> scheduleApi
+const TRAVEL_STYLE_OPTIONS = [
+  { value: 'relaxed', label: 'Relaxed Pace', description: '2-3 activities per day, plenty of free time' },
+  { value: 'balanced', label: 'Balanced', description: '4-5 activities per day with breaks' },
+  { value: 'packed', label: 'Packed Schedule', description: 'Maximize experiences, full days' }
+];
+
+const MAX_INTERESTS = 3;
+
+// Travel Style 매핑: AdminItineraryEditor -> scheduleApi (budget로 변환)
 const BUDGET_TO_API: Record<string, string> = {
-  'budget': 'budget',
-  'mid': 'mid-range',
-  'luxury': 'luxury',
+  'relaxed': 'budget',
+  'balanced': 'mid-range',
+  'packed': 'luxury',
 };
 
 // AI 응답을 Day[] 형식으로 변환
@@ -151,10 +158,11 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
   // Basic Info State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [duration, setDuration] = useState('5');
-  const [startDate, setStartDate] = useState('');
+  const [duration, setDuration] = useState('5 days');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [cities, setCities] = useState<string[]>([]);
-  const [budget, setBudget] = useState('mid');
+  const [customCity, setCustomCity] = useState('');
+  const [budget, setBudget] = useState('balanced');
   const [interests, setInterests] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState('');
   const [rating, setRating] = useState(4.5);
@@ -287,8 +295,10 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
     if (itinerary) {
       setTitle(itinerary.title);
       setDescription(itinerary.description);
-      setDuration(itinerary.duration.split(' ')[0]); // Extract number from "5 days"
-      setStartDate(itinerary.createdAt.split('T')[0]);
+      setDuration(itinerary.duration); // Keep full duration string like "5 days"
+      // Parse date from createdAt
+      const parsedDate = itinerary.createdAt ? new Date(itinerary.createdAt.split('T')[0]) : undefined;
+      setStartDate(parsedDate);
       setCities(itinerary.cities);
       setBudget(itinerary.budget);
       setInterests(itinerary.interests);
@@ -313,42 +323,151 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
     }
   }, [itinerary]);
 
+  // Mock 데이터 생성 함수 (API 연동 전 임시 사용)
+  const generateMockItinerary = (numDays: number, selectedCities: string[], selectedInterests: string[]): Day[] => {
+    const mockActivities: Record<string, { activity: string; location: string; description: string }[]> = {
+      food: [
+        { activity: 'Korean BBQ Experience', location: 'Gangnam-gu, Seoul', description: 'Authentic Korean barbecue with premium meat cuts' },
+        { activity: 'Gwangjang Market Food Tour', location: 'Jongno-gu, Seoul', description: 'Try bindaetteok, mayak gimbap, and other street foods' },
+        { activity: 'Traditional Korean Lunch', location: 'Various', description: 'Authentic Korean set meal (jeongsik) at local restaurant' },
+        { activity: 'Street Food Tour in Myeongdong', location: 'Jung-gu, Seoul', description: 'Sample hotteok, tteokbokki, and Korean fried chicken' },
+        { activity: 'Fine Dining Korean Cuisine', location: 'Jung-gu, Seoul', description: 'Modern interpretation of traditional Korean flavors' }
+      ],
+      culture: [
+        { activity: 'Visit Gyeongbokgung Palace', location: 'Jongno-gu, Seoul', description: 'Explore the largest of the Five Grand Palaces built during the Joseon Dynasty' },
+        { activity: 'Bukchon Hanok Village', location: 'Jongno-gu, Seoul', description: 'Walk through traditional Korean houses and experience old Seoul' },
+        { activity: 'National Museum of Korea', location: 'Yongsan-gu, Seoul', description: 'Discover 5,000 years of Korean history and culture' },
+        { activity: 'Changdeokgung Palace Secret Garden', location: 'Jongno-gu, Seoul', description: 'UNESCO World Heritage site with beautiful secret gardens' },
+        { activity: 'Jogyesa Temple', location: 'Jongno-gu, Seoul', description: 'Main temple of Korean Buddhism in Seoul' }
+      ],
+      shopping: [
+        { activity: 'Myeongdong Shopping', location: 'Jung-gu, Seoul', description: 'Shop for cosmetics, fashion, and souvenirs' },
+        { activity: 'Hongdae Area', location: 'Mapo-gu, Seoul', description: 'Trendy shopping and youth culture district' },
+        { activity: 'Dongdaemun Design Plaza', location: 'Jung-gu, Seoul', description: 'Modern shopping complex and cultural hub' },
+        { activity: 'Insadong Traditional Crafts', location: 'Jongno-gu, Seoul', description: 'Traditional Korean crafts and antiques shopping' },
+        { activity: 'Gangnam Underground Shopping', location: 'Gangnam-gu, Seoul', description: 'Extensive underground shopping network' }
+      ],
+      nature: [
+        { activity: 'Namsan Tower Hike', location: 'Jung-gu, Seoul', description: "Hike up to Seoul's iconic landmark for city views" },
+        { activity: 'Han River Cruise', location: 'Seoul', description: "Relaxing cruise along Seoul's main river" },
+        { activity: 'Bukhansan National Park', location: 'Northern Seoul', description: 'Scenic mountain hiking with panoramic views' },
+        { activity: 'Banpo Rainbow Bridge', location: 'Seocho-gu, Seoul', description: 'Musical fountain show with rainbow lights' },
+        { activity: 'Seoullo 7017 Skygarden', location: 'Jung-gu, Seoul', description: 'Elevated botanical garden and walkway' }
+      ],
+      kculture: [
+        { activity: 'K-Pop Experience', location: 'Gangnam-gu, Seoul', description: 'Visit entertainment companies and K-pop themed cafes' },
+        { activity: 'Lotte World Tower', location: 'Songpa-gu, Seoul', description: 'Modern entertainment complex with amazing views' },
+        { activity: 'SM Town Museum', location: 'Gangnam-gu, Seoul', description: 'Interactive K-pop museum and experience center' },
+        { activity: 'Korean Drama Filming Locations Tour', location: 'Various, Seoul', description: 'Visit famous K-drama shooting locations' },
+        { activity: 'HYBE Insight', location: 'Yongsan-gu, Seoul', description: 'BTS and HYBE artists exhibition and experience' }
+      ],
+      local: [
+        { activity: 'Local Market Experience', location: 'Namdaemun, Seoul', description: 'Explore traditional Korean market life' },
+        { activity: 'Korean Cooking Class', location: 'Mapo-gu, Seoul', description: 'Learn to make kimchi and bulgogi with local chefs' },
+        { activity: 'Neighborhood Walk in Ikseon-dong', location: 'Jongno-gu, Seoul', description: 'Explore charming alleyways with cafes and shops' },
+        { activity: 'Local Pub Hopping', location: 'Euljiro, Seoul', description: 'Experience authentic Korean nightlife in retro bars' },
+        { activity: 'Morning Yoga at Han River', location: 'Yeouido, Seoul', description: 'Join locals for outdoor exercise along the river' }
+      ]
+    };
+
+    const budgetRanges: Record<string, { low: string; mid: string; high: string }> = {
+      relaxed: { low: '$10-20', mid: '$15-25', high: '$20-35' },
+      balanced: { low: '$20-40', mid: '$30-50', high: '$40-70' },
+      packed: { low: '$50-80', mid: '$70-100', high: '$80-150' }
+    };
+
+    const currentBudget = budgetRanges[budget] || budgetRanges.balanced;
+
+    return Array.from({ length: numDays }, (_, i) => {
+      const dayActivities: Activity[] = [];
+      const cityForDay = selectedCities.length > 0
+        ? selectedCities[i % selectedCities.length]
+        : 'Seoul';
+
+      // Morning Activity
+      const morningInterest = selectedInterests[i % selectedInterests.length] || 'culture';
+      const morningActivities = mockActivities[morningInterest] || mockActivities.culture;
+      dayActivities.push({
+        time: '09:00 AM',
+        ...morningActivities[i % morningActivities.length],
+        estimatedCost: currentBudget.low
+      });
+
+      // Lunch
+      dayActivities.push({
+        time: '12:00 PM',
+        activity: 'Traditional Korean Lunch',
+        location: `${cityForDay}`,
+        description: 'Enjoy authentic Korean cuisine at a local restaurant',
+        estimatedCost: currentBudget.mid
+      });
+
+      // Afternoon Activity 1
+      const afternoonInterest1 = selectedInterests[(i + 1) % selectedInterests.length] || 'shopping';
+      const afternoonActivities1 = mockActivities[afternoonInterest1] || mockActivities.shopping;
+      dayActivities.push({
+        time: '02:00 PM',
+        ...afternoonActivities1[(i + 1) % afternoonActivities1.length],
+        estimatedCost: currentBudget.low
+      });
+
+      // Afternoon Activity 2
+      const afternoonInterest2 = selectedInterests[(i + 2) % selectedInterests.length] || 'nature';
+      const afternoonActivities2 = mockActivities[afternoonInterest2] || mockActivities.nature;
+      dayActivities.push({
+        time: '04:30 PM',
+        ...afternoonActivities2[(i + 2) % afternoonActivities2.length],
+        estimatedCost: currentBudget.low
+      });
+
+      // Dinner
+      dayActivities.push({
+        time: '07:00 PM',
+        activity: 'Korean BBQ Dinner',
+        location: `${cityForDay}`,
+        description: 'Premium Korean barbecue with banchan (side dishes)',
+        estimatedCost: currentBudget.high
+      });
+
+      return {
+        day: i + 1,
+        title: `Day ${i + 1} - Exploring ${cityForDay}`,
+        activities: dayActivities
+      };
+    });
+  };
+
   const handleGenerateAI = async () => {
-    if (cities.length === 0) {
-      toast.error('도시를 최소 1개 선택해주세요!');
-      return;
-    }
     if (interests.length === 0) {
       toast.error('관심사를 최소 1개 선택해주세요!');
       return;
     }
 
+    if (!startDate) {
+      toast.error('시작 날짜를 선택해주세요!');
+      return;
+    }
+
     setIsGenerating(true);
 
+    // Extract number from duration (e.g., "5 days" -> "5")
+    const durationNum = parseInt(duration.split(' ')[0]) || 5;
+    const citiesToUse = cities.length > 0 ? cities.map(c => c === 'notSure' ? 'Seoul' : c) : ['Seoul'];
+
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
     try {
-      // startDate 파싱 (string -> Date)
-      const parsedStartDate = startDate ? new Date(startDate) : new Date();
-
-      // AI API 호출
-      const result = await generateSchedule({
-        startDate: parsedStartDate,
-        duration: `${duration} days`,
-        cities: cities,
-        budget: BUDGET_TO_API[budget] || 'mid-range',
-        interests: interests,
-        language: 'en',
-      });
-
-      // AI 응답을 Day[] 형식으로 변환
-      const generatedDays = convertAIResponseToDays(result.itinerary);
+      // 목업 데이터 생성 (API 연동 전 임시)
+      const generatedDays = generateMockItinerary(durationNum, citiesToUse, interests);
       setDays(generatedDays);
 
       // Auto-fill some fields if empty
       if (!title) {
-        setTitle(`${duration} Days ${cities[0]} Adventure`);
+        setTitle(`${durationNum} Days ${citiesToUse[0]} Adventure`);
       }
       if (!description) {
-        setDescription(`Explore the best of ${cities.join(', ')} with this carefully curated ${duration}-day itinerary.`);
+        setDescription(`Explore the best of ${citiesToUse.join(', ')} with this carefully curated ${durationNum}-day itinerary.`);
       }
       if (!imageUrl) {
         setImageUrl('https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=800');
@@ -356,24 +475,10 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
 
       setHasGenerated(true);
       setActiveTab('edit');
-      toast.success('일정이 성공적으로 생성되었습니다!');
+      toast.success('일정이 성공적으로 생성되었습니다! (목업 데이터)');
     } catch (error) {
-      // 상세한 에러 처리
-      if (error instanceof ScheduleApiError) {
-        switch (error.code) {
-          case 'TIMEOUT':
-            toast.error('AI 서비스 응답 시간 초과. 잠시 후 다시 시도해주세요.');
-            break;
-          case 'NETWORK_ERROR':
-            toast.error('AI 서비스에 연결할 수 없습니다. 네트워크를 확인해주세요.');
-            break;
-          default:
-            toast.error(error.message || '일정 생성 중 오류가 발생했습니다.');
-        }
-      } else {
-        toast.error('예기치 않은 오류가 발생했습니다. 다시 시도해주세요.');
-      }
-      console.error('AI Schedule generation error:', error);
+      toast.error('일정 생성 중 오류가 발생했습니다.');
+      console.error('Mock generation error:', error);
     } finally {
       setIsGenerating(false);
     }
@@ -811,16 +916,40 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
     setContentBlocks(sampleBlocks);
   };
 
-  const toggleCity = (city: string) => {
-    setCities(prev => 
-      prev.includes(city) ? prev.filter(c => c !== city) : [...prev, city]
+  const handleDestinationToggle = (destinationId: string) => {
+    setCities(prev =>
+      prev.includes(destinationId) ? prev.filter(c => c !== destinationId) : [...prev, destinationId]
     );
   };
 
-  const toggleInterest = (interest: string) => {
-    setInterests(prev => 
-      prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]
-    );
+  const handleAddCustomCity = () => {
+    const trimmedCity = customCity.trim();
+    if (trimmedCity && !cities.includes(trimmedCity)) {
+      setCities(prev => [...prev, trimmedCity]);
+      setCustomCity('');
+    }
+  };
+
+  const handleRemoveCustomCity = (city: string) => {
+    setCities(prev => prev.filter(c => c !== city));
+  };
+
+  const handleInterestToggle = (interestId: string) => {
+    setInterests(prev => {
+      const isAlreadySelected = prev.includes(interestId);
+
+      // 이미 선택된 경우 제거
+      if (isAlreadySelected) {
+        return prev.filter(id => id !== interestId);
+      }
+
+      // 최대 개수 도달 시 추가 불가
+      if (prev.length >= MAX_INTERESTS) {
+        return prev;
+      }
+
+      return [...prev, interestId];
+    });
   };
 
   return (
@@ -892,70 +1021,136 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
               </div>
               
               <div className="p-6 space-y-8">
-                {/* Date & Duration Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Start Date */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-bold text-black uppercase tracking-wide">Start Date</Label>
-                    <Input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full h-12 border-2 border-gray-200 hover:border-black focus-visible:border-black focus-visible:ring-0 transition-all rounded-lg"
-                    />
-                    <p className="text-xs text-gray-500 font-medium">We'll suggest seasonal events based on this.</p>
-                  </div>
+                {/* Date & Duration Section */}
+                <div className="space-y-4">
+                  <Label className="text-sm font-bold text-black uppercase tracking-wide flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4" />
+                    When do you want to start?
+                  </Label>
 
-                  {/* Duration */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-bold text-black uppercase tracking-wide">Duration</Label>
-                    <select
-                      value={`${duration} days`}
-                      onChange={(e) => setDuration(e.target.value.split(' ')[0])}
-                      className="w-full h-12 border-2 border-gray-200 hover:border-black focus:border-black transition-all rounded-lg px-3"
-                    >
-                      <option value="1 day">1 day</option>
-                      <option value="2 days">2 days</option>
-                      <option value="3 days">3 days</option>
-                      <option value="5 days">5 days</option>
-                      <option value="7 days">7 days</option>
-                      <option value="10 days">10 days</option>
-                    </select>
+                  {/* Date & Duration Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Start Date */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-bold text-black uppercase tracking-wide">Start Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={`w-full h-12 justify-start text-left font-normal border-2 border-gray-200 hover:border-black hover:bg-gray-50 transition-all rounded-lg ${
+                              !startDate && "text-gray-500"
+                            }`}
+                          >
+                            <CalendarIcon className="mr-3 h-5 w-5" />
+                            {startDate ? format(startDate, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-auto p-0 bg-white z-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black rounded-lg"
+                          align="start"
+                        >
+                          <Calendar
+                            mode="single"
+                            selected={startDate}
+                            onSelect={(date) => setStartDate(date)}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                            className="p-4"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <p className="text-xs text-gray-500 font-medium">We'll suggest seasonal events based on this.</p>
+                    </div>
+
+                    {/* Duration */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-bold text-black uppercase tracking-wide">Duration</Label>
+                      <Select value={duration} onValueChange={(value) => setDuration(value)}>
+                        <SelectTrigger className="w-full h-12 border-2 border-gray-200 hover:border-black transition-all rounded-lg">
+                          <SelectValue placeholder="Select duration" />
+                        </SelectTrigger>
+                        <SelectContent className="z-50 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-lg">
+                          <SelectItem value="1 day">1 day</SelectItem>
+                          <SelectItem value="2 days">2 days</SelectItem>
+                          <SelectItem value="3 days">3 days</SelectItem>
+                          <SelectItem value="5 days">5 days</SelectItem>
+                          <SelectItem value="7 days">7 days</SelectItem>
+                          <SelectItem value="10 days">10 days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 
-                {/* Cities Selection */}
+                {/* Destination Selection */}
                 <div className="space-y-4 pt-6 border-t-2 border-gray-100">
                   <Label className="text-sm font-bold text-black uppercase tracking-wide flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    Interested Cities
+                    Where do you want to go?
                   </Label>
-                  
+
                   <div className="flex flex-wrap gap-3">
-                    {KOREAN_CITIES.map((city) => {
-                      const isSelected = cities.includes(city);
+                    {DESTINATION_OPTIONS.map((dest) => {
+                      const isSelected = cities.includes(dest.id);
                       return (
                         <div
-                          key={city}
-                          onClick={() => toggleCity(city)}
+                          key={dest.id}
+                          onClick={() => handleDestinationToggle(dest.id)}
                           className={`
-                            cursor-pointer px-3 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 border-2
-                            ${isSelected 
-                              ? 'bg-black text-white border-black shadow-[2px_2px_0px_0px_rgba(100,100,100,1)] translate-x-[-2px] translate-y-[-2px]' 
+                            cursor-pointer px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 border-2
+                            ${isSelected
+                              ? 'bg-black text-white border-black shadow-[2px_2px_0px_0px_rgba(100,100,100,1)] translate-x-[-2px] translate-y-[-2px]'
                               : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black'
                             }
                           `}
                         >
-                          {city}
+                          {dest.label}
                         </div>
                       );
                     })}
                   </div>
-                  <p className="text-xs text-gray-500 font-medium">
-                    {cities.length === 0 
-                      ? "Select cities or leave empty for all recommendations." 
-                      : `${cities.length} cities selected.`}
-                  </p>
+
+                  {/* Custom city input */}
+                  <div className="flex gap-2 items-center mt-4">
+                    <Input
+                      type="text"
+                      placeholder="Or type a custom city..."
+                      value={customCity}
+                      onChange={(e) => setCustomCity(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCity()}
+                      className="flex-1 h-10 border-2 border-gray-200 rounded-lg text-sm focus:border-black"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleAddCustomCity}
+                      disabled={!customCity.trim()}
+                      className="h-10 px-4 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 disabled:opacity-50"
+                    >
+                      Add
+                    </Button>
+                  </div>
+
+                  {/* Custom cities display */}
+                  {cities.filter(c => !DESTINATION_OPTIONS.some(d => d.id === c)).length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {cities
+                        .filter(city => !DESTINATION_OPTIONS.some(d => d.id === city))
+                        .map((city) => (
+                          <div
+                            key={city}
+                            className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium"
+                          >
+                            {city}
+                            <button
+                              onClick={() => handleRemoveCustomCity(city)}
+                              className="ml-1 text-gray-500 hover:text-black"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -973,22 +1168,28 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                 <h3 className="text-xl font-bold text-black flex items-center gap-3">
                   <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">2</div>
                   Your Interests
+                  <span className="text-sm font-medium text-gray-500 ml-auto">
+                    {interests.length}/{MAX_INTERESTS}
+                  </span>
                 </h3>
               </div>
-              
+
               <div className="p-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {INTEREST_OPTIONS.map((interest) => {
                     const isSelected = interests.includes(interest.id);
+                    const isDisabled = !isSelected && interests.length >= MAX_INTERESTS;
                     return (
                       <div
                         key={interest.id}
-                        onClick={() => toggleInterest(interest.id)}
+                        onClick={() => !isDisabled && handleInterestToggle(interest.id)}
                         className={`
-                          cursor-pointer transition-all duration-200 border-2 rounded-xl p-2 flex flex-col items-center justify-center gap-2 h-20
+                          transition-all duration-200 border-2 rounded-xl p-2 flex flex-col items-center justify-center gap-2 h-20
                           ${isSelected
-                            ? 'bg-black text-white border-black shadow-[3px_3px_0px_0px_rgba(100,100,100,1)] translate-x-[-2px] translate-y-[-2px]'
-                            : 'bg-white text-gray-900 border-gray-200 hover:border-black hover:shadow-sm'
+                            ? 'cursor-pointer bg-black text-white border-black shadow-[3px_3px_0px_0px_rgba(100,100,100,1)] translate-x-[-2px] translate-y-[-2px]'
+                            : isDisabled
+                              ? 'cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200 opacity-50'
+                              : 'cursor-pointer bg-white text-gray-900 border-gray-200 hover:border-black hover:shadow-sm'
                           }
                         `}
                       >
@@ -1004,7 +1205,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
             </div>
           </motion.div>
 
-          {/* Step 3: Budget */}
+          {/* Step 3: Travel Style */}
           <motion.div
             className="mb-8"
             initial={{ opacity: 0, y: 30 }}
@@ -1015,17 +1216,13 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
               <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
                 <h3 className="text-xl font-bold text-black flex items-center gap-3">
                   <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">3</div>
-                  Budget Range
+                  Travel Style
                 </h3>
               </div>
-              
+
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {[
-                    { value: 'budget', label: 'Budget ($50-100/day)', description: 'Hostels, street food, public transport' },
-                    { value: 'mid', label: 'Mid-range ($100-200/day)', description: 'Hotels, restaurants, some experiences' },
-                    { value: 'luxury', label: 'Luxury ($200+/day)', description: 'Premium hotels, fine dining, private tours' }
-                  ].map((option) => {
+                  {TRAVEL_STYLE_OPTIONS.map((option) => {
                     const isSelected = budget === option.value;
                     return (
                       <div
@@ -1142,7 +1339,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
           >
             <Button
               onClick={handleGenerateAI}
-              disabled={isGenerating || interests.length === 0}
+              disabled={isGenerating || interests.length === 0 || !startDate}
               size="lg"
               className="h-14 px-[24px] bg-black hover:bg-gray-900 text-white text-lg font-bold rounded-full shadow-[0px_4px_15px_rgba(0,0,0,0.3)] transition-all duration-300 hover:scale-105 hover:shadow-[0px_6px_20px_rgba(0,0,0,0.4)] disabled:opacity-50 disabled:hover:scale-100 text-[16px] py-[0px] mx-[12px] my-[0px]"
             >
@@ -1158,10 +1355,15 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                 </>
               )}
             </Button>
-            
+
             {interests.length === 0 && (
               <p className="text-sm text-red-600 font-medium mt-3 animate-pulse">
                 * Please select at least one interest to continue
+              </p>
+            )}
+            {interests.length > 0 && !startDate && (
+              <p className="text-sm text-red-600 font-medium mt-3 animate-pulse">
+                * Please select a start date to continue
               </p>
             )}
 
@@ -1192,22 +1394,20 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
           <div className="space-y-4">
             {days.map((day, dayIdx) => (
               <Card key={dayIdx} className="border-2 border-black shadow-none rounded-none">
-                <CardHeader className="border-b-2 border-black bg-gray-50">
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1 flex items-center gap-4">
-                      <span className="font-black text-xl">Day {day.day}</span>
-                      <Input
-                        value={day.title}
-                        onChange={(e) => updateDay(dayIdx, 'title', e.target.value)}
-                        placeholder="Day title"
-                        className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-black"
-                      />
-                    </div>
+                <CardHeader className="border-b-2 border-black bg-gray-50 py-4">
+                  <div className="flex items-center gap-4">
+                    <span className="font-black text-xl whitespace-nowrap shrink-0">Day {day.day}</span>
+                    <Input
+                      value={day.title}
+                      onChange={(e) => updateDay(dayIdx, 'title', e.target.value)}
+                      placeholder="Day title"
+                      className="flex-1 border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-black"
+                    />
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => deleteDay(dayIdx)}
-                      className="border-2 border-red-600 text-red-600 rounded-none hover:bg-red-600 hover:text-white"
+                      className="border-2 border-red-600 text-red-600 rounded-none hover:bg-red-600 hover:text-white shrink-0 ml-2"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -1215,41 +1415,41 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
                   {day.activities.map((activity, actIdx) => (
-                    <div 
-                      key={actIdx} 
-                      className={`relative border-2 rounded-lg overflow-hidden ${
-                        activity.isEvent 
-                          ? 'border-yellow-400 bg-yellow-50' 
+                    <div
+                      key={actIdx}
+                      className={`border-2 rounded-lg overflow-hidden ${
+                        activity.isEvent
+                          ? 'border-yellow-400 bg-yellow-50'
                           : 'border-black bg-white'
                       }`}
                     >
-                      {/* Activity Number Badge */}
-                      <div className="absolute -left-3 top-6 bg-black text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg border-4 border-white z-10">
-                        {actIdx + 1}
+                      {/* Header Row: Number + Time + Cost */}
+                      <div className="flex items-center gap-4 p-4 border-b-2 border-gray-100">
+                        <div className="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-base flex-shrink-0">
+                          {actIdx + 1}
+                        </div>
+                        <Input
+                          value={activity.time}
+                          onChange={(e) => updateActivity(dayIdx, actIdx, 'time', e.target.value)}
+                          placeholder="09:00 AM"
+                          className="w-32 h-9 px-3 py-2 bg-yellow-400 border-2 border-black rounded font-bold text-sm focus:ring-0 focus:border-black"
+                        />
+                        {activity.isEvent && (
+                          <Badge className="bg-black text-white border-2 border-black rounded px-3 py-1.5 text-xs font-bold">
+                            EVENT
+                          </Badge>
+                        )}
+                        <div className="flex-1" />
+                        <Input
+                          value={activity.estimatedCost}
+                          onChange={(e) => updateActivity(dayIdx, actIdx, 'estimatedCost', e.target.value)}
+                          placeholder="$20-50"
+                          className="w-28 h-9 px-3 py-2 bg-gray-100 border-2 border-gray-300 rounded font-bold text-sm text-right focus:ring-0 focus:border-black"
+                        />
                       </div>
 
-                      <div className="pl-16 pr-6 py-6 space-y-4">
-                        {/* Time and Cost Row */}
-                        <div className="flex items-start justify-between gap-3">
-                          <Input
-                            value={activity.time}
-                            onChange={(e) => updateActivity(dayIdx, actIdx, 'time', e.target.value)}
-                            placeholder="09:00 AM"
-                            className="w-32 h-10 px-3 py-2 bg-yellow-400 border-2 border-black rounded font-bold text-sm focus:ring-0 focus:border-black"
-                          />
-                          {activity.isEvent && (
-                            <Badge className="bg-black text-white border-2 border-black rounded px-3 py-1.5 text-xs font-bold">
-                              EVENT
-                            </Badge>
-                          )}
-                          <Input
-                            value={activity.estimatedCost}
-                            onChange={(e) => updateActivity(dayIdx, actIdx, 'estimatedCost', e.target.value)}
-                            placeholder="$20-50"
-                            className="w-28 h-10 px-3 py-2 bg-gray-100 border-2 border-gray-300 rounded font-bold text-sm text-right focus:ring-0 focus:border-black"
-                          />
-                        </div>
-
+                      {/* Content Body */}
+                      <div className="p-4 space-y-4">
                         {/* Activity Name */}
                         <Input
                           value={activity.activity}
@@ -1274,153 +1474,186 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                           value={activity.description}
                           onChange={(e) => updateActivity(dayIdx, actIdx, 'description', e.target.value)}
                           placeholder="Activity description"
-                          rows={3}
+                          rows={2}
                           className="text-sm text-gray-600 border-2 border-gray-200 rounded-lg p-3 resize-none focus:ring-0 focus:border-black"
                         />
+                      </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex items-center justify-between gap-2 pt-3 border-t-2 border-gray-100">
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                              <Switch
-                                checked={activity.isEvent || false}
-                                onCheckedChange={(checked) => updateActivity(dayIdx, actIdx, 'isEvent', checked)}
-                              />
-                              <Label className="text-xs font-bold text-gray-600">이벤트</Label>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setAiSuggestionMode({ dayIdx, actIdx });
-                                setAiPrompt('');
-                                setAiSuggestions([]);
-                              }}
-                              className="border-2 border-purple-500 text-purple-700 hover:bg-purple-50 h-9 px-3 text-xs font-bold"
-                            >
-                              <Wand2 className="h-3 w-3 mr-1" />
-                              AI 추천
-                            </Button>
+                      {/* Footer: Action Buttons */}
+                      <div className="flex items-center justify-between gap-2 px-4 py-3 bg-gray-50 border-t-2 border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={activity.isEvent || false}
+                              onCheckedChange={(checked) => updateActivity(dayIdx, actIdx, 'isEvent', checked)}
+                            />
+                            <Label className="text-xs font-bold text-gray-600">이벤트</Label>
                           </div>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            onClick={() => deleteActivity(dayIdx, actIdx)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9 px-3"
+                            onClick={() => {
+                              setAiSuggestionMode({ dayIdx, actIdx });
+                              setAiPrompt('');
+                              setAiSuggestions([]);
+                            }}
+                            className="border-2 border-purple-500 text-purple-700 hover:bg-purple-50 h-9 px-3 text-xs font-bold"
                           >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            삭제
+                            <Wand2 className="h-3 w-3 mr-1" />
+                            AI 추천
                           </Button>
                         </div>
-
-                        {/* AI Suggestion Mode */}
-                        {aiSuggestionMode?.dayIdx === dayIdx && aiSuggestionMode?.actIdx === actIdx && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="mt-4 pt-5 border-t-2 border-purple-200 space-y-4"
-                          >
-                            {/* Prompt Input */}
-                            <div className="space-y-2">
-                              <Label className="text-sm font-bold text-purple-900">AI에게 요청하기</Label>
-                              <div className="flex gap-2">
-                                <Input
-                                  value={aiPrompt}
-                                  onChange={(e) => setAiPrompt(e.target.value)}
-                                  onKeyPress={(e) => {
-                                    if (e.key === 'Enter' && !isLoadingAI) {
-                                      generateActivitySuggestions(aiPrompt, activity);
-                                    }
-                                  }}
-                                  placeholder="예: 카페 추천해줘, 박물관 찾아줘, 맛집 알려줘"
-                                  className="flex-1 border-2 border-purple-300 focus:border-purple-500 focus:ring-0 rounded-lg h-11 px-4"
-                                  disabled={isLoadingAI}
-                                />
-                                <Button
-                                  onClick={() => generateActivitySuggestions(aiPrompt, activity)}
-                                  disabled={isLoadingAI || !aiPrompt.trim()}
-                                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 h-11"
-                                >
-                                  {isLoadingAI ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                      생성중...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Sparkles className="h-4 w-4 mr-2" />
-                                      추천받기
-                                    </>
-                                  )}
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  onClick={cancelAISuggestion}
-                                  className="border-2 border-gray-300 hover:bg-gray-100 h-11 px-4"
-                                  disabled={isLoadingAI}
-                                >
-                                  취소
-                                </Button>
-                              </div>
-                              <p className="text-xs text-purple-600">
-                                💡 Tip: "카페", "식당", "박물관" 등 구체적으로 입력하면 더 정확한 추천을 받을 수 있어요
-                              </p>
-                            </div>
-
-                            {/* AI Suggestions */}
-                            {aiSuggestions.length > 0 && (
-                              <div className="space-y-3">
-                                <Label className="text-sm font-bold text-purple-900">AI 추천 결과 (선택하세요)</Label>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                  {aiSuggestions.map((suggestion, idx) => (
-                                    <motion.div
-                                      key={idx}
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{ delay: idx * 0.1 }}
-                                      className="border-2 border-purple-200 bg-purple-50 rounded-lg p-4 hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer group"
-                                      onClick={() => selectAISuggestion(dayIdx, actIdx, suggestion)}
-                                    >
-                                      <div className="space-y-2">
-                                        <div className="flex items-start justify-between gap-2">
-                                          <h4 className="font-bold text-sm text-purple-900 group-hover:text-purple-700 line-clamp-2">
-                                            {suggestion.activity}
-                                          </h4>
-                                          <Badge className="bg-purple-600 text-white text-xs shrink-0">
-                                            옵션 {idx + 1}
-                                          </Badge>
-                                        </div>
-                                        <div className="flex items-center gap-1 text-xs text-purple-700">
-                                          <MapPin className="h-3 w-3" />
-                                          <span className="line-clamp-1">{suggestion.location}</span>
-                                        </div>
-                                        <p className="text-xs text-gray-600 line-clamp-2">{suggestion.description}</p>
-                                        <div className="flex items-center justify-between pt-2 border-t border-purple-200">
-                                          <span className="text-xs font-bold text-purple-800">{suggestion.estimatedCost}</span>
-                                          <Button
-                                            size="sm"
-                                            className="bg-purple-600 hover:bg-purple-700 text-white h-7 text-xs font-bold"
-                                          >
-                                            선택
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    </motion.div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </motion.div>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteActivity(dayIdx, actIdx)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9 px-3"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          삭제
+                        </Button>
                       </div>
+
+                      {/* AI Suggestion Mode */}
+                      {aiSuggestionMode?.dayIdx === dayIdx && aiSuggestionMode?.actIdx === actIdx && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="px-4 py-4 bg-purple-50 border-t-2 border-purple-200 space-y-4"
+                        >
+                          {/* Prompt Input */}
+                          <div className="space-y-2">
+                            <label style={{ color: '#581c87', fontWeight: 'bold', fontSize: '14px' }}>AI에게 요청하기</label>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <input
+                                type="text"
+                                value={aiPrompt}
+                                onChange={(e) => setAiPrompt(e.target.value)}
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter' && !isLoadingAI) {
+                                    generateActivitySuggestions(aiPrompt, activity);
+                                  }
+                                }}
+                                placeholder="예: 카페 추천해줘, 박물관 찾아줘, 맛집 알려줘"
+                                style={{
+                                  flex: 1,
+                                  border: '2px solid #c4b5fd',
+                                  borderRadius: '8px',
+                                  height: '44px',
+                                  padding: '0 16px',
+                                  fontSize: '14px',
+                                  outline: 'none'
+                                }}
+                                disabled={isLoadingAI}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => generateActivitySuggestions(aiPrompt, activity)}
+                                disabled={isLoadingAI || !aiPrompt.trim()}
+                                style={{
+                                  backgroundColor: (isLoadingAI || !aiPrompt.trim()) ? '#a78bfa' : '#9333ea',
+                                  color: 'white',
+                                  fontWeight: 'bold',
+                                  padding: '0 24px',
+                                  height: '44px',
+                                  borderRadius: '8px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  fontSize: '14px',
+                                  border: 'none',
+                                  cursor: (isLoadingAI || !aiPrompt.trim()) ? 'not-allowed' : 'pointer'
+                                }}
+                              >
+                                {isLoadingAI ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    생성중...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="h-4 w-4" />
+                                    추천받기
+                                  </>
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelAISuggestion}
+                                disabled={isLoadingAI}
+                                style={{
+                                  border: '2px solid #d1d5db',
+                                  backgroundColor: 'white',
+                                  height: '44px',
+                                  padding: '0 16px',
+                                  borderRadius: '8px',
+                                  fontSize: '14px',
+                                  fontWeight: 500,
+                                  cursor: isLoadingAI ? 'not-allowed' : 'pointer',
+                                  opacity: isLoadingAI ? 0.5 : 1
+                                }}
+                              >
+                                취소
+                              </button>
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#9333ea' }}>
+                              💡 Tip: "카페", "식당", "박물관" 등 구체적으로 입력하면 더 정확한 추천을 받을 수 있어요
+                            </p>
+                          </div>
+
+                          {/* AI Suggestions */}
+                          {aiSuggestions.length > 0 && (
+                            <div className="space-y-3">
+                              <Label className="text-sm font-bold text-purple-900">AI 추천 결과 (선택하세요)</Label>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                {aiSuggestions.map((suggestion, idx) => (
+                                  <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    className="border-2 border-purple-200 bg-purple-50 rounded-lg p-4 hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer group"
+                                    onClick={() => selectAISuggestion(dayIdx, actIdx, suggestion)}
+                                  >
+                                    <div className="space-y-2">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <h4 className="font-bold text-sm text-purple-900 group-hover:text-purple-700 line-clamp-2">
+                                          {suggestion.activity}
+                                        </h4>
+                                        <Badge className="bg-purple-600 text-white text-xs shrink-0">
+                                          옵션 {idx + 1}
+                                        </Badge>
+                                      </div>
+                                      <div className="flex items-center gap-1 text-xs text-purple-700">
+                                        <MapPin className="h-3 w-3" />
+                                        <span className="line-clamp-1">{suggestion.location}</span>
+                                      </div>
+                                      <p className="text-xs text-gray-600 line-clamp-2">{suggestion.description}</p>
+                                      <div className="flex items-center justify-between pt-2 border-t border-purple-200">
+                                        <span className="text-xs font-bold text-purple-800">{suggestion.estimatedCost}</span>
+                                        <Button
+                                          size="sm"
+                                          className="bg-purple-600 hover:bg-purple-700 text-white h-7 text-xs font-bold"
+                                        >
+                                          선택
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
                     </div>
                   ))}
 
                   <Button
                     variant="outline"
                     onClick={() => addActivity(dayIdx)}
-                    className="w-full border-2 border-dashed border-gray-400 rounded-lg hover:border-black hover:bg-gray-50 h-12"
+                    className="w-full border-2 border-dashed border-gray-400 rounded-none hover:border-black hover:bg-gray-100 h-11 font-bold"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Activity 추가
@@ -1990,24 +2223,6 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
           </div>
         </TabsContent>
       </Tabs>
-
-      {/* Sticky Save Button */}
-      <div className="sticky bottom-0 bg-white border-t-2 border-black py-4 flex justify-end gap-4">
-        <Button
-          variant="outline"
-          onClick={onCancel}
-          className="border-2 border-black rounded-none hover:bg-gray-100"
-        >
-          취소
-        </Button>
-        <Button
-          onClick={handleSave}
-          disabled={!hasGenerated}
-          className="bg-black text-white rounded-none hover:bg-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-bold px-8 disabled:opacity-50"
-        >
-          저장하기
-        </Button>
-      </div>
     </div>
   );
 }

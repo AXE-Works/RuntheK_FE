@@ -385,7 +385,7 @@ const generateMockItinerary = (userInput: UserInput, availableEvents: any[] = []
 
   return {
     id: `itinerary-${Date.now()}`,
-    title: `${duration} Korea Adventure`,
+    title: 'Name your plan',
     duration,
     interests: userInput.interests,
     budget: userInput.budget,

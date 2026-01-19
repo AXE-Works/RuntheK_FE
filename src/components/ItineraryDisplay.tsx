@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
-import { MapPin, Clock, DollarSign, Calendar, Star, ExternalLink, CheckCircle, Edit2, RotateCcw, Info, MessageSquare, Sparkles, Mail, Save, Share2, Footprints, Train, Car } from 'lucide-react';
+import { MapPin, Clock, Star, ExternalLink, CheckCircle, Edit2, RotateCcw, Info, MessageSquare, Sparkles, Mail, Save, Share2, Footprints, Train, Car } from 'lucide-react';
 import { ItineraryData } from '../App';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -65,6 +65,21 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
         setIsRegenerating(false);
       }
     }
+  };
+
+  // Helper: Extract days from duration string ("3 days" → "3")
+  const extractDays = (duration: string): string => {
+    const match = duration.match(/\d+/);
+    return match ? match[0] : duration;
+  };
+
+  // Helper: Format interests array to natural sentence
+  // ["food", "shopping", "kculture"] → "food, shopping, and kculture"
+  const formatInterests = (interests: string[]): string => {
+    if (interests.length === 0) return '';
+    if (interests.length === 1) return interests[0];
+    if (interests.length === 2) return `${interests[0]} and ${interests[1]}`;
+    return `${interests.slice(0, -1).join(', ')}, and ${interests[interests.length - 1]}`;
   };
 
   return (
@@ -140,23 +155,9 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate }:
                     )}
                   </div>
 
-                  <div className="flex items-center space-x-2 md:space-x-4 text-gray-300 text-sm md:text-base">
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="h-3 w-3 md:h-4 md:w-4" />
-                      <span>{itinerary.duration}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <DollarSign className="h-3 w-3 md:h-4 md:w-4" />
-                      <span>{itinerary.totalEstimatedCost}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 md:gap-2 mt-3">
-                    {itinerary.interests.map((interest) => (
-                      <Badge key={interest} variant="secondary" className="bg-white/20 text-white border-white/20 text-xs md:text-sm">
-                        {interest}
-                      </Badge>
-                    ))}
-                  </div>
+                  <p className="text-sm text-gray-300">
+                    A {extractDays(itinerary.duration)}-day plan focused on {formatInterests(itinerary.interests)}—based on your travel pace and location flow.
+                  </p>
                 </div>
               </div>
               

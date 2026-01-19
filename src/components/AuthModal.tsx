@@ -431,10 +431,10 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
             <div className="space-y-2">
               <h3 className="font-semibold text-gray-900">{t('auth:messages.verificationSent')}</h3>
               <p className="text-sm text-gray-600">
-                {t('auth:verification.subtitle')} <strong>{signupForm.email}</strong>
+                {t('auth:verification.checkInboxSent')} <strong>{signupForm.email}</strong>
               </p>
               <p className="text-xs text-gray-500">
-                {t('auth:verification.checkInbox')}
+                {t('auth:verification.checkInboxAction')}
               </p>
             </div>
 
@@ -452,7 +452,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                 onClick={() => setEmailSent(false)}
                 className="w-full"
               >
-                {t('common:buttons.back')}
+                {t('auth:verification.useDifferentEmail')}
               </Button>
             </div>
           </motion.div>
