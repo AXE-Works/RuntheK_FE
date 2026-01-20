@@ -175,6 +175,7 @@ export interface RecommendedItinerary {
   displayOrder: number;
   days: RecommendedDay[];
   richContent?: RichContent;
+  startDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -461,7 +462,9 @@ export interface CreateRecommendedRequest {
   interests: string[];
   isActive?: boolean;
   isFeatured?: boolean;
+  seoVisible?: boolean;
   displayOrder?: number;
+  startDate?: string;
   targetAudience?: string;
   seasonTag?: string;
   days: {
@@ -500,7 +503,9 @@ function convertToBackendRequest(params: CreateRecommendedRequest) {
     interests: params.interests,
     isActive: params.isActive ?? false,
     isFeatured: params.isFeatured ?? false,
+    seoVisible: params.seoVisible ?? true,
     displayOrder: params.displayOrder ?? 0,
+    startDate: params.startDate || null,
     targetAudience: params.targetAudience || null,
     seasonTag: params.seasonTag || null,
     days: params.days.map(day => ({

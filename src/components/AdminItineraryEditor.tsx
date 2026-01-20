@@ -85,8 +85,11 @@ interface RecommendedItinerary {
   bookingCount: number;
   active: boolean;
   featured: boolean;
+  seoVisible: boolean;
+  displayOrder: number;
   days: Day[];
   richContent?: RichContent;
+  startDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -168,7 +171,9 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
   const [rating, setRating] = useState(4.5);
   const [active, setActive] = useState(true);
   const [featured, setFeatured] = useState(false);
-  
+  const [seoVisible, setSeoVisible] = useState(true);
+  const [displayOrder, setDisplayOrder] = useState(0);
+
   // Schedule State
   const [days, setDays] = useState<Day[]>([]);
   
@@ -306,6 +311,8 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
       setRating(itinerary.rating);
       setActive(itinerary.active);
       setFeatured(itinerary.featured);
+      setSeoVisible(itinerary.seoVisible ?? true);
+      setDisplayOrder(itinerary.displayOrder ?? 0);
       setDays(itinerary.days);
       const richData = itinerary.richContent || {
         introduction: '',
@@ -494,7 +501,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
       id: itinerary?.id || '',
       title,
       description,
-      duration: `${duration} days`,
+      duration,
       cities,
       budget,
       interests,
@@ -504,11 +511,14 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
       bookingCount: itinerary?.bookingCount || 0,
       active,
       featured,
+      seoVisible,
+      displayOrder,
       days,
       richContent: {
         ...richContent,
         contentBlocks
       },
+      startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
       createdAt: itinerary?.createdAt || '',
       updatedAt: itinerary?.updatedAt || ''
     };
@@ -720,11 +730,27 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
   };
 
   const selectAISuggestion = (dayIdx: number, actIdx: number, suggestion: Activity) => {
-    updateActivity(dayIdx, actIdx, 'activity', suggestion.activity);
-    updateActivity(dayIdx, actIdx, 'location', suggestion.location);
-    updateActivity(dayIdx, actIdx, 'description', suggestion.description);
-    updateActivity(dayIdx, actIdx, 'estimatedCost', suggestion.estimatedCost);
-    
+    // 한 번에 모든 필드 업데이트 (React 배치 업데이트 문제 방지)
+    const updated = days.map((day, dIdx) =>
+      dIdx === dayIdx
+        ? {
+            ...day,
+            activities: day.activities.map((act, aIdx) =>
+              aIdx === actIdx
+                ? {
+                    ...act,
+                    activity: suggestion.activity,
+                    location: suggestion.location,
+                    description: suggestion.description,
+                    estimatedCost: suggestion.estimatedCost
+                  }
+                : act
+            )
+          }
+        : day
+    );
+    setDays(updated);
+
     // Exit AI mode
     setAiSuggestionMode(null);
     setAiSuggestions([]);
@@ -1634,6 +1660,11 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                                         <span className="text-xs font-bold text-purple-800">{suggestion.estimatedCost}</span>
                                         <Button
                                           size="sm"
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            selectAISuggestion(dayIdx, actIdx, suggestion);
+                                          }}
                                           className="bg-purple-600 hover:bg-purple-700 text-white h-7 text-xs font-bold"
                                         >
                                           선택

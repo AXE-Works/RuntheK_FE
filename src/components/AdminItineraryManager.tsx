@@ -248,7 +248,9 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
       interests: itinerary.interests,
       isActive: itinerary.active,
       isFeatured: itinerary.featured,
-      displayOrder: itinerary.displayOrder,
+      seoVisible: itinerary.seoVisible ?? true,
+      displayOrder: itinerary.displayOrder ?? 0,
+      startDate: itinerary.startDate,
       days: itinerary.days.map(day => ({
         day: day.day,
         title: day.title,

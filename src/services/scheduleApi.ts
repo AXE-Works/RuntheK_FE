@@ -6,7 +6,7 @@ import { ItineraryData } from '../App';
 const AI_API_BASE_URL = import.meta.env.VITE_AI_API_BASE_URL || 'https://runthek-api.onrender.com/api/v1';
 
 // Enable mock mode for testing (set to true to use mock data)
-const USE_MOCK_DATA = false;
+const USE_MOCK_DATA = true;
 
 // ===== Request Types =====
 
