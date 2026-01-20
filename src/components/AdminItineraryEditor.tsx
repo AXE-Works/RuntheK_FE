@@ -44,6 +44,7 @@ interface Activity {
   location: string;
   description: string;
   estimatedCost: string;
+  googleMapsUrl?: string;
   isEvent?: boolean;
   eventType?: string;
 }
@@ -742,7 +743,8 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                     activity: suggestion.activity,
                     location: suggestion.location,
                     description: suggestion.description,
-                    estimatedCost: suggestion.estimatedCost
+                    estimatedCost: suggestion.estimatedCost,
+                    googleMapsUrl: suggestion.googleMapsUrl
                   }
                 : act
             )

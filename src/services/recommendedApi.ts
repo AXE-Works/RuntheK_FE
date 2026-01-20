@@ -137,6 +137,7 @@ export interface RecommendedActivity {
   location: string;
   description: string;
   estimatedCost: string;
+  googleMapsUrl?: string;
   isEvent?: boolean;
   eventType?: string;
 }
@@ -477,6 +478,7 @@ export interface CreateRecommendedRequest {
       location?: string;
       description?: string;
       estimatedCost?: string;
+      googleMapsUrl?: string;
     }[];
   }[];
   richContent?: {
@@ -518,6 +520,7 @@ function convertToBackendRequest(params: CreateRecommendedRequest) {
         location: act.location || '',
         description: act.description || '',
         estimatedCost: act.estimatedCost || '',
+        googleMapsUrl: act.googleMapsUrl || '',
       })),
     })),
     richContent: params.richContent ? {
