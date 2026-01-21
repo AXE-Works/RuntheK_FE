@@ -268,6 +268,7 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
   const [systemStatusLoading, setSystemStatusLoading] = useState(true);
   const [serverLoad, setServerLoad] = useState<ServerLoadInfo | null>(null);
   const [systemAlerts, setSystemAlerts] = useState<SystemAlertInfo[]>([]);
+  const [trafficData, setTrafficData] = useState<number[]>([]);
 
   // Fetch dashboard stats on mount (always visible header)
   useEffect(() => {
@@ -289,11 +290,14 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
     const checkSystemStatus = async () => {
       try {
         const response = await getSystemStatus();
-        const { services, serverLoad: loadData, alerts } = response.data;
+        const { services, serverLoad: loadData, alerts, traffic } = response.data;
 
-        // Store serverLoad and alerts
+        // Store serverLoad, alerts, and traffic data
         setServerLoad(loadData);
         setSystemAlerts(alerts);
+        if (traffic?.hourly) {
+          setTrafficData(traffic.hourly);
+        }
 
         // Determine overall status based on all services
         const anyDown = services.some(s => s.status === 'down');
@@ -1319,17 +1323,21 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
             <div className="border-2 border-black bg-white p-6">
                <h3 className="text-xl font-black uppercase mb-6">트래픽 분석</h3>
                <div className="h-[300px] w-full flex items-end justify-between gap-2 px-4 pb-4 border-b-2 border-black">
-                  {[45, 60, 35, 80, 55, 90, 70, 65, 85, 50, 40, 95].map((h, i) => (
-                    <div key={i} className="w-full bg-gray-100 hover:bg-black transition-colors relative group h-full flex items-end">
-                       <div 
-                         style={{ height: `${h}%` }} 
-                         className="w-full bg-black opacity-20 group-hover:opacity-100 transition-all"
-                       ></div>
-                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity rounded pointer-events-none">
-                          {h * 10} visits
-                       </div>
-                    </div>
-                  ))}
+                  {(trafficData.length > 0 ? trafficData : Array(12).fill(0)).map((count, i) => {
+                    const maxTraffic = Math.max(...(trafficData.length > 0 ? trafficData : [1]), 1);
+                    const percentage = Math.round((count / maxTraffic) * 100);
+                    return (
+                      <div key={i} className="w-full bg-gray-100 hover:bg-black transition-colors relative group h-full flex items-end">
+                         <div
+                           style={{ height: `${percentage}%` }}
+                           className="w-full bg-black opacity-20 group-hover:opacity-100 transition-all"
+                         ></div>
+                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity rounded pointer-events-none whitespace-nowrap">
+                            {count.toLocaleString()} visits
+                         </div>
+                      </div>
+                    );
+                  })}
                </div>
                <div className="flex justify-between mt-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
                   <span>00:00</span>

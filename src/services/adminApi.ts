@@ -650,3 +650,59 @@ export async function submitEventForm(
     return createAdminEvent(request);
   }
 }
+
+// ============================================
+// System Status API
+// ============================================
+
+export interface ServiceStatusInfo {
+  name: string;
+  status: 'operational' | 'degraded' | 'down';
+  latency: number | null;
+  lastChecked: string;
+}
+
+export interface ServerLoadInfo {
+  cpu: number;
+  memory: number;
+  disk: number;
+}
+
+export interface SystemAlertInfo {
+  type: 'info' | 'warning' | 'error';
+  message: string;
+  timestamp: string;
+}
+
+export interface TrafficInfo {
+  hourly: number[];
+  daily: number[];
+}
+
+export interface UptimeInfo {
+  api: number;
+  database: number;
+  ai: number;
+}
+
+export interface SystemStatusResponse {
+  services: ServiceStatusInfo[];
+  serverLoad: ServerLoadInfo;
+  alerts: SystemAlertInfo[];
+  traffic: TrafficInfo;
+  uptime: UptimeInfo;
+}
+
+/**
+ * Get system status
+ * GET /api/v1/admin/system/status
+ */
+export async function getSystemStatus(): Promise<ApiResponse<SystemStatusResponse>> {
+  const response = await fetchWithAuth(`${API_BASE_URL}/admin/system/status`, {
+    method: 'GET',
+    headers: {
+      'Cache-Control': 'no-store',
+    },
+  });
+  return response.json();
+}
