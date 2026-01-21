@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import {
   getDashboardStats,
   DashboardStats,
   getAdminUsers,
   AdminUser,
+  PageInfo,
   updateUserStatus as updateUserStatusApi,
   deleteUser as deleteUserApi,
   getAdminTrips,
@@ -71,7 +74,9 @@ import {
   ChevronRight,
   ArrowUpDown,
   User,
-  X
+  X,
+  Lock,
+  ShieldAlert
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -97,6 +102,34 @@ const mockUserDemographics = {
     { name: '남성', count: 2146, percentage: 41.0 },
     { name: '기타', count: 158, percentage: 3.0 }
   ]
+};
+
+// 국가 코드 → 한글 이름 매핑
+const COUNTRY_NAMES: Record<string, string> = {
+  'KR': '한국',
+  'US': '미국',
+  'JP': '일본',
+  'CN': '중국',
+  'SG': '싱가포르',
+  'MY': '말레이시아',
+  'TH': '태국',
+  'VN': '베트남',
+  'PH': '필리핀',
+  'ID': '인도네시아',
+  'IN': '인도',
+  'AU': '호주',
+  'GB': '영국',
+  'DE': '독일',
+  'FR': '프랑스',
+  'CA': '캐나다',
+  'BR': '브라질',
+  'MX': '멕시코',
+  'HK': '홍콩',
+  'TW': '대만',
+};
+
+const getCountryName = (code: string): string => {
+  return COUNTRY_NAMES[code] || code;
 };
 
 const mockAPIStatus = [
@@ -202,6 +235,11 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboardProps) {
+  const { t } = useTranslation();
+
+  // Check if user has admin privileges
+  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'admin';
+
   const [showEventForm, setShowEventForm] = useState(false);
   const [showItineraryDetail, setShowItineraryDetail] = useState(false);
   const [selectedItinerary, setSelectedItinerary] = useState<any>(null);
@@ -244,6 +282,17 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
   const [showUserDetail, setShowUserDetail] = useState(false);
   const [userSearchTerm, setUserSearchTerm] = useState('');
 
+  // User pagination states
+  const [userPagination, setUserPagination] = useState<PageInfo>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
+  const [userPageSize] = useState(10);
+
   // Trip search state
   const [tripSearchTerm, setTripSearchTerm] = useState('');
 
@@ -268,22 +317,42 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsLoaded, setEventsLoaded] = useState(false);
 
+  // Fetch users function with pagination and search
+  const fetchUsers = async (page: number = 1, search: string = '') => {
+    setUsersLoading(true);
+    try {
+      const response = await getAdminUsers({
+        page,
+        limit: userPageSize,
+        search: search || undefined,  // 빈 문자열이면 파라미터 제외
+      });
+      setUsers(response.data);
+      if (response.pagination) {
+        setUserPagination(response.pagination);
+      }
+      setUsersLoaded(true);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      toast.error('사용자 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  // Handle user page change (검색어 유지)
+  const handleUserPageChange = (page: number) => {
+    fetchUsers(page, userSearchTerm);
+  };
+
+  // Handle user search
+  const handleUserSearch = () => {
+    fetchUsers(1, userSearchTerm);  // 검색 시 첫 페이지로 리셋
+  };
+
   // Fetch users when 'users' tab is selected
   useEffect(() => {
     if (activeTab === 'users' && !usersLoaded) {
-      const fetchUsers = async () => {
-        setUsersLoading(true);
-        try {
-          const response = await getAdminUsers();
-          setUsers(response.data);
-          setUsersLoaded(true);
-        } catch (error) {
-          console.error('Failed to fetch users:', error);
-        } finally {
-          setUsersLoading(false);
-        }
-      };
-      fetchUsers();
+      fetchUsers(1);
     }
   }, [activeTab, usersLoaded]);
 
@@ -523,10 +592,7 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
       ));
     } catch (error) {
       console.error('Failed to update user status:', error);
-      // Fallback: update local state anyway for demo
-      setUsers(users.map(u =>
-        u.id === userId ? { ...u, status: newStatus } : u
-      ));
+      toast.error('사용자 상태 변경에 실패했습니다.');
     }
   };
 
@@ -545,14 +611,42 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
     return adminTrips.filter((t) => t.userEmail === email || t.userName === selectedUser?.name);
   };
 
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) || 
-    user.email.toLowerCase().includes(userSearchTerm.toLowerCase())
-  );
+  // Show access denied UI if user is not an admin
+  if (!isAdmin) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="text-center max-w-md mx-auto p-8"
+        >
+          <div className="mb-6">
+            <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Lock className="w-10 h-10 text-gray-400" />
+            </div>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <ShieldAlert className="w-5 h-5 text-amber-500" />
+              <h2 className="text-2xl font-bold text-gray-900">{t('admin.accessDenied')}</h2>
+            </div>
+          </div>
+
+          <div className="space-y-3 text-gray-600">
+            <p className="text-lg font-medium">{t('admin.adminOnly')}</p>
+            <p className="text-sm">{t('admin.noPermission')}</p>
+            {!currentUser && (
+              <p className="text-sm text-gray-500 mt-4">{t('admin.loginAsAdmin')}</p>
+            )}
+            <p className="text-xs text-gray-400 mt-4">{t('admin.contactSupport')}</p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -635,13 +729,17 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
             <div className="flex justify-between items-center mb-6">
                <h2 className="text-2xl font-bold uppercase tracking-tight">사용자 관리</h2>
                <div className="flex gap-2">
-                 <Input 
-                   placeholder="사용자 검색..." 
+                 <Input
+                   placeholder="사용자 검색..."
                    value={userSearchTerm}
                    onChange={(e) => setUserSearchTerm(e.target.value)}
+                   onKeyDown={(e) => e.key === 'Enter' && handleUserSearch()}
                    className="w-64 border-black rounded-none focus:ring-0 focus:border-black"
                  />
-                 <Button className="bg-black text-white rounded-none hover:bg-gray-800">
+                 <Button
+                   className="bg-black text-white rounded-none hover:bg-gray-800"
+                   onClick={handleUserSearch}
+                 >
                    <Search className="h-4 w-4" />
                  </Button>
                </div>
@@ -662,16 +760,16 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
                   <p className="text-gray-500">사용자 목록을 불러오는 중...</p>
                 </div>
-              ) : filteredUsers.length === 0 ? (
+              ) : users.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
                   {userSearchTerm ? '검색 결과가 없습니다.' : '등록된 사용자가 없습니다.'}
                 </div>
               ) : (
-                filteredUsers.map((user) => (
+                users.map((user) => (
                   <div key={user.id} className="border-t border-black p-4 grid grid-cols-1 md:grid-cols-6 gap-4 items-center hover:bg-gray-50 transition-colors">
                     <span className="truncate font-medium">{user.email}</span>
                     <span>{user.name}</span>
-                    <span>{user.country || '-'}</span>
+                    <span>{user.country ? getCountryName(user.country) : '-'}</span>
                     <span className="text-sm text-gray-500">{formatDate(user.signupDate)}</span>
                     <div className="flex items-center gap-2">
                        <Switch
@@ -700,6 +798,68 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                 ))
               )}
             </div>
+
+            {/* Pagination */}
+            {!usersLoading && userPagination.totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-black pt-4 mt-4">
+                <div className="text-sm text-gray-600">
+                  총 <span className="font-bold">{userPagination.totalItems}</span>명 중{' '}
+                  <span className="font-bold">
+                    {(userPagination.currentPage - 1) * userPageSize + 1}-
+                    {Math.min(userPagination.currentPage * userPageSize, userPagination.totalItems)}
+                  </span>명 표시
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleUserPageChange(userPagination.currentPage - 1)}
+                    disabled={!userPagination.hasPreviousPage}
+                    className="rounded-none border-black disabled:opacity-50"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    이전
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: userPagination.totalPages }, (_, i) => i + 1)
+                      .filter(page => {
+                        const current = userPagination.currentPage;
+                        return page === 1 || page === userPagination.totalPages ||
+                               (page >= current - 1 && page <= current + 1);
+                      })
+                      .map((page, idx, arr) => (
+                        <React.Fragment key={page}>
+                          {idx > 0 && arr[idx - 1] !== page - 1 && (
+                            <span className="px-1 text-gray-400">...</span>
+                          )}
+                          <Button
+                            variant={page === userPagination.currentPage ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handleUserPageChange(page)}
+                            className={`rounded-none min-w-[36px] ${
+                              page === userPagination.currentPage
+                                ? 'bg-black text-white'
+                                : 'border-black'
+                            }`}
+                          >
+                            {page}
+                          </Button>
+                        </React.Fragment>
+                      ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleUserPageChange(userPagination.currentPage + 1)}
+                    disabled={!userPagination.hasNextPage}
+                    className="rounded-none border-black disabled:opacity-50"
+                  >
+                    다음
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           {/* Itineraries Tab */}
@@ -1069,21 +1229,21 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                   </div>
                   <div>
                     <Label className="text-xs uppercase text-gray-400 tracking-widest">국가</Label>
-                    <p className="text-lg font-bold border-b border-gray-200 py-1">{selectedUser.country}</p>
+                    <p className="text-lg font-bold border-b border-gray-200 py-1">{getCountryName(selectedUser.country)}</p>
                   </div>
                   <div>
                     <Label className="text-xs uppercase text-gray-400 tracking-widest">가입일</Label>
-                    <p className="text-lg font-bold border-b border-gray-200 py-1">{selectedUser.signupDate}</p>
+                    <p className="text-lg font-bold border-b border-gray-200 py-1">{new Date(selectedUser.signupDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
                   </div>
                   <div>
-                    <Label className="text-xs uppercase text-gray-400 tracking-widest">최근 로그인</Label>
-                    <p className="text-lg font-bold border-b border-gray-200 py-1">{selectedUser.lastLogin}</p>
+                    <Label className="text-xs uppercase text-gray-400 tracking-widest">최근 활동</Label>
+                    <p className="text-lg font-bold border-b border-gray-200 py-1">{new Date(selectedUser.lastActive).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
                   </div>
                   <div>
                     <Label className="text-xs uppercase text-gray-400 tracking-widest">상태</Label>
                     <div className="flex items-center gap-2 py-1">
-                       <div className={`w-3 h-3 rounded-full ${selectedUser.status === '활성' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                       <span className="font-bold">{selectedUser.status}</span>
+                       <div className={`w-3 h-3 rounded-full ${selectedUser.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                       <span className="font-bold">{selectedUser.status === 'active' ? '활성' : '비활성'}</span>
                     </div>
                   </div>
                </div>
@@ -1097,16 +1257,12 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                        <p className="text-xs text-gray-500 uppercase">생성한 여행</p>
                     </div>
                     <div className="flex-1 px-2">
-                       <p className="text-3xl font-black">{selectedUser.totalSpent}</p>
-                       <p className="text-xs text-gray-500 uppercase">총 예상 지출</p>
+                       <p className="text-3xl font-black">{selectedUser.totalRatings}</p>
+                       <p className="text-xs text-gray-500 uppercase">총 평점 수</p>
                     </div>
                     <div className="flex-1 px-2">
-                       <div className="flex gap-1 flex-wrap justify-center">
-                          {selectedUser.interests.map((i: any) => (
-                            <Badge key={i} variant="secondary" className="rounded-none text-[10px] px-1">{i}</Badge>
-                          ))}
-                       </div>
-                       <p className="text-xs text-gray-500 uppercase mt-1">선호 관심사</p>
+                       <p className="text-3xl font-black uppercase">{selectedUser.provider}</p>
+                       <p className="text-xs text-gray-500 uppercase mt-1">가입 경로</p>
                     </div>
                  </div>
                </div>
