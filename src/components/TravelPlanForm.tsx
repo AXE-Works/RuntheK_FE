@@ -622,7 +622,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
         </div>
       </motion.div>
 
-      {/* Step 1: Basic Information */}
+      {/* Step 1: Interests (기존 Step 3) */}
       <motion.div
         className="mb-8"
         initial={{ opacity: 0, y: 20 }}
@@ -633,157 +633,6 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
           <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
             <h3 className="text-xl font-bold text-black flex items-center gap-3">
               <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">1</div>
-              {t('form:sections.basicInfo')} <span className="text-gray-500 font-normal text-sm ml-auto">{t('form:sections.basicInfoOptional')}</span>
-            </h3>
-          </div>
-          
-          <div className="p-6 space-y-8">
-            {/* Date & Duration Section */}
-            <div className="space-y-4">
-              <Label className="text-sm font-bold text-black uppercase tracking-wide flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                {t('form:labels.startDateHint')}
-              </Label>
-
-              {/* Date & Duration Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Start Date */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-bold text-black uppercase tracking-wide">{t('form:labels.startDate')}</Label>
-                  <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={`w-full h-12 justify-start text-left font-normal border-2 border-gray-200 hover:border-black hover:bg-gray-50 transition-all rounded-lg ${
-                        !userInput.startDate && "text-gray-500"
-                      }`}
-                    >
-                      <CalendarIcon className="mr-3 h-5 w-5" />
-                      {userInput.startDate ? format(userInput.startDate, "PPP") : t('form:labels.pickDate')}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent 
-                    className="w-auto p-0 bg-white z-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black rounded-lg" 
-                    align="start"
-                  >
-                    <Calendar
-                      mode="single"
-                      selected={userInput.startDate}
-                      onSelect={(date) => setUserInput(prev => ({ ...prev, startDate: date }))}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                      className="p-4"
-                    />
-                  </PopoverContent>
-                </Popover>
-                <p className="text-xs text-gray-500 font-medium">{t('form:labels.seasonalEventsHint')}</p>
-              </div>
-
-              {/* Duration */}
-              <div className="space-y-2">
-                <Label className="text-sm font-bold text-black uppercase tracking-wide">{t('form:labels.duration')}</Label>
-                <Select value={userInput.duration} onValueChange={(value) => setUserInput(prev => ({ ...prev, duration: value }))}>
-                  <SelectTrigger className="w-full h-12 border-2 border-gray-200 hover:border-black transition-all rounded-lg">
-                    <SelectValue placeholder={t('form:labels.selectDuration')} />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-lg">
-                    <SelectItem value="1 day">{t('form:duration.1day')}</SelectItem>
-                    <SelectItem value="2 days">{t('form:duration.2days')}</SelectItem>
-                    <SelectItem value="3 days">{t('form:duration.3days')}</SelectItem>
-                    <SelectItem value="5 days">{t('form:duration.5days')}</SelectItem>
-                    <SelectItem value="7 days">{t('form:duration.7days')}</SelectItem>
-                    <SelectItem value="10 days">{t('form:duration.10days')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            </div>
-
-            {/* Destination Selection */}
-            <div className="space-y-4 pt-6 border-t-2 border-gray-100">
-              <Label className="text-sm font-bold text-black uppercase tracking-wide flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                {t('form:sections.whereToGo')}
-              </Label>
-
-              <div className="flex flex-wrap gap-3">
-                {DESTINATION_OPTIONS.map((dest) => {
-                  const isSelected = userInput.cities.includes(dest.id);
-                  return (
-                    <div
-                      key={dest.id}
-                      onClick={() => handleDestinationToggle(dest.id)}
-                      className={`
-                        cursor-pointer px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 border-2
-                        ${isSelected
-                          ? 'bg-black text-white border-black shadow-[2px_2px_0px_0px_rgba(100,100,100,1)] translate-x-[-2px] translate-y-[-2px]'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black'
-                        }
-                      `}
-                    >
-                      {t(`form:destinations.${dest.labelKey}`)}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Custom city input */}
-              <div className="flex gap-2 items-center mt-4">
-                <Input
-                  type="text"
-                  placeholder={t('form:destinations.customPlaceholder')}
-                  value={customCity}
-                  onChange={(e) => setCustomCity(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCity()}
-                  className="flex-1 h-10 border-2 border-gray-200 rounded-lg text-sm focus:border-black"
-                />
-                <Button
-                  type="button"
-                  onClick={handleAddCustomCity}
-                  disabled={!customCity.trim()}
-                  className="h-10 px-4 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 disabled:opacity-50"
-                >
-                  {t('form:destinations.addButton')}
-                </Button>
-              </div>
-
-              {/* Custom cities display */}
-              {userInput.cities.filter(c => !DESTINATION_OPTIONS.some(d => d.id === c)).length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {userInput.cities
-                    .filter(city => !DESTINATION_OPTIONS.some(d => d.id === city))
-                    .map((city) => (
-                      <div
-                        key={city}
-                        className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium"
-                      >
-                        {city}
-                        <button
-                          onClick={() => handleRemoveCustomCity(city)}
-                          className="ml-1 text-gray-500 hover:text-black"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Step 2: Interests */}
-      <motion.div
-        className="mb-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-      >
-        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl overflow-hidden">
-          <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
-            <h3 className="text-xl font-bold text-black flex items-center gap-3">
-              <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">2</div>
               {t('form:sections.yourInterests')}
               <span className="text-sm font-medium text-gray-500 ml-auto">
                 {userInput.interests.length}/{MAX_INTERESTS}
@@ -822,17 +671,17 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
         </div>
       </motion.div>
 
-      {/* Step 3: Budget */}
+      {/* Step 2: Budget (기존 Step 4) */}
       <motion.div
         className="mb-8"
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
+        transition={{ duration: 0.6, delay: 0.15 }}
       >
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl overflow-hidden">
           <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
             <h3 className="text-xl font-bold text-black flex items-center gap-3">
-              <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">3</div>
+              <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">2</div>
               {t('form:sections.travelStyle')}
             </h3>
           </div>
@@ -865,7 +714,169 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
         </div>
       </motion.div>
 
-      {/* Step 4: Additional Notes */}
+      {/* Step 3: Destination (기존 Step 2) */}
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl overflow-hidden">
+          <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
+            <h3 className="text-xl font-bold text-black flex items-center gap-3">
+              <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">3</div>
+              {t('form:sections.whereToGo')}
+            </h3>
+          </div>
+
+          <div className="p-6 space-y-4">
+            <div className="flex flex-wrap gap-3">
+              {DESTINATION_OPTIONS.map((dest) => {
+                const isSelected = userInput.cities.includes(dest.id);
+                return (
+                  <div
+                    key={dest.id}
+                    onClick={() => handleDestinationToggle(dest.id)}
+                    className={`
+                      cursor-pointer px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 border-2
+                      ${isSelected
+                        ? 'bg-black text-white border-black shadow-[2px_2px_0px_0px_rgba(100,100,100,1)] translate-x-[-2px] translate-y-[-2px]'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-black hover:text-black'
+                      }
+                    `}
+                  >
+                    {t(`form:destinations.${dest.labelKey}`)}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Custom city input */}
+            <div className="flex gap-2 items-center mt-4">
+              <Input
+                type="text"
+                placeholder={t('form:destinations.customPlaceholder')}
+                value={customCity}
+                onChange={(e) => setCustomCity(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCity()}
+                className="flex-1 h-10 border-2 border-gray-200 rounded-lg text-sm focus:border-black"
+              />
+              <Button
+                type="button"
+                onClick={handleAddCustomCity}
+                disabled={!customCity.trim()}
+                className="h-10 px-4 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 disabled:opacity-50"
+              >
+                {t('form:destinations.addButton')}
+              </Button>
+            </div>
+
+            {/* Custom cities display */}
+            {userInput.cities.filter(c => !DESTINATION_OPTIONS.some(d => d.id === c)).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {userInput.cities
+                  .filter(city => !DESTINATION_OPTIONS.some(d => d.id === city))
+                  .map((city) => (
+                    <div
+                      key={city}
+                      className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium"
+                    >
+                      {city}
+                      <button
+                        onClick={() => handleRemoveCustomCity(city)}
+                        className="ml-1 text-gray-500 hover:text-black"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Step 4: Date & Duration (기존 Step 1) */}
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.25 }}
+      >
+        <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl overflow-hidden">
+          <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
+            <h3 className="text-xl font-bold text-black flex items-center gap-3">
+              <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">4</div>
+              {t('form:sections.basicInfo')} <span className="text-gray-500 font-normal text-sm ml-auto">{t('form:sections.basicInfoOptional')}</span>
+            </h3>
+          </div>
+
+          <div className="p-6 space-y-8">
+            {/* Date & Duration Section */}
+            <div className="space-y-4">
+              <Label className="text-sm font-bold text-black uppercase tracking-wide flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                {t('form:labels.startDateHint')}
+              </Label>
+
+              {/* Date & Duration Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Start Date */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold text-black uppercase tracking-wide">{t('form:labels.startDate')}</Label>
+                  <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`w-full h-12 justify-start text-left font-normal border-2 border-gray-200 hover:border-black hover:bg-gray-50 transition-all rounded-lg ${
+                        !userInput.startDate && "text-gray-500"
+                      }`}
+                    >
+                      <CalendarIcon className="mr-3 h-5 w-5" />
+                      {userInput.startDate ? format(userInput.startDate, "PPP") : t('form:labels.pickDate')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-0 bg-white z-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black rounded-lg"
+                    align="start"
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={userInput.startDate}
+                      onSelect={(date) => setUserInput(prev => ({ ...prev, startDate: date }))}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                      className="p-4"
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-gray-500 font-medium">{t('form:labels.seasonalEventsHint')}</p>
+              </div>
+
+              {/* Duration */}
+              <div className="space-y-2">
+                <Label className="text-sm font-bold text-black uppercase tracking-wide">{t('form:labels.duration')}</Label>
+                <Select value={userInput.duration} onValueChange={(value) => setUserInput(prev => ({ ...prev, duration: value }))}>
+                  <SelectTrigger className="w-full h-12 border-2 border-gray-200 hover:border-black transition-all rounded-lg">
+                    <SelectValue placeholder={t('form:labels.selectDuration')} />
+                  </SelectTrigger>
+                  <SelectContent className="z-50 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-lg">
+                    <SelectItem value="1 day">{t('form:duration.1day')}</SelectItem>
+                    <SelectItem value="2 days">{t('form:duration.2days')}</SelectItem>
+                    <SelectItem value="3 days">{t('form:duration.3days')}</SelectItem>
+                    <SelectItem value="5 days">{t('form:duration.5days')}</SelectItem>
+                    <SelectItem value="7 days">{t('form:duration.7days')}</SelectItem>
+                    <SelectItem value="10 days">{t('form:duration.10days')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Step 5: Additional Notes */}
       <motion.div
         className="mb-8"
         initial={{ opacity: 0, y: 30 }}
@@ -875,7 +886,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
         <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl overflow-hidden">
           <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
             <h3 className="text-xl font-bold text-black flex items-center gap-3">
-              <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">4</div>
+              <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">5</div>
               {t('form:sections.additionalNotes')} <span className="text-gray-500 font-normal text-sm ml-auto">{t('form:sections.basicInfoOptional')}</span>
             </h3>
           </div>
