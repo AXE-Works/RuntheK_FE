@@ -153,7 +153,7 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [activeTab, setActiveTab] = useState("plan");
-  const [showHero, setShowHero] = useState(true);
+  const [showHero, setShowHero] = useState(false); // Landing page disabled
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
