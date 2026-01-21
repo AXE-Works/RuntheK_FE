@@ -22,6 +22,10 @@ import {
   EventFormData,
   getAdminEventDetail,
   convertDetailToForm,
+  getSystemStatus,
+  SystemStatusResponse,
+  ServerLoadInfo,
+  SystemAlertInfo,
 } from '../services/adminApi';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -259,6 +263,12 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
+  // System status state for polling
+  const [systemStatus, setSystemStatus] = useState<'operational' | 'degraded' | 'down'>('operational');
+  const [systemStatusLoading, setSystemStatusLoading] = useState(true);
+  const [serverLoad, setServerLoad] = useState<ServerLoadInfo | null>(null);
+  const [systemAlerts, setSystemAlerts] = useState<SystemAlertInfo[]>([]);
+
   // Fetch dashboard stats on mount (always visible header)
   useEffect(() => {
     const fetchStats = async () => {
@@ -272,6 +282,49 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
       }
     };
     fetchStats();
+  }, []);
+
+  // System status polling (1 minute interval)
+  useEffect(() => {
+    const checkSystemStatus = async () => {
+      try {
+        const response = await getSystemStatus();
+        const { services, serverLoad: loadData, alerts } = response.data;
+
+        // Store serverLoad and alerts
+        setServerLoad(loadData);
+        setSystemAlerts(alerts);
+
+        // Determine overall status based on all services
+        const anyDown = services.some(s => s.status === 'down');
+        const allOperational = services.every(s => s.status === 'operational');
+
+        if (anyDown) {
+          setSystemStatus('down');
+        } else if (allOperational) {
+          setSystemStatus('operational');
+        } else {
+          setSystemStatus('degraded');
+        }
+      } catch (error) {
+        console.error('Failed to fetch system status:', error);
+        setSystemStatus('down');
+      } finally {
+        setSystemStatusLoading(false);
+      }
+    };
+
+    // Initial fetch
+    checkSystemStatus();
+
+    // Poll every 15 seconds (only when tab is visible)
+    const intervalId = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        checkSystemStatus();
+      }
+    }, 15000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   // User management states
@@ -661,8 +714,27 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
              <div className="text-right">
                 <p className="text-xs text-gray-400 uppercase tracking-widest mb-[4px] mt-[0px] mr-[10px] ml-[0px]">시스템 상태</p>
                 <div className="flex items-center gap-2 mx-[10px] my-[0px]">
-                  <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="font-bold text-sm">정상 가동 중</span>
+                  {systemStatusLoading ? (
+                    <>
+                      <div className="h-2 w-2 bg-gray-400 rounded-full animate-pulse"></div>
+                      <span className="font-bold text-sm text-gray-400">확인 중...</span>
+                    </>
+                  ) : systemStatus === 'operational' ? (
+                    <>
+                      <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="font-bold text-sm">정상 가동 중</span>
+                    </>
+                  ) : systemStatus === 'degraded' ? (
+                    <>
+                      <div className="h-2 w-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                      <span className="font-bold text-sm text-yellow-600">성능 저하</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-2 w-2 bg-red-500 rounded-full animate-pulse"></div>
+                      <span className="font-bold text-sm text-red-600">서비스 중단</span>
+                    </>
+                  )}
                 </div>
              </div>
           </div>
@@ -1134,16 +1206,71 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                     서버 부하
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 flex flex-col justify-center items-center h-[200px]">
-                   <div className="text-5xl font-black mb-2">24%</div>
-                   <p className="text-gray-500 font-medium mb-4">CPU 사용량 (안정적)</p>
-                   <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden border border-black">
-                      <div className="h-full bg-green-500 w-[24%]"></div>
+                <CardContent className="p-6 space-y-6">
+                   {/* CPU */}
+                   <div>
+                      <div className="flex justify-between items-center mb-2">
+                         <span className="font-bold text-sm uppercase">CPU</span>
+                         <span className={`text-2xl font-black ${
+                            (serverLoad?.cpu ?? 0) > 80 ? 'text-red-600' :
+                            (serverLoad?.cpu ?? 0) > 60 ? 'text-yellow-600' : 'text-green-600'
+                         }`}>
+                            {serverLoad?.cpu ?? '--'}%
+                         </span>
+                      </div>
+                      <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden border border-black">
+                         <div
+                            className={`h-full transition-all duration-500 ${
+                               (serverLoad?.cpu ?? 0) > 80 ? 'bg-red-500' :
+                               (serverLoad?.cpu ?? 0) > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                            }`}
+                            style={{ width: `${serverLoad?.cpu ?? 0}%` }}
+                         ></div>
+                      </div>
                    </div>
-                   <div className="w-full flex justify-between mt-2 text-xs text-gray-400">
-                      <span>0%</span>
-                      <span>50%</span>
-                      <span>100%</span>
+
+                   {/* Memory */}
+                   <div>
+                      <div className="flex justify-between items-center mb-2">
+                         <span className="font-bold text-sm uppercase">Memory</span>
+                         <span className={`text-2xl font-black ${
+                            (serverLoad?.memory ?? 0) > 85 ? 'text-red-600' :
+                            (serverLoad?.memory ?? 0) > 70 ? 'text-yellow-600' : 'text-green-600'
+                         }`}>
+                            {serverLoad?.memory ?? '--'}%
+                         </span>
+                      </div>
+                      <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden border border-black">
+                         <div
+                            className={`h-full transition-all duration-500 ${
+                               (serverLoad?.memory ?? 0) > 85 ? 'bg-red-500' :
+                               (serverLoad?.memory ?? 0) > 70 ? 'bg-yellow-500' : 'bg-green-500'
+                            }`}
+                            style={{ width: `${serverLoad?.memory ?? 0}%` }}
+                         ></div>
+                      </div>
+                   </div>
+
+                   {/* Disk */}
+                   <div>
+                      <div className="flex justify-between items-center mb-2">
+                         <span className="font-bold text-sm uppercase">Disk</span>
+                         <span className={`text-2xl font-black ${
+                            (serverLoad?.disk ?? 0) > 90 ? 'text-red-600' :
+                            (serverLoad?.disk ?? 0) > 75 ? 'text-yellow-600' : 'text-green-600'
+                         }`}>
+                            {serverLoad?.disk ?? '--'}%
+                         </span>
+                      </div>
+                      <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden border border-black">
+                         <div
+                            className={`h-full transition-all duration-500 ${
+                               (serverLoad?.disk ?? 0) > 90 ? 'bg-red-500' :
+                               (serverLoad?.disk ?? 0) > 75 ? 'bg-yellow-500' : 'bg-green-500'
+                            }`}
+                            style={{ width: `${serverLoad?.disk ?? 0}%` }}
+                         ></div>
+                      </div>
                    </div>
                 </CardContent>
               </Card>
@@ -1158,23 +1285,36 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="divide-y divide-gray-200">
-                     <div className="p-4 border-l-4 border-yellow-400 bg-yellow-50">
-                        <p className="font-bold text-sm">데이터베이스 백업 완료</p>
-                        <p className="text-xs text-gray-500 mt-1">오늘, 03:00 AM</p>
-                     </div>
-                     <div className="p-4 border-l-4 border-green-400 bg-green-50">
-                        <p className="font-bold text-sm">시스템 정기 점검 완료</p>
-                        <p className="text-xs text-gray-500 mt-1">어제, 11:00 PM</p>
-                     </div>
-                     <div className="p-4 border-l-4 border-blue-400 bg-blue-50">
-                        <p className="font-bold text-sm">새로운 버전 배포 v2.1.0</p>
-                        <p className="text-xs text-gray-500 mt-1">2024-11-20</p>
-                     </div>
+                     {systemAlerts.length === 0 ? (
+                        <div className="p-4 border-l-4 border-green-400 bg-green-50">
+                           <p className="font-bold text-sm">모든 시스템이 정상 작동 중</p>
+                           <p className="text-xs text-gray-500 mt-1">알림 없음</p>
+                        </div>
+                     ) : (
+                        systemAlerts.slice(0, 5).map((alert, idx) => (
+                           <div
+                              key={idx}
+                              className={`p-4 border-l-4 ${
+                                 alert.type === 'error' ? 'border-rose-400 bg-rose-50' :
+                                 alert.type === 'warning' ? 'border-yellow-400 bg-yellow-50' :
+                                 alert.type === 'success' ? 'border-green-400 bg-green-50' :
+                                 alert.type === 'neutral' ? 'border-gray-300 bg-gray-50' :
+                                 alert.type === 'purple' ? 'border-purple-400 bg-purple-50' :
+                                 'border-sky-400 bg-sky-50'
+                              }`}
+                           >
+                              <p className="font-bold text-sm">{alert.message}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                 {new Date(alert.timestamp).toLocaleString('ko-KR')}
+                              </p>
+                           </div>
+                        ))
+                     )}
                   </div>
                 </CardContent>
               </Card>
             </div>
-            
+
             {/* Detailed Metrics */}
             <div className="border-2 border-black bg-white p-6">
                <h3 className="text-xl font-black uppercase mb-6">트래픽 분석</h3>
