@@ -120,5 +120,12 @@
   },
   "loading": {
     "tests": "Running tests..."
+  },
+  "admin": {
+    "accessDenied": "Access Denied",
+    "adminOnly": "This page is only accessible to administrators.",
+    "noPermission": "You do not have permission to access this area.",
+    "loginAsAdmin": "Please log in with an administrator account to continue.",
+    "contactSupport": "If you believe this is an error, please contact support."
   }
 }
