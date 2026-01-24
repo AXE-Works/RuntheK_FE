@@ -6,7 +6,7 @@ import { ItineraryData } from '../App';
 const AI_API_BASE_URL = import.meta.env.VITE_AI_API_BASE_URL || 'https://runthek-api.onrender.com/api/v1';
 
 // Enable mock mode for testing (set to true to use mock data)
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = false;
 
 // ===== Request Types =====
 
@@ -16,6 +16,7 @@ export interface ScheduleGenerateRequest {
   cities: string[];
   interests: string[];
   budget_level?: 'LOW' | 'MEDIUM' | 'HIGH';
+  travel_style?: 'relaxed' | 'balanced' | 'packed';
   language?: 'ko' | 'en' | 'ja' | 'zh';
   additional_notes?: string;
 }
@@ -110,6 +111,15 @@ const BUDGET_TO_LEVEL: Record<string, 'LOW' | 'MEDIUM' | 'HIGH'> = {
   'luxury': 'HIGH',
 };
 
+// City ID to API name mapping
+const CITY_ID_TO_NAME: Record<string, string> = {
+  'seoul': 'Seoul',
+  'busan': 'Busan',
+  'jeju': 'Jeju',
+  'gyeongju': 'Gyeongju',
+  'suwon': 'Suwon',
+};
+
 const LEVEL_TO_BUDGET: Record<string, string> = {
   'LOW': 'budget',
   'MEDIUM': 'mid-range',
@@ -164,9 +174,16 @@ export function convertToApiRequest(
   return {
     start_date: format(startDate, 'yyyy-MM-dd'),
     duration_days: parseDurationToDays(userInput.duration || '5 days'),
-    cities: userInput.cities.length > 0 ? userInput.cities.slice(0, 5) : ['Seoul'],
+    cities: (() => {
+      const validCities = userInput.cities
+        .filter(id => id !== 'notSure')
+        .slice(0, 5)
+        .map(id => CITY_ID_TO_NAME[id] || id);
+      return validCities.length > 0 ? validCities : ['Seoul'];
+    })(),
     interests: userInput.interests.slice(0, 5).map(id => INTEREST_ID_TO_LABEL[id] || id),
-    budget_level: BUDGET_TO_LEVEL[userInput.budget] || 'MEDIUM',
+    budget_level: 'MEDIUM',
+    travel_style: userInput.budget as 'relaxed' | 'balanced' | 'packed',
     language: userInput.language || 'en',
     additional_notes: userInput.additionalNotes?.slice(0, 500),
   };

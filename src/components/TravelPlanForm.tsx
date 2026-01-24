@@ -520,11 +520,19 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
 
   const handleAddCustomCity = () => {
     const trimmedCity = customCity.trim();
-    if (trimmedCity && !userInput.cities.includes(trimmedCity)) {
-      setUserInput(prev => ({
-        ...prev,
-        cities: [...prev.cities, trimmedCity]
-      }));
+    if (trimmedCity) {
+      // Capitalize first letter of each word
+      const capitalizedCity = trimmedCity
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+
+      if (!userInput.cities.includes(capitalizedCity)) {
+        setUserInput(prev => ({
+          ...prev,
+          cities: [...prev.cities, capitalizedCity]
+        }));
+      }
       setCustomCity('');
     }
   };
