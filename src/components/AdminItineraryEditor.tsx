@@ -462,17 +462,38 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
     const durationNum = parseInt(duration.split(' ')[0]) || 5;
     const citiesToUse = cities.length > 0 ? cities.map(c => c === 'notSure' ? 'Seoul' : c) : ['Seoul'];
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
     try {
-      // 목업 데이터 생성 (API 연동 전 임시)
-      const generatedDays = generateMockItinerary(durationNum, citiesToUse, interests);
+      // 실제 AI API 호출
+      const result = await generateSchedule({
+        startDate: startDate,
+        duration: duration,
+        cities: citiesToUse,
+        budget: budget,
+        interests: interests,
+        language: 'en',
+      });
+
+      // API 응답에서 days 추출하여 상태 업데이트
+      const generatedDays: Day[] = result.itinerary.days.map(day => ({
+        day: day.day,
+        title: day.title,
+        activities: day.activities.map(act => ({
+          time: act.time,
+          activity: act.activity,
+          location: act.location,
+          description: act.description,
+          estimatedCost: act.estimatedCost,
+          googleMapsUrl: act.googleMapsUrl,
+          isEvent: act.isEvent,
+          eventType: act.eventType,
+        })),
+      }));
+
       setDays(generatedDays);
 
       // Auto-fill some fields if empty
       if (!title) {
-        setTitle(`${durationNum} Days ${citiesToUse[0]} Adventure`);
+        setTitle(result.itinerary.title || `${durationNum} Days ${citiesToUse[0]} Adventure`);
       }
       if (!description) {
         setDescription(`Explore the best of ${citiesToUse.join(', ')} with this carefully curated ${durationNum}-day itinerary.`);
@@ -483,10 +504,15 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
 
       setHasGenerated(true);
       setActiveTab('edit');
-      toast.success('일정이 성공적으로 생성되었습니다! (목업 데이터)');
+      toast.success('AI 일정이 성공적으로 생성되었습니다!');
     } catch (error) {
-      toast.error('일정 생성 중 오류가 발생했습니다.');
-      console.error('Mock generation error:', error);
+      console.error('[AdminItineraryEditor] AI generation error:', error);
+
+      if (error instanceof ScheduleApiError) {
+        toast.error(error.message);
+      } else {
+        toast.error('일정 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+      }
     } finally {
       setIsGenerating(false);
     }
