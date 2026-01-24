@@ -35,7 +35,7 @@ import {
   Package,
   X
 } from 'lucide-react';
-import { generateSchedule, ScheduleApiError } from '../services/scheduleApi';
+import { generateSchedule, recommendPlaces, ScheduleApiError } from '../services/scheduleApi';
 import { toast } from 'sonner';
 
 interface Activity {
@@ -612,144 +612,56 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
   };
 
   // AI Spot Suggestion Functions
-  // TODO: AI 스팟 추천 기능 - 백엔드 AI 서비스 엔드포인트 구현 후 연동 필요
-  // - 현재: Mock 데이터 (하드코딩된 카페/식당/박물관 추천)
-  // - 목표: 실제 AI 서비스에 프롬프트 전송 후 맞춤 장소 추천 받기
-  // - 필요 엔드포인트: POST /api/v1/ai/spot-recommendation (예상)
-  // - 요청 파라미터: prompt, currentLocation, interests, budget 등
+  // POST /api/v1/admin/recommend-places API 연동
   const generateActivitySuggestions = async (prompt: string, currentActivity: Activity) => {
     if (!prompt.trim()) {
-      alert('프롬프트를 입력해주세요!');
+      toast.error('프롬프트를 입력해주세요!');
       return;
     }
 
     setIsLoadingAI(true);
 
     try {
-      // TODO: 실제 AI API 호출로 교체
-      // const suggestions = await generateSpotRecommendation({ prompt, ... });
-      // Simulate AI processing (Mock)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Get destination from cities or use Seoul as default
+      const destination = cities.length > 0
+        ? DESTINATION_OPTIONS.find(opt => opt.id === cities[0])?.label || cities[0]
+        : 'Seoul';
 
-      // Mock AI suggestions based on prompt
-      const suggestions: Activity[] = [];
-      const keywords = prompt.toLowerCase();
+      // Convert budget (travel style) to API format
+      const apiRequest = {
+        prompt: prompt,
+        destination: destination,
+        interests: interests,
+        budget: BUDGET_TO_API[budget] || 'mid-range',
+        count: 3,
+      };
 
-      // Generate 3 different suggestions
-      if (keywords.includes('cafe') || keywords.includes('카페') || keywords.includes('coffee')) {
-        suggestions.push(
-          {
-            time: currentActivity.time,
-            activity: 'Artisan Cafe in Samcheong-dong',
-            location: 'Samcheong-dong, Seoul',
-            description: 'Enjoy specialty coffee in a traditional hanok cafe with beautiful garden views',
-            estimatedCost: '$8-15',
-            isEvent: false
-          },
-          {
-            time: currentActivity.time,
-            activity: 'Cafe Onion Anguk',
-            location: 'Anguk, Seoul',
-            description: 'Trendy industrial-style cafe in a renovated factory building',
-            estimatedCost: '$10-18',
-            isEvent: false
-          },
-          {
-            time: currentActivity.time,
-            activity: 'Cafe Layered Gangnam',
-            location: 'Gangnam, Seoul',
-            description: 'Multi-story themed cafe with unique desserts and photo zones',
-            estimatedCost: '$12-20',
-            isEvent: false
-          }
-        );
-      } else if (keywords.includes('restaurant') || keywords.includes('food') || keywords.includes('음식') || keywords.includes('식당')) {
-        suggestions.push(
-          {
-            time: currentActivity.time,
-            activity: 'Tosokchon Samgyetang',
-            location: 'Gyeongbokgung, Seoul',
-            description: 'Famous ginseng chicken soup restaurant near the palace',
-            estimatedCost: '$15-25',
-            isEvent: false
-          },
-          {
-            time: currentActivity.time,
-            activity: 'Gwangjang Market Food Tour',
-            location: 'Jongno, Seoul',
-            description: 'Traditional market with authentic Korean street food',
-            estimatedCost: '$10-20',
-            isEvent: false
-          },
-          {
-            time: currentActivity.time,
-            activity: 'Jungsik',
-            location: 'Gangnam, Seoul',
-            description: 'Michelin 2-star modern Korean fine dining',
-            estimatedCost: '$80-150',
-            isEvent: false
-          }
-        );
-      } else if (keywords.includes('museum') || keywords.includes('박물관') || keywords.includes('gallery')) {
-        suggestions.push(
-          {
-            time: currentActivity.time,
-            activity: 'National Museum of Korea',
-            location: 'Yongsan, Seoul',
-            description: 'Largest museum in Korea showcasing Korean history and culture',
-            estimatedCost: 'Free',
-            isEvent: false
-          },
-          {
-            time: currentActivity.time,
-            activity: 'Leeum Samsung Museum',
-            location: 'Itaewon, Seoul',
-            description: 'Contemporary art museum with traditional and modern collections',
-            estimatedCost: '$10',
-            isEvent: false
-          },
-          {
-            time: currentActivity.time,
-            activity: 'teamLab Borderless Seoul',
-            location: 'Seongsu, Seoul',
-            description: 'Immersive digital art experience with interactive exhibits',
-            estimatedCost: '$25-30',
-            isEvent: false
-          }
-        );
-      } else {
-        // Generic suggestions based on interests
-        suggestions.push(
-          {
-            time: currentActivity.time,
-            activity: 'Bukchon Hanok Village',
-            location: 'Jongno-gu, Seoul',
-            description: 'Traditional Korean houses with cultural experience',
-            estimatedCost: 'Free',
-            isEvent: false
-          },
-          {
-            time: currentActivity.time,
-            activity: 'N Seoul Tower Observatory',
-            location: 'Namsan, Seoul',
-            description: 'Iconic tower with panoramic city views',
-            estimatedCost: '$10-15',
-            isEvent: false
-          },
-          {
-            time: currentActivity.time,
-            activity: 'Han River Bike Tour',
-            location: 'Han River Park, Seoul',
-            description: 'Scenic cycling along the Han River with bike rental',
-            estimatedCost: '$5-10',
-            isEvent: false
-          }
-        );
-      }
+      const response = await recommendPlaces(apiRequest);
+
+      // Convert API response to Activity[] format
+      const suggestions: Activity[] = response.recommendations.map(rec => ({
+        time: currentActivity.time,
+        activity: rec.activity,
+        location: rec.location,
+        description: rec.description,
+        estimatedCost: rec.estimatedCost,
+        googleMapsUrl: rec.googleMapsUrl,
+        isEvent: false,
+      }));
 
       setAiSuggestions(suggestions);
+
+      if (suggestions.length === 0) {
+        toast.info('추천 결과가 없습니다. 다른 키워드를 시도해보세요.');
+      }
     } catch (error) {
-      alert('AI 추천 생성 중 오류가 발생했습니다.');
+      console.error('[AdminItineraryEditor] AI recommendation error:', error);
+
+      if (error instanceof ScheduleApiError) {
+        toast.error(error.message);
+      } else {
+        toast.error('AI 추천 생성 중 오류가 발생했습니다.');
+      }
       setAiSuggestions([]);
     } finally {
       setIsLoadingAI(false);

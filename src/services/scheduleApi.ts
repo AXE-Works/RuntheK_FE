@@ -521,6 +521,114 @@ export async function modifySchedule(
   }
 }
 
+// ===== Recommend Places Types =====
+
+export interface RecommendPlacesRequest {
+  prompt: string;
+  destination: string;
+  interests: string[];
+  budget: string;
+  count?: number;
+}
+
+export interface RecommendedPlace {
+  activity: string;
+  location: string;
+  description: string;
+  estimatedCost: string;
+  googleMapsUrl?: string;
+}
+
+export interface RecommendPlacesResponse {
+  recommendations: RecommendedPlace[];
+}
+
+/**
+ * Recommend places based on prompt and context
+ * POST /api/v1/admin/recommend-places
+ */
+export async function recommendPlaces(
+  request: RecommendPlacesRequest
+): Promise<RecommendPlacesResponse> {
+  // Create AbortController for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+  try {
+    console.log('[Schedule API] Requesting place recommendations...', request);
+
+    const response = await fetch(`${AI_API_BASE_URL}/admin/recommend-places`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: request.prompt,
+        destination: request.destination,
+        interests: request.interests,
+        budget: request.budget,
+        count: request.count || 3,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errorData: ApiError;
+      try {
+        errorData = await response.json();
+      } catch {
+        throw new ScheduleApiError(
+          'NETWORK_ERROR',
+          'AI 서비스에 연결할 수 없습니다. 다시 시도해주세요.'
+        );
+      }
+
+      throw new ScheduleApiError(
+        errorData.code,
+        errorData.message || 'AI 추천 생성 중 오류가 발생했습니다.',
+        errorData.details
+      );
+    }
+
+    const data: RecommendPlacesResponse = await response.json();
+    console.log('[Schedule API] Place recommendations received:', data);
+
+    return data;
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof ScheduleApiError) {
+      throw error;
+    }
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.error('[Schedule API] Recommend places request timed out');
+        throw new ScheduleApiError(
+          'TIMEOUT',
+          '요청 시간이 초과되었습니다. AI 서비스가 응답하지 않습니다.'
+        );
+      }
+
+      if (error.message.includes('fetch') || error.message.includes('network')) {
+        console.error('[Schedule API] Network error:', error.message);
+        throw new ScheduleApiError(
+          'NETWORK_ERROR',
+          'AI 서비스에 연결할 수 없습니다.'
+        );
+      }
+    }
+
+    console.error('[Schedule API] Unexpected error:', error);
+    throw new ScheduleApiError(
+      'UNKNOWN_ERROR',
+      '예상치 못한 오류가 발생했습니다.'
+    );
+  }
+}
+
 export async function generateSchedule(
   userInput: {
     startDate?: Date;
