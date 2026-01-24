@@ -424,6 +424,103 @@ export interface GenerateScheduleResult {
   userBudget: string;  // Store user's budget selection for BE API
 }
 
+// ===== Modify Schedule Types =====
+
+export interface ModifyScheduleRequest {
+  modification_prompt: string;
+}
+
+export interface ModifyScheduleResult {
+  itinerary: ItineraryData;
+  rawAIResponse: ScheduleGenerateResponse;
+}
+
+/**
+ * Modify an existing schedule with additional user requests
+ * POST /api/v1/schedules/{schedule_id}/modify
+ */
+export async function modifySchedule(
+  scheduleId: number | string,
+  modificationPrompt: string
+): Promise<ModifyScheduleResult> {
+  // Create AbortController for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout for modification
+
+  try {
+    console.log('[Schedule API] Modifying schedule...', { scheduleId, modificationPrompt });
+
+    const request: ModifyScheduleRequest = {
+      modification_prompt: modificationPrompt,
+    };
+
+    const response = await fetch(`${AI_API_BASE_URL}/schedules/${scheduleId}/modify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errorData: ApiError;
+      try {
+        errorData = await response.json();
+      } catch {
+        throw new ScheduleApiError(
+          'NETWORK_ERROR',
+          'Failed to connect to server. Please try again.'
+        );
+      }
+
+      const userMessage = ERROR_MESSAGES[errorData.code] || errorData.message || 'An error occurred';
+      throw new ScheduleApiError(errorData.code, userMessage, errorData.details);
+    }
+
+    const data: ScheduleGenerateResponse = await response.json();
+    console.log('[Schedule API] Schedule modified successfully');
+
+    return {
+      itinerary: convertToItineraryData(data),
+      rawAIResponse: data,
+    };
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof ScheduleApiError) {
+      throw error;
+    }
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.error('[Schedule API] Modify request timed out');
+        throw new ScheduleApiError(
+          'TIMEOUT',
+          'Request timed out. The AI service may be unavailable. Please try again later.'
+        );
+      }
+
+      // Network error
+      if (error.message.includes('fetch') || error.message.includes('network')) {
+        console.error('[Schedule API] Network error:', error.message);
+        throw new ScheduleApiError(
+          'NETWORK_ERROR',
+          'Cannot connect to AI service. Please ensure the service is running.'
+        );
+      }
+    }
+
+    console.error('[Schedule API] Unexpected error:', error);
+    throw new ScheduleApiError(
+      'UNKNOWN_ERROR',
+      'An unexpected error occurred. Please try again.'
+    );
+  }
+}
+
 export async function generateSchedule(
   userInput: {
     startDate?: Date;

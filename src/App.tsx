@@ -47,7 +47,7 @@ import { motion } from 'motion/react';
 import logo from 'figma:asset/ade16fc310679880d8b27a51a4119372559298ac.png';
 import { fetchWithAuth, API_BASE_URL } from './utils/api';
 import { saveTripWithItinerary } from './services/tripApi';
-import { ScheduleGenerateResponse } from './services/scheduleApi';
+import { ScheduleGenerateResponse, modifySchedule, ScheduleApiError } from './services/scheduleApi';
 import { toast } from 'sonner';
 
 const mockEvents = [
@@ -272,27 +272,33 @@ export default function App() {
   };
 
   const handleRegenerateItinerary = async (additionalNotes: string) => {
-    if (!currentItinerary) return;
-    
+    if (!currentItinerary || !rawAIResponse) {
+      toast.error('No itinerary to modify. Please generate an itinerary first.');
+      return;
+    }
+
     setIsGenerating(true);
-    
-    // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Create a user input object based on the current itinerary
-    const baseUserInput: UserInput = {
-      duration: currentItinerary.duration,
-      cities: [], // Extract from current itinerary
-      budget: currentItinerary.budget,
-      interests: currentItinerary.interests,
-      additionalNotes: additionalNotes
-    };
-    
-    // Apply modifications based on additional notes
-    const modifiedItinerary = generateModifiedItinerary(currentItinerary, additionalNotes, baseUserInput);
-    
-    setCurrentItinerary(modifiedItinerary);
-    setIsGenerating(false);
+
+    try {
+      // Call the modify API with the schedule ID and modification prompt
+      const result = await modifySchedule(rawAIResponse.id, additionalNotes);
+
+      // Update the itinerary with the modified result
+      setCurrentItinerary(result.itinerary);
+      setRawAIResponse(result.rawAIResponse);
+
+      toast.success('Itinerary has been regenerated with your changes!');
+    } catch (error) {
+      console.error('[App] Failed to modify itinerary:', error);
+
+      if (error instanceof ScheduleApiError) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to regenerate itinerary. Please try again.');
+      }
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Simplified regeneration that modifies the existing itinerary based on additional notes
