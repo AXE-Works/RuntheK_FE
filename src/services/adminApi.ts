@@ -706,3 +706,72 @@ export async function getSystemStatus(): Promise<ApiResponse<SystemStatusRespons
   });
   return response.json();
 }
+
+// ============================================
+// AI Service Health Check API
+// ============================================
+
+export interface AIHealthResponse {
+  status: string;  // "ok" when healthy
+  service: string; // "run-the-k-backend"
+}
+
+export interface APIServiceStatus {
+  name: string;
+  status: 'active' | 'inactive' | 'checking';
+  lastChecked?: string;
+}
+
+/**
+ * Check AI service health
+ * GET https://runthekai-production.up.railway.app/api/v1/health
+ *
+ * This checks the AI backend service status.
+ * Returns { status: "ok", service: "run-the-k-backend" } when healthy.
+ */
+export async function checkAIHealth(): Promise<AIHealthResponse> {
+  const response = await fetch('https://runthekai-production.up.railway.app/api/v1/health', {
+    method: 'GET',
+    headers: {
+      'Cache-Control': 'no-store',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('AI 서비스가 응답하지 않습니다');
+  }
+
+  return response.json();
+}
+
+/**
+ * Database health check response type
+ */
+export interface DBHealthResponse {
+  status: 'UP' | 'DOWN';
+  components?: {
+    db?: { status: 'UP' | 'DOWN' };
+    redis?: { status: 'UP' | 'DOWN' };
+  };
+}
+
+/**
+ * Check database health via Spring Boot Actuator
+ * GET /actuator/health
+ *
+ * Returns database connection status.
+ */
+export async function checkDBHealth(): Promise<DBHealthResponse> {
+  const response = await fetch(`${API_BASE_URL.replace('/api/v1', '')}/actuator/health`, {
+    method: 'GET',
+    headers: {
+      'Cache-Control': 'no-store',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('데이터베이스가 응답하지 않습니다');
+  }
+
+  return response.json();
+}

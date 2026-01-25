@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useJsApiLoader } from '@react-google-maps/api';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import {
@@ -26,6 +27,8 @@ import {
   SystemStatusResponse,
   ServerLoadInfo,
   SystemAlertInfo,
+  checkAIHealth,
+  APIServiceStatus,
 } from '../services/adminApi';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -136,12 +139,14 @@ const getCountryName = (code: string): string => {
   return COUNTRY_NAMES[code] || code;
 };
 
-const mockAPIStatus = [
-  { name: 'OpenAI GPT-4', status: 'active' },
-  { name: 'Google Maps', status: 'active' },
-  { name: '한국관광공사', status: 'active' },
-  { name: '데이터베이스', status: 'active' }
+// Initial API service status (will be updated via polling)
+const initialAPIStatus: APIServiceStatus[] = [
+  { name: 'AI 서비스 (OpenRoute)', status: 'checking' },
+  { name: 'Google Maps', status: 'checking' },
+  { name: '데이터베이스', status: 'checking' }
 ];
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 // Mock popular activities
 const mockPopularActivities = [
@@ -241,6 +246,11 @@ interface AdminDashboardProps {
 export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboardProps) {
   const { t } = useTranslation();
 
+  // Google Maps API load check (free - only checks if API loads, no billable calls)
+  const { isLoaded: isMapsLoaded, loadError: mapsLoadError } = useJsApiLoader({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+  });
+
   // Check if user has admin privileges
   const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'admin';
 
@@ -269,6 +279,7 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
   const [serverLoad, setServerLoad] = useState<ServerLoadInfo | null>(null);
   const [systemAlerts, setSystemAlerts] = useState<SystemAlertInfo[]>([]);
   const [trafficData, setTrafficData] = useState<number[]>([]);
+  const [apiServices, setApiServices] = useState<APIServiceStatus[]>(initialAPIStatus);
 
   // Fetch dashboard stats on mount (always visible header)
   useEffect(() => {
@@ -327,6 +338,105 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
         checkSystemStatus();
       }
     }, 15000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // AI service health check polling (30 seconds)
+  useEffect(() => {
+    const checkAIServiceHealth = async () => {
+      try {
+        const response = await checkAIHealth();
+        // Update only the AI service status based on response
+        setApiServices(prev => prev.map(service =>
+          service.name === 'AI 서비스 (OpenRoute)'
+            ? {
+                ...service,
+                status: response.status === 'ok' ? 'active' : 'inactive',
+                lastChecked: new Date().toISOString()
+              }
+            : service
+        ));
+      } catch (error) {
+        console.error('AI 헬스체크 실패:', error);
+        // Mark AI service as inactive on error
+        setApiServices(prev => prev.map(service =>
+          service.name === 'AI 서비스 (OpenRoute)'
+            ? {
+                ...service,
+                status: 'inactive',
+                lastChecked: new Date().toISOString()
+              }
+            : service
+        ));
+      }
+    };
+
+    // Initial fetch
+    checkAIServiceHealth();
+
+    // Poll every 30 seconds (only when tab is visible)
+    const intervalId = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        checkAIServiceHealth();
+      }
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Google Maps API status check (based on JS API load - free, no API calls)
+  useEffect(() => {
+    setApiServices(prev => prev.map(service =>
+      service.name === 'Google Maps'
+        ? {
+            ...service,
+            status: mapsLoadError ? 'inactive' : isMapsLoaded ? 'active' : 'checking',
+            lastChecked: new Date().toISOString()
+          }
+        : service
+    ));
+  }, [isMapsLoaded, mapsLoadError]);
+
+  // Database health check - based on dashboard stats API success
+  // If getDashboardStats succeeds, DB is working (it queries the database)
+  useEffect(() => {
+    const checkDBServiceHealth = async () => {
+      try {
+        // Use existing dashboard stats API - if it succeeds, DB is healthy
+        await getDashboardStats();
+        setApiServices(prev => prev.map(service =>
+          service.name === '데이터베이스'
+            ? {
+                ...service,
+                status: 'active',
+                lastChecked: new Date().toISOString()
+              }
+            : service
+        ));
+      } catch (error) {
+        console.error('DB 헬스체크 실패:', error);
+        setApiServices(prev => prev.map(service =>
+          service.name === '데이터베이스'
+            ? {
+                ...service,
+                status: 'inactive',
+                lastChecked: new Date().toISOString()
+              }
+            : service
+        ));
+      }
+    };
+
+    // Initial fetch
+    checkDBServiceHealth();
+
+    // Poll every 30 seconds (only when tab is visible)
+    const intervalId = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        checkDBServiceHealth();
+      }
+    }, 30000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -1189,12 +1299,24 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="divide-y divide-gray-200">
-                    {mockAPIStatus.map((api, idx) => (
+                    {apiServices.map((api, idx) => (
                       <div key={idx} className="flex justify-between items-center p-4 hover:bg-gray-50 transition-colors">
                         <span className="font-bold">{api.name}</span>
                         <div className="flex items-center gap-2">
-                           <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                           <span className="text-sm text-green-600 font-bold uppercase">{api.status}</span>
+                           <span className={`w-2 h-2 rounded-full ${
+                             api.status === 'active' ? 'bg-green-500 animate-pulse' :
+                             api.status === 'inactive' ? 'bg-red-500' :
+                             'bg-gray-400 animate-pulse'
+                           }`}></span>
+                           <span className={`text-sm font-bold uppercase ${
+                             api.status === 'active' ? 'text-green-600' :
+                             api.status === 'inactive' ? 'text-red-600' :
+                             'text-gray-500'
+                           }`}>
+                             {api.status === 'active' ? 'ACTIVE' :
+                              api.status === 'inactive' ? 'INACTIVE' :
+                              '확인 중...'}
+                           </span>
                         </div>
                       </div>
                     ))}
