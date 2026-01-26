@@ -42,7 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './components/ui/dropdown-menu';
 import { Badge } from './components/ui/badge';
-import { MapPin, Users, BarChart, ArrowLeft, LogIn, User, LogOut, Settings, Globe, Mail, Save, Share2 } from 'lucide-react';
+import { MapPin, Users, BarChart, ArrowLeft, LogIn, User, LogOut, Settings, Globe, Mail, Save, Share2, Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 import logo from 'figma:asset/ade16fc310679880d8b27a51a4119372559298ac.png';
 import { fetchWithAuth, API_BASE_URL } from './utils/api';
@@ -173,6 +173,8 @@ export default function App() {
 
   const { t, i18n } = useTranslation();
   const location = useLocation();
+
+  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'admin';
 
   // Handle navigation from RegionPage or DestinationPage
   useEffect(() => {
@@ -616,6 +618,11 @@ export default function App() {
     setMyTripsDefaultTab("profile");
   };
 
+  const handleGoToAdmin = () => {
+    setShowHero(false);
+    setActiveTab("admin");
+  };
+
   // Show loading while restoring session
   if (isRestoringSession) {
     return (
@@ -628,14 +635,15 @@ export default function App() {
     );
   }
 
-  if (showHero && !currentItinerary) {
-    return (
-      <>
-        <Seo {...buildHomeSeo()} />
-        <HeroSection onStartPlanning={handleStartPlanning} />
-      </>
-    );
-  }
+  // Landing page disabled - go directly to main app
+  // if (showHero && !currentItinerary) {
+  //   return (
+  //     <>
+  //       <Seo {...buildHomeSeo()} />
+  //       <HeroSection onStartPlanning={handleStartPlanning} />
+  //     </>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -747,10 +755,17 @@ export default function App() {
                       <User className="mr-2 h-4 w-4" />
                       {t('nav.profile')}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleGoToMyTrips}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      {t('nav.myTrips')}
-                    </DropdownMenuItem>
+                    {isAdmin ? (
+                      <DropdownMenuItem onClick={handleGoToAdmin}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        {t('nav.admin')}
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem onClick={handleGoToMyTrips}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        {t('nav.myTrips')}
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
@@ -786,18 +801,6 @@ export default function App() {
           />
         ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full max-w-lg mx-auto mb-6 sm:mb-8 bg-gray-100">
-            <TabsTrigger value="plan" className="data-[state=active]:bg-white data-[state=active]:text-black text-sm sm:text-base">
-              {t('nav.planTrip')}
-            </TabsTrigger>
-            <TabsTrigger value="my-trips" className="data-[state=active]:bg-white data-[state=active]:text-black text-sm sm:text-base">
-              {t('nav.myTrips')}
-            </TabsTrigger>
-            <TabsTrigger value="admin" className="data-[state=active]:bg-white data-[state=active]:text-black text-sm sm:text-base">
-              {t('nav.admin')}
-            </TabsTrigger>
-          </TabsList>
-
           <TabsContent value="plan" className="space-y-6">
             {!currentItinerary ? (
               <motion.div
