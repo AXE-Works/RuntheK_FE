@@ -297,7 +297,7 @@ export function ItineraryMap({ activities, activeIndex, onMarkerClick }: Itinera
   }
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full overflow-hidden">
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={markers[0] || DEFAULT_CENTER}

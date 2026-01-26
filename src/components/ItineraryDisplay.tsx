@@ -100,7 +100,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, o
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 md:space-y-6 px-4 md:px-0">
+    <div className="max-w-6xl mx-auto space-y-4 md:space-y-6 px-4 md:px-0">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -319,10 +319,10 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, o
                   </CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="p-0">
-                <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
-                    {/* Map Section (Desktop: Sticky Right, Mobile: Top) */}
-                    <div className="relative w-full h-[300px] lg:h-auto lg:min-h-[600px] border-b-2 lg:border-b-0 lg:border-r-2 border-black bg-gray-100 order-first lg:order-last">
+              <CardContent className="p-0 overflow-hidden">
+                <div className="grid grid-cols-1 lg:grid-cols-2 h-full overflow-hidden lg:pr-4 xl:pr-6">
+                    {/* Map Section (Desktop: Right, Mobile: Top) */}
+                    <div className="relative w-full h-[300px] lg:h-auto lg:min-h-[600px] border-b-2 lg:border-b-0 lg:border-l-2 border-black bg-gray-100 order-first lg:order-last overflow-hidden">
                         <ItineraryMap
                             activities={day.activities}
                             activeIndex={activeMapState?.dayIndex === dayIndex ? activeMapState.activityIndex : null}
@@ -347,8 +347,8 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, o
                         </div>
                     </div>
 
-                    {/* Timeline Section */}
-                    <div className="relative p-4 md:p-6 bg-gray-50/50 h-full">
+                    {/* Timeline Section - z-index ensures it stacks above map InfoWindow */}
+                    <div className="relative p-4 md:p-6 bg-gray-50/50 h-full z-10 isolate">
                         <div className="relative pl-2">
                             {/* Vertical Route Line */}
                             <div className="absolute left-[19px] top-4 bottom-4 w-[4px] bg-black/10 rounded-full" />
