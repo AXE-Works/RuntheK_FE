@@ -503,12 +503,46 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
   const handleBannerClick = (banner: BannerData) => {
     if (editingBanner === banner.id) return;
     if (onBannerSelect) {
+      // Map category to valid interest IDs
+      const categoryToInterest: { [key: string]: string } = {
+        'urban': 'culture',
+        'nature': 'nature',
+        'cultural': 'culture',
+        'food': 'food',
+        'historical': 'culture',
+        'coastal': 'nature',
+      };
+
+      // Determine interests: use highlights if they match valid interest IDs, otherwise map from category
+      const validInterests = ['food', 'local', 'kculture', 'shopping', 'culture', 'nature'];
+      let interests: string[] = [];
+
+      if (banner.highlights && banner.highlights.length > 0) {
+        // Filter highlights to only valid interest IDs
+        const matchedInterests = banner.highlights.filter(h =>
+          validInterests.includes(h.toLowerCase())
+        ).map(h => h.toLowerCase());
+
+        if (matchedInterests.length > 0) {
+          interests = matchedInterests;
+        }
+      }
+
+      // Fallback to category mapping if no valid interests found
+      if (interests.length === 0) {
+        const mappedInterest = categoryToInterest[banner.category.toLowerCase()];
+        if (mappedInterest) {
+          interests = [mappedInterest];
+        }
+      }
+
       onBannerSelect({
+        id: banner.id,  // Include unique ID for change detection
         name: banner.title,
         subtitle: banner.subtitle,
         // Form auto-fill parameters
         recommendedDuration: banner.duration,
-        recommendedInterests: banner.highlights || [banner.category.toLowerCase()],
+        recommendedInterests: interests,
         recommendedCities: banner.cities || [],
         recommendedBudget: banner.budget || 'mid-range',
         recommendedStartDate: banner.startDate,

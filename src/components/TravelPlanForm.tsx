@@ -410,7 +410,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
     nationality: '',
     startDate: undefined
   });
-  const [isFromDestination, setIsFromDestination] = useState(false);
+  const [lastAppliedDestinationId, setLastAppliedDestinationId] = useState<string | null>(null);
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [customCity, setCustomCity] = useState('');
 
@@ -427,61 +427,68 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
 
   // Auto-fill form when destination is selected
   useEffect(() => {
-    if (selectedDestination && !isFromDestination) {
-      setIsFromDestination(true);
+    if (!selectedDestination) return;
 
-      // Determine cities: prefer recommendedCities array, fallback to name mapping
-      let cities: string[] = [];
-      if (selectedDestination.recommendedCities && selectedDestination.recommendedCities.length > 0) {
-        cities = selectedDestination.recommendedCities;
-      } else {
-        // Legacy city name mapping for PopularDestinations
-        const cityMapping: { [key: string]: string } = {
-          'Seoul': 'Seoul',
-          'Jeju Island': 'Jeju Island',
-          'Busan': 'Busan',
-          'Gyeongju': 'Gyeongju',
-          'Traditional Markets': 'Seoul'
-        };
-        const selectedCity = cityMapping[selectedDestination.name] || selectedDestination.name;
-        cities = [selectedCity];
-      }
+    // Create unique identifier for the destination
+    const destinationId = selectedDestination.id || selectedDestination.name || JSON.stringify(selectedDestination);
 
-      // Determine budget: prefer recommendedBudget, fallback to name-based defaults
-      let budget = selectedDestination.recommendedBudget;
-      if (!budget) {
-        budget = selectedDestination.name === 'Seoul' ? 'mid-range' :
-                 selectedDestination.name === 'Traditional Markets' ? 'budget' : 'mid-range';
-      }
+    // Skip if same destination was already applied
+    if (destinationId === lastAppliedDestinationId) return;
 
-      // Parse startDate if provided as string
-      let startDate: Date | undefined;
-      if (selectedDestination.recommendedStartDate) {
-        startDate = new Date(selectedDestination.recommendedStartDate);
-        // Ensure it's a future date
-        if (startDate < new Date()) {
-          startDate = undefined;
-        }
-      }
+    // Mark this destination as applied
+    setLastAppliedDestinationId(destinationId);
 
-      setUserInput(prev => ({
-        ...prev,
-        duration: selectedDestination.recommendedDuration || '5 days',
-        cities: cities,
-        interests: selectedDestination.recommendedInterests || [],
-        budget: budget,
-        startDate: startDate
-      }));
-
-      // Scroll to form section
-      setTimeout(() => {
-        const formSection = document.getElementById('travel-form-section');
-        if (formSection) {
-          formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
+    // Determine cities: prefer recommendedCities array, fallback to name mapping
+    let cities: string[] = [];
+    if (selectedDestination.recommendedCities && selectedDestination.recommendedCities.length > 0) {
+      cities = selectedDestination.recommendedCities;
+    } else {
+      // Legacy city name mapping for PopularDestinations
+      const cityMapping: { [key: string]: string } = {
+        'Seoul': 'Seoul',
+        'Jeju Island': 'Jeju Island',
+        'Busan': 'Busan',
+        'Gyeongju': 'Gyeongju',
+        'Traditional Markets': 'Seoul'
+      };
+      const selectedCity = cityMapping[selectedDestination.name] || selectedDestination.name;
+      cities = [selectedCity];
     }
-  }, [selectedDestination, isFromDestination]);
+
+    // Determine budget: prefer recommendedBudget, fallback to name-based defaults
+    let budget = selectedDestination.recommendedBudget;
+    if (!budget) {
+      budget = selectedDestination.name === 'Seoul' ? 'mid-range' :
+               selectedDestination.name === 'Traditional Markets' ? 'budget' : 'mid-range';
+    }
+
+    // Parse startDate if provided as string
+    let startDate: Date | undefined;
+    if (selectedDestination.recommendedStartDate) {
+      startDate = new Date(selectedDestination.recommendedStartDate);
+      // Ensure it's a future date
+      if (startDate < new Date()) {
+        startDate = undefined;
+      }
+    }
+
+    setUserInput(prev => ({
+      ...prev,
+      duration: selectedDestination.recommendedDuration || '5 days',
+      cities: cities,
+      interests: selectedDestination.recommendedInterests || [],
+      budget: budget,
+      startDate: startDate
+    }));
+
+    // Scroll to form section
+    setTimeout(() => {
+      const formSection = document.getElementById('travel-form-section');
+      if (formSection) {
+        formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }, [selectedDestination, lastAppliedDestinationId]);
 
   const MAX_INTERESTS = 3;
 
