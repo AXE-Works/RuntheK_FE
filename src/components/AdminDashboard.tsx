@@ -812,7 +812,7 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
   }
 
   return (
-    <div className="w-full min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white">
+    <div className="w-full min-h-screen bg-amber-50/50 text-black font-sans selection:bg-black selection:text-white">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
