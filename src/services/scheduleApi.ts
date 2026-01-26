@@ -541,13 +541,30 @@ export interface RecommendPlacesRequest {
 export interface RecommendedPlace {
   activity: string;
   location: string;
-  description: string;
+  description: string | null;
   estimatedCost: string;
   googleMapsUrl?: string;
 }
 
 export interface RecommendPlacesResponse {
   recommendations: RecommendedPlace[];
+}
+
+// Raw API response format
+interface RawRecommendPlacesResponse {
+  city: string;
+  theme: string;
+  places: Array<{
+    activity: string;
+    location: string;
+    content_type: string;
+    image_url: string;
+    rating: number | null;
+    description: string | null;
+    estimatedCost: string;
+    googleMapsUrl: string;
+  }>;
+  total_count: number;
 }
 
 /**
@@ -599,8 +616,19 @@ export async function recommendPlaces(
       );
     }
 
-    const data: RecommendPlacesResponse = await response.json();
-    console.log('[Schedule API] Place recommendations received:', data);
+    const rawData: RawRecommendPlacesResponse = await response.json();
+    console.log('[Schedule API] Place recommendations received:', rawData);
+
+    // Map raw API response to expected format
+    const data: RecommendPlacesResponse = {
+      recommendations: rawData.places.map(place => ({
+        activity: place.activity,
+        location: place.location,
+        description: place.description,
+        estimatedCost: place.estimatedCost,
+        googleMapsUrl: place.googleMapsUrl,
+      })),
+    };
 
     return data;
   } catch (error) {

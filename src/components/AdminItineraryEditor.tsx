@@ -96,7 +96,7 @@ interface RecommendedItinerary {
 
 interface AdminItineraryEditorProps {
   itinerary: RecommendedItinerary | null;
-  onSave: (itinerary: RecommendedItinerary) => void;
+  onSave: (itinerary: RecommendedItinerary) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -116,6 +116,18 @@ const INTEREST_OPTIONS = [
   { id: 'shopping', label: 'Shopping', icon: '🛍️' },
   { id: 'culture', label: 'Culture & History', icon: '🏛️' },
   { id: 'nature', label: 'Nature & Hiking', icon: '🏔️' }
+];
+
+// AI Recommendation categories for activity suggestions
+const AI_RECOMMEND_CATEGORIES = [
+  'Culture & History',
+  'Korean Food',
+  'Shopping',
+  'Nature & Hiking',
+  'Temples & Spirituality',
+  'K-Pop & Entertainment',
+  'Traditional Arts',
+  'Nightlife'
 ];
 
 const TRAVEL_STYLE_OPTIONS = [
@@ -182,6 +194,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
   const [aiSuggestions, setAiSuggestions] = useState<Activity[]>([]);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Rich Content State
   const [richContent, setRichContent] = useState<RichContent>({
@@ -517,7 +530,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!hasGenerated || days.length === 0) {
       alert('먼저 일정을 생성해주세요!');
       return;
@@ -547,7 +560,13 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
       createdAt: itinerary?.createdAt || '',
       updatedAt: itinerary?.updatedAt || ''
     };
-    onSave(savedItinerary);
+
+    setIsSaving(true);
+    try {
+      await onSave(savedItinerary);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Schedule Management Functions
@@ -641,7 +660,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
         time: currentActivity.time,
         activity: rec.activity,
         location: rec.location,
-        description: rec.description,
+        description: rec.description || '',
         estimatedCost: rec.estimatedCost,
         googleMapsUrl: rec.googleMapsUrl,
         isEvent: false,
@@ -940,10 +959,17 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
         </div>
         <Button
           onClick={handleSave}
-          disabled={!hasGenerated}
+          disabled={!hasGenerated || isSaving}
           className="bg-black text-white rounded-none hover:bg-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-bold h-12 px-8 disabled:opacity-50"
         >
-          저장하기
+          {isSaving ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              저장 중...
+            </>
+          ) : (
+            '저장하기'
+          )}
         </Button>
       </div>
 
@@ -1486,31 +1512,52 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                           exit={{ opacity: 0, height: 0 }}
                           className="px-4 py-4 bg-purple-50 border-t-2 border-purple-200 space-y-4"
                         >
-                          {/* Prompt Input */}
-                          <div className="space-y-2">
-                            <label style={{ color: '#581c87', fontWeight: 'bold', fontSize: '14px' }}>AI에게 요청하기</label>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              <input
-                                type="text"
-                                value={aiPrompt}
-                                onChange={(e) => setAiPrompt(e.target.value)}
-                                onKeyPress={(e) => {
-                                  if (e.key === 'Enter' && !isLoadingAI) {
-                                    generateActivitySuggestions(aiPrompt, activity);
-                                  }
-                                }}
-                                placeholder="예: 카페 추천해줘, 박물관 찾아줘, 맛집 알려줘"
-                                style={{
-                                  flex: 1,
-                                  border: '2px solid #c4b5fd',
-                                  borderRadius: '8px',
-                                  height: '44px',
-                                  padding: '0 16px',
-                                  fontSize: '14px',
-                                  outline: 'none'
-                                }}
+                          {/* Category Selection */}
+                          <div className="space-y-3">
+                            <label style={{ color: '#581c87', fontWeight: 'bold', fontSize: '14px' }}>카테고리 선택</label>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              {AI_RECOMMEND_CATEGORIES.map((category) => (
+                                <button
+                                  key={category}
+                                  type="button"
+                                  onClick={() => setAiPrompt(category)}
+                                  disabled={isLoadingAI}
+                                  style={{
+                                    padding: '6px 12px',
+                                    fontSize: '13px',
+                                    fontWeight: aiPrompt === category ? 600 : 500,
+                                    borderRadius: '16px',
+                                    border: `1.5px solid ${aiPrompt === category ? '#9333ea' : '#d1d5db'}`,
+                                    backgroundColor: aiPrompt === category ? '#f3e8ff' : 'white',
+                                    color: aiPrompt === category ? '#7c3aed' : '#4b5563',
+                                    cursor: isLoadingAI ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.15s ease',
+                                    opacity: isLoadingAI ? 0.5 : 1
+                                  }}
+                                >
+                                  {category}
+                                </button>
+                              ))}
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '12px' }}>
+                              <button
+                                type="button"
+                                onClick={cancelAISuggestion}
                                 disabled={isLoadingAI}
-                              />
+                                style={{
+                                  border: '1px solid #d1d5db',
+                                  backgroundColor: 'white',
+                                  height: '36px',
+                                  padding: '0 16px',
+                                  borderRadius: '6px',
+                                  fontSize: '13px',
+                                  fontWeight: 500,
+                                  cursor: isLoadingAI ? 'not-allowed' : 'pointer',
+                                  opacity: isLoadingAI ? 0.5 : 1
+                                }}
+                              >
+                                취소
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => generateActivitySuggestions(aiPrompt, activity)}
@@ -1519,13 +1566,13 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                                   backgroundColor: (isLoadingAI || !aiPrompt.trim()) ? '#a78bfa' : '#9333ea',
                                   color: 'white',
                                   fontWeight: 'bold',
-                                  padding: '0 24px',
-                                  height: '44px',
-                                  borderRadius: '8px',
+                                  padding: '0 20px',
+                                  height: '36px',
+                                  borderRadius: '6px',
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: '8px',
-                                  fontSize: '14px',
+                                  gap: '6px',
+                                  fontSize: '13px',
                                   border: 'none',
                                   cursor: (isLoadingAI || !aiPrompt.trim()) ? 'not-allowed' : 'pointer'
                                 }}
@@ -1542,28 +1589,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                                   </>
                                 )}
                               </button>
-                              <button
-                                type="button"
-                                onClick={cancelAISuggestion}
-                                disabled={isLoadingAI}
-                                style={{
-                                  border: '2px solid #d1d5db',
-                                  backgroundColor: 'white',
-                                  height: '44px',
-                                  padding: '0 16px',
-                                  borderRadius: '8px',
-                                  fontSize: '14px',
-                                  fontWeight: 500,
-                                  cursor: isLoadingAI ? 'not-allowed' : 'pointer',
-                                  opacity: isLoadingAI ? 0.5 : 1
-                                }}
-                              >
-                                취소
-                              </button>
                             </div>
-                            <p style={{ fontSize: '12px', color: '#9333ea' }}>
-                              💡 Tip: "카페", "식당", "박물관" 등 구체적으로 입력하면 더 정확한 추천을 받을 수 있어요
-                            </p>
                           </div>
 
                           {/* AI Suggestions */}
@@ -1634,7 +1660,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
 
           {days.length === 0 && (
             <div className="text-center py-12 border-2 border-dashed border-gray-300">
-              <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <CalendarIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <p className="text-gray-500 font-medium mb-4">생성된 일정이 없습니다</p>
               <p className="text-sm text-gray-400">먼저 "기본 정보 & 생성" 탭에서 일정을 생성하세요</p>
             </div>
@@ -1956,7 +1982,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                 {/* Meta Info */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                   <div className="border-2 border-black p-3">
-                    <Calendar className="h-4 w-4 mb-2" />
+                    <CalendarIcon className="h-4 w-4 mb-2" />
                     <p className="text-xs text-gray-500 uppercase">기간</p>
                     <p className="font-bold">{duration} days</p>
                   </div>
@@ -2117,7 +2143,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                 <div className="border-t-4 border-black pt-8">
                   <div className="mb-6">
                     <h3 className="text-3xl font-black uppercase mb-2 flex items-center gap-3">
-                      <Calendar className="h-8 w-8" />
+                      <CalendarIcon className="h-8 w-8" />
                       여행 일정
                     </h3>
                     <p className="text-gray-600">일별 상세 일정과 활동</p>
