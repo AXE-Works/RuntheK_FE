@@ -17,7 +17,6 @@ import {
   Calendar,
   DollarSign,
   Star,
-  TrendingUp,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -51,7 +50,6 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
     totalItineraries: 0,
     activeItineraries: 0,
     totalViewCount: 0,
-    totalBookingCount: 0,
   });
 
   // UI state
@@ -127,7 +125,6 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
           totalItineraries: prev.totalItineraries - 1,
           activeItineraries: deletedItem.active ? prev.activeItineraries - 1 : prev.activeItineraries,
           totalViewCount: prev.totalViewCount - deletedItem.viewCount,
-          totalBookingCount: prev.totalBookingCount - deletedItem.bookingCount,
         }));
       }
       toast.success('추천 일정이 삭제되었습니다');
@@ -365,12 +362,11 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { label: '총 추천 일정', value: summary.totalItineraries, icon: MapPin },
           { label: '활성 일정', value: summary.activeItineraries, icon: Star },
-          { label: '총 조회수', value: summary.totalViewCount.toLocaleString(), icon: Eye },
-          { label: '총 예약수', value: summary.totalBookingCount.toLocaleString(), icon: TrendingUp }
+          { label: '총 조회수', value: summary.totalViewCount.toLocaleString(), icon: Eye }
         ].map((stat) => (
           <Card key={stat.label} className="border-2 border-black shadow-none rounded-none hover:bg-black hover:text-white transition-colors group">
             <CardContent className="p-4 flex items-center justify-between">
@@ -475,8 +471,8 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
                     </div>
                     <div className="flex items-center gap-1">
                       <Eye className="h-3 w-3 text-gray-400" />
-                      <span className="text-xs text-gray-400">조회/예약</span>
-                      <span className="font-bold">{itinerary.viewCount} / {itinerary.bookingCount}</span>
+                      <span className="text-xs text-gray-400">조회수</span>
+                      <span className="font-bold">{itinerary.viewCount}</span>
                     </div>
                   </div>
 

@@ -532,7 +532,6 @@ export interface RecommendedTripResponse {
   interests: string[];
   averageRating: number | null;
   viewCount: number;
-  bookingCount: number;
   isFeatured: boolean;
   category: string;           // Derived from first interest
   daysCount: number;

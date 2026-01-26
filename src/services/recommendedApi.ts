@@ -34,7 +34,6 @@ export interface RecommendedSummary {
   totalItineraries: number;
   activeItineraries: number;
   totalViewCount: number;
-  totalBookingCount: number;
 }
 
 /** Backend response for list item */
@@ -49,7 +48,6 @@ interface AdminRecommendedResponseRaw {
   interests: string[];
   averageRating: number;
   viewCount: number;
-  bookingCount: number;
   isActive: boolean;
   isFeatured: boolean;
   seoVisible: boolean;
@@ -95,7 +93,6 @@ interface AdminRecommendedDetailResponseRaw {
   interests: string[];
   averageRating: number;
   viewCount: number;
-  bookingCount: number;
   isActive: boolean;
   isFeatured: boolean;
   seoVisible: boolean;
@@ -169,7 +166,6 @@ export interface RecommendedItinerary {
   imageUrl: string;
   rating: number;
   viewCount: number;
-  bookingCount: number;
   active: boolean;
   featured: boolean;
   seoVisible: boolean;
@@ -225,7 +221,6 @@ function convertListItem(raw: AdminRecommendedResponseRaw): RecommendedItinerary
     imageUrl: raw.imageUrl || '',
     rating: raw.averageRating || 0,
     viewCount: raw.viewCount || 0,
-    bookingCount: raw.bookingCount || 0,
     active: raw.isActive,
     featured: raw.isFeatured,
     seoVisible: raw.seoVisible ?? true,
@@ -270,7 +265,6 @@ function convertDetail(raw: AdminRecommendedDetailResponseRaw): RecommendedItine
     imageUrl: raw.imageUrl || '',
     rating: raw.averageRating || 0,
     viewCount: raw.viewCount || 0,
-    bookingCount: raw.bookingCount || 0,
     active: raw.isActive,
     featured: raw.isFeatured,
     seoVisible: raw.seoVisible ?? true,
@@ -620,7 +614,6 @@ interface PublicRecommendedDetailResponseRaw {
   interests: string[];
   averageRating: number;
   viewCount: number;
-  bookingCount: number;
   targetAudience: string | null;
   seasonTag: string | null;
   days: {
@@ -653,7 +646,6 @@ export interface PublicRecommendedItinerary {
   interests: string[];
   averageRating: number;
   viewCount: number;
-  bookingCount: number;
   targetAudience: string | null;
   seasonTag: string | null;
   days: RecommendedDay[];
@@ -696,7 +688,6 @@ function convertPublicDetail(raw: PublicRecommendedDetailResponseRaw): PublicRec
     interests: raw.interests || [],
     averageRating: raw.averageRating || 0,
     viewCount: raw.viewCount || 0,
-    bookingCount: raw.bookingCount || 0,
     targetAudience: raw.targetAudience,
     seasonTag: raw.seasonTag,
     days: (raw.days || []).map(day => ({

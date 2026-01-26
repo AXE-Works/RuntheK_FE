@@ -84,7 +84,6 @@ export interface RelatedItinerary {
   interests: string[];
   averageRating: number;
   viewCount: number;
-  bookingCount: number;
   isFeatured: boolean;
   category: string;
   daysCount: number;

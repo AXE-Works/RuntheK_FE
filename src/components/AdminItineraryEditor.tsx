@@ -83,7 +83,6 @@ interface RecommendedItinerary {
   imageUrl: string;
   rating: number;
   viewCount: number;
-  bookingCount: number;
   active: boolean;
   featured: boolean;
   seoVisible: boolean;
@@ -535,7 +534,6 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
       imageUrl,
       rating,
       viewCount: itinerary?.viewCount || 0,
-      bookingCount: itinerary?.bookingCount || 0,
       active,
       featured,
       seoVisible,
