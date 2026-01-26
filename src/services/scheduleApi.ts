@@ -92,6 +92,7 @@ export const INTEREST_ID_TO_LABEL: Record<string, string> = {
   'nightlife': 'Nightlife',
   'temples': 'Temples & Spirituality',
   'traditional': 'Traditional Arts',
+  'local': 'Local Experience',
 };
 
 export const INTEREST_LABEL_TO_ID: Record<string, string> = {
@@ -103,6 +104,7 @@ export const INTEREST_LABEL_TO_ID: Record<string, string> = {
   'Nightlife': 'nightlife',
   'Temples & Spirituality': 'temples',
   'Traditional Arts': 'traditional',
+  'Local Experience': 'local',
 };
 
 const BUDGET_TO_LEVEL: Record<string, 'LOW' | 'MEDIUM' | 'HIGH'> = {
@@ -189,13 +191,18 @@ export function convertToApiRequest(
   };
 }
 
-export function convertToItineraryData(response: ScheduleGenerateResponse): ItineraryData {
+export function convertToItineraryData(response: ScheduleGenerateResponse, userDuration?: string): ItineraryData {
   const { meta, itinerary, travel_tips } = response;
+
+  // Fallback priority: meta.duration_days > userDuration > itinerary.length
+  const actualDays = meta.duration_days
+    ?? (userDuration ? parseDurationToDays(userDuration) : null)
+    ?? itinerary.length;
 
   return {
     id: String(response.id),
-    title: `${meta.duration_days} Days Korea Adventure`,
-    duration: `${meta.duration_days} days`,
+    title: `${actualDays} Days Korea Adventure`,
+    duration: `${actualDays} days`,
     interests: meta.interests.map(label => INTEREST_LABEL_TO_ID[label] || label),
     budget: LEVEL_TO_BUDGET[meta.budget_level] || 'mid-range',
     days: itinerary.map(day => ({
@@ -736,7 +743,7 @@ export async function generateSchedule(
     console.log('[Schedule API] Schedule generated successfully');
 
     return {
-      itinerary: convertToItineraryData(data),
+      itinerary: convertToItineraryData(data, userInput.duration),
       rawAIResponse: data,
       userBudget: userInput.budget,
     };

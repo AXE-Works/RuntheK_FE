@@ -410,6 +410,16 @@ export default function App() {
     };
   };
 
+  // Handle title change from ItineraryDisplay
+  const handleTitleChange = (newTitle: string) => {
+    if (currentItinerary) {
+      setCurrentItinerary({
+        ...currentItinerary,
+        title: newTitle,
+      });
+    }
+  };
+
   const handleConfirmItinerary = async (itinerary: ItineraryData) => {
     if (!currentUser) {
       toast.error('Please login to save your trip');
@@ -977,6 +987,7 @@ export default function App() {
                   onEdit={handleNewPlan}
                   onConfirm={handleConfirmItinerary}
                   onRegenerate={handleRegenerateItinerary}
+                  onTitleChange={handleTitleChange}
                   startDate={userStartDate}
                   selectedCities={userSelectedCities}
                 />

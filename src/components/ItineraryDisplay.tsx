@@ -18,11 +18,12 @@ interface ItineraryDisplayProps {
   onEdit: () => void;
   onConfirm?: (itinerary: ItineraryData) => void;
   onRegenerate?: (additionalNotes: string) => void;
+  onTitleChange?: (newTitle: string) => void;
   startDate?: Date;
   selectedCities?: string[];
 }
 
-export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, startDate, selectedCities }: ItineraryDisplayProps) {
+export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, onTitleChange, startDate, selectedCities }: ItineraryDisplayProps) {
   const { t } = useTranslation(['trips', 'common', 'tips']);
   const [editedTitle, setEditedTitle] = useState('');
   const [showEditTitle, setShowEditTitle] = useState(false);
@@ -130,8 +131,8 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, s
                                 onChange={(e) => setEditedTitle(e.target.value)}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
-                                        // Update the actual itinerary title
-                                        itinerary.title = editedTitle;
+                                        // Update the actual itinerary title via callback
+                                        onTitleChange?.(editedTitle);
                                         setShowEditTitle(false);
                                     }
                                     if (e.key === 'Escape') {
@@ -140,12 +141,12 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, s
                                     }
                                 }}
                             />
-                            <Button 
-                                size="sm" 
-                                variant="ghost" 
+                            <Button
+                                size="sm"
+                                variant="ghost"
                                 className="h-9 w-9 p-0 text-white hover:bg-white/20 rounded-full"
                                 onClick={() => {
-                                    itinerary.title = editedTitle;
+                                    onTitleChange?.(editedTitle);
                                     setShowEditTitle(false);
                                 }}
                             >
