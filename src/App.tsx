@@ -689,7 +689,7 @@ export default function App() {
             <div className="flex items-center space-x-1 sm:space-x-4">
               {/* Version Badge - Hidden on mobile */}
               <Badge variant="outline" className="hidden sm:inline-flex text-xs border-gray-300 text-gray-600">
-                v3.0.0
+                v1.0.0
               </Badge>
 
               {/* Language Selector */}
