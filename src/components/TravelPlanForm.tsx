@@ -20,6 +20,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { generateSchedule, ScheduleApiError, ScheduleGenerateResponse } from '../services/scheduleApi';
+import { TRAVEL_STYLE_OPTIONS } from '../constants/travelOptions';
 
 interface TravelPlanFormProps {
   onItineraryGenerated: (
@@ -147,11 +148,7 @@ const INTERESTS = [
   { id: 'nature', labelKey: 'nature', icon: '🏔️' }
 ];
 
-const TRAVEL_STYLE_OPTIONS = [
-  { value: 'relaxed', labelKey: 'relaxedLabel', descKey: 'relaxedDesc' },
-  { value: 'balanced', labelKey: 'balancedLabel', descKey: 'balancedDesc' },
-  { value: 'packed', labelKey: 'packedLabel', descKey: 'packedDesc' }
-];
+// TRAVEL_STYLE_OPTIONS is imported from '../constants/travelOptions'
 
 // Mock AI itinerary generation
 const generateMockItinerary = (userInput: UserInput, availableEvents: any[] = []): ItineraryData => {

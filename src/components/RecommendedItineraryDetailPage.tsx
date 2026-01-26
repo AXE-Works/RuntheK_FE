@@ -83,6 +83,7 @@ interface RecommendedItineraryDetailPageProps {
     category: string;
     cities?: string[];
     budget?: string;
+    travelStyle?: string;
     interests?: string[];
     startDate?: string | null;
     richContent?: ContentBlock[] | RichContentData;
@@ -329,9 +330,9 @@ export function RecommendedItineraryDetailPage({
               </p>
             </div>
             <div className="border-2 border-black p-4">
-              <DollarSign className="h-5 w-5 mb-2" aria-hidden="true" />
-              <p className="text-xs text-gray-500 uppercase font-medium">Budget</p>
-              <p className="font-bold uppercase">{banner.budget || 'N/A'}</p>
+              <Clock className="h-5 w-5 mb-2" aria-hidden="true" />
+              <p className="text-xs text-gray-500 uppercase font-medium">Travel Style</p>
+              <p className="font-bold">{banner.travelStyle || 'N/A'}</p>
             </div>
             <div className="border-2 border-black p-4">
               <Star className="h-5 w-5 mb-2" aria-hidden="true" />

@@ -529,6 +529,7 @@ export interface RecommendedTripResponse {
   duration: string;           // "5 days" format
   cities: string[];
   budget: string;             // "budget" | "mid-range" | "luxury"
+  travelStyle?: string;       // "Relaxed Pace" | "Balanced" | "Packed Schedule"
   interests: string[];
   averageRating: number | null;
   viewCount: number;

@@ -385,6 +385,7 @@ interface BannerData {
   // Additional fields from API
   startDate?: string | null;
   budget?: string;
+  travelStyle?: string;
   cities?: string[];
   interests?: string[];
   // Rich content from API (parsed JSON object or array for legacy)
@@ -596,6 +597,7 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
           const detailedBanner: BannerData = {
             ...banner,
             subtitle: detail.description || banner.subtitle,
+            travelStyle: detail.travelStyle || banner.travelStyle,
             richContent: parsedRichContent,
             detailedSchedule: detail.days?.map((day: RecommendedDayResponse) => ({
               day: day.dayNumber,

@@ -19,6 +19,9 @@ type DurationEnum = 'THREE_DAYS' | 'FIVE_DAYS' | 'SEVEN_DAYS' | 'TEN_PLUS_DAYS';
 /** Backend budget enum values */
 type BudgetEnum = 'BUDGET' | 'MID_RANGE' | 'LUXURY';
 
+/** Backend travel style enum values */
+type TravelStyleEnum = 'RELAXED' | 'BALANCED' | 'PACKED';
+
 /** Pagination info from backend */
 export interface PageInfo {
   page: number;
@@ -45,6 +48,7 @@ interface AdminRecommendedResponseRaw {
   duration: DurationEnum;
   cities: string[];
   budget: BudgetEnum;
+  travelStyle: TravelStyleEnum | null;
   interests: string[];
   averageRating: number;
   viewCount: number;
@@ -91,6 +95,7 @@ interface AdminRecommendedDetailResponseRaw {
   duration: DurationEnum;
   cities: string[];
   budget: BudgetEnum;
+  travelStyle: TravelStyleEnum | null;
   interests: string[];
   averageRating: number;
   viewCount: number;
@@ -164,6 +169,7 @@ export interface RecommendedItinerary {
   daysCount: number;
   cities: string[];
   budget: string;
+  travelStyle: string;
   interests: string[];
   imageUrl: string;
   rating: number;
@@ -210,6 +216,17 @@ function convertBudget(budget: BudgetEnum): string {
   return map[budget] || budget.toLowerCase();
 }
 
+/** Convert backend travel style enum to display string */
+function convertTravelStyle(travelStyle: TravelStyleEnum | null): string {
+  if (!travelStyle) return '';
+  const map: Record<TravelStyleEnum, string> = {
+    'RELAXED': 'Relaxed Pace',
+    'BALANCED': 'Balanced',
+    'PACKED': 'Packed Schedule',
+  };
+  return map[travelStyle] || travelStyle;
+}
+
 /** Convert raw list item to frontend type */
 function convertListItem(raw: AdminRecommendedResponseRaw): RecommendedItinerary {
   return {
@@ -220,6 +237,7 @@ function convertListItem(raw: AdminRecommendedResponseRaw): RecommendedItinerary
     daysCount: raw.daysCount || 0,
     cities: raw.cities || [],
     budget: convertBudget(raw.budget),
+    travelStyle: convertTravelStyle(raw.travelStyle),
     interests: raw.interests || [],
     imageUrl: raw.imageUrl || '',
     rating: raw.averageRating || 0,
@@ -303,6 +321,7 @@ function convertDetail(raw: AdminRecommendedDetailResponseRaw): RecommendedItine
     daysCount: days.length,
     cities: raw.cities || [],
     budget: convertBudget(raw.budget),
+    travelStyle: convertTravelStyle(raw.travelStyle),
     interests: raw.interests || [],
     imageUrl: raw.imageUrl || '',
     rating: raw.averageRating || 0,
@@ -461,6 +480,16 @@ function convertBudgetToEnum(budget: string): BudgetEnum {
   return 'MID_RANGE'; // default
 }
 
+/** Convert display travel style to backend enum */
+function convertTravelStyleToEnum(travelStyle: string | undefined): TravelStyleEnum {
+  if (!travelStyle) return 'BALANCED';
+  const normalized = travelStyle.toLowerCase();
+  if (normalized === 'relaxed') return 'RELAXED';
+  if (normalized === 'balanced') return 'BALANCED';
+  if (normalized === 'packed') return 'PACKED';
+  return 'BALANCED'; // default
+}
+
 /** Convert "09:00 AM" to "09:00" format */
 function convertTimeTo24Hour(time: string): string {
   const match = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
@@ -484,6 +513,7 @@ export interface CreateRecommendedRequest {
   duration: string;
   cities: string[];
   budget: string;
+  travelStyle?: string;
   interests: string[];
   isActive?: boolean;
   isFeatured?: boolean;
@@ -603,6 +633,7 @@ function convertToBackendRequest(params: CreateRecommendedRequest) {
     duration: convertDurationToEnum(params.duration),
     cities: params.cities,
     budget: convertBudgetToEnum(params.budget),
+    travelStyle: convertTravelStyleToEnum(params.travelStyle),
     interests: params.interests,
     isActive: params.isActive ?? false,
     isFeatured: params.isFeatured ?? false,
@@ -712,6 +743,7 @@ interface PublicRecommendedDetailResponseRaw {
   duration: string; // Already formatted as "3 days", etc.
   cities: string[];
   budget: string; // Already formatted as "budget", "mid-range", "luxury"
+  travelStyle: string | null; // Already formatted as "Relaxed Pace", "Balanced", "Packed Schedule"
   interests: string[];
   averageRating: number;
   viewCount: number;
@@ -745,6 +777,7 @@ export interface PublicRecommendedItinerary {
   duration: string;
   cities: string[];
   budget: string;
+  travelStyle: string;
   interests: string[];
   averageRating: number;
   viewCount: number;
@@ -809,6 +842,7 @@ function convertPublicDetail(raw: PublicRecommendedDetailResponseRaw): PublicRec
     duration: raw.duration,
     cities: raw.cities || [],
     budget: raw.budget,
+    travelStyle: raw.travelStyle || '',
     interests: raw.interests || [],
     averageRating: raw.averageRating || 0,
     viewCount: raw.viewCount || 0,

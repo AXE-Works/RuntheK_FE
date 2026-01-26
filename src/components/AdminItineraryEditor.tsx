@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { generateSchedule, recommendPlaces, ScheduleApiError } from '../services/scheduleApi';
 import { toast } from 'sonner';
+import { TRAVEL_STYLE_OPTIONS, TRAVEL_STYLE_TO_BUDGET_API } from '../constants/travelOptions';
 
 interface Activity {
   time: string;
@@ -79,6 +80,7 @@ interface RecommendedItinerary {
   duration: string;
   cities: string[];
   budget: string;
+  travelStyle: string;
   interests: string[];
   imageUrl: string;
   rating: number;
@@ -130,20 +132,9 @@ const AI_RECOMMEND_CATEGORIES = [
   'Nightlife'
 ];
 
-const TRAVEL_STYLE_OPTIONS = [
-  { value: 'relaxed', label: 'Relaxed Pace', description: '2-3 activities per day, plenty of free time' },
-  { value: 'balanced', label: 'Balanced', description: '4-5 activities per day with breaks' },
-  { value: 'packed', label: 'Packed Schedule', description: 'Maximize experiences, full days' }
-];
+// TRAVEL_STYLE_OPTIONS and TRAVEL_STYLE_TO_BUDGET_API are imported from '../constants/travelOptions'
 
 const MAX_INTERESTS = 3;
-
-// Travel Style 매핑: AdminItineraryEditor -> scheduleApi (budget로 변환)
-const BUDGET_TO_API: Record<string, string> = {
-  'relaxed': 'budget',
-  'balanced': 'mid-range',
-  'packed': 'luxury',
-};
 
 // AI 응답을 Day[] 형식으로 변환
 const convertAIResponseToDays = (itineraryData: {
@@ -177,7 +168,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [cities, setCities] = useState<string[]>([]);
   const [customCity, setCustomCity] = useState('');
-  const [budget, setBudget] = useState('balanced');
+  const [travelStyle, setTravelStyle] = useState('balanced');
   const [interests, setInterests] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState('');
   const [rating, setRating] = useState(4.5);
@@ -318,7 +309,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
       const parsedDate = itinerary.createdAt ? new Date(itinerary.createdAt.split('T')[0]) : undefined;
       setStartDate(parsedDate);
       setCities(itinerary.cities);
-      setBudget(itinerary.budget);
+      setTravelStyle(itinerary.travelStyle || 'balanced');
       setInterests(itinerary.interests);
       setImageUrl(itinerary.imageUrl);
       setRating(itinerary.rating);
@@ -542,7 +533,8 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
       description,
       duration,
       cities,
-      budget,
+      budget: TRAVEL_STYLE_TO_BUDGET_API[travelStyle] || 'mid-range',
+      travelStyle,
       interests,
       imageUrl,
       rating,
@@ -649,7 +641,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
         prompt: prompt,
         destination: destination,
         interests: interests,
-        budget: BUDGET_TO_API[budget] || 'mid-range',
+        budget: TRAVEL_STYLE_TO_BUDGET_API[travelStyle] || 'mid-range',
         count: 3,
       };
 
@@ -1213,11 +1205,11 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {TRAVEL_STYLE_OPTIONS.map((option) => {
-                    const isSelected = budget === option.value;
+                    const isSelected = travelStyle === option.value;
                     return (
                       <div
                         key={option.value}
-                        onClick={() => setBudget(option.value)}
+                        onClick={() => setTravelStyle(option.value)}
                         className={`
                           cursor-pointer transition-all duration-200 border-2 rounded-xl p-6 flex flex-col items-center justify-center text-center gap-2
                           ${isSelected
