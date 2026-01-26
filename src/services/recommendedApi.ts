@@ -257,13 +257,22 @@ function convertDetail(raw: AdminRecommendedDetailResponseRaw): RecommendedItine
         return block;
       });
 
+      // Extract separate fields from contentBlocks if they exist there
+      const extractFromContentBlocks = (type: string): string[] => {
+        const block = convertedContentBlocks.find((b: { type: string }) => b.type === type);
+        if (block && Array.isArray(block.content)) {
+          return block.content;
+        }
+        return [];
+      };
+
       richContent = {
         introduction: parsed.introduction || '',
-        highlights: parsed.highlights || [],
-        tips: parsed.tips || [],
-        includes: parsed.includes || [],
-        excludes: parsed.excludes || [],
-        whatToBring: parsed.whatToBring || [],
+        highlights: parsed.highlights?.length ? parsed.highlights : extractFromContentBlocks('highlights'),
+        tips: parsed.tips?.length ? parsed.tips : extractFromContentBlocks('tips'),
+        includes: parsed.includes?.length ? parsed.includes : extractFromContentBlocks('includes'),
+        excludes: parsed.excludes?.length ? parsed.excludes : extractFromContentBlocks('excludes'),
+        whatToBring: parsed.whatToBring?.length ? parsed.whatToBring : extractFromContentBlocks('whatToBring'),
         contentBlocks: convertedContentBlocks,
       };
     } catch {
@@ -498,6 +507,11 @@ export interface CreateRecommendedRequest {
   }[];
   richContent?: {
     introduction?: string;
+    highlights?: string[];
+    tips?: string[];
+    includes?: string[];
+    excludes?: string[];
+    whatToBring?: string[];
     contentBlocks?: {
       id: string;
       type: string;
@@ -510,6 +524,78 @@ export interface CreateRecommendedRequest {
 
 /** Convert frontend request to backend format */
 function convertToBackendRequest(params: CreateRecommendedRequest) {
+  // Build contentBlocks by merging separate fields with existing contentBlocks
+  const buildContentBlocks = () => {
+    if (!params.richContent) return [];
+
+    const blocks: { id: string; type: string; content: string; title: string }[] = [];
+    const existingTypes = new Set(params.richContent.contentBlocks?.map(b => b.type) || []);
+
+    // Add highlights if exists and not already in contentBlocks
+    if (params.richContent.highlights && params.richContent.highlights.length > 0 && !existingTypes.has('highlights')) {
+      blocks.push({
+        id: `highlights-${Date.now()}`,
+        type: 'highlights',
+        content: params.richContent.highlights.join('\n'),
+        title: 'Highlights',
+      });
+    }
+
+    // Add tips if exists
+    if (params.richContent.tips && params.richContent.tips.length > 0 && !existingTypes.has('tips')) {
+      blocks.push({
+        id: `tips-${Date.now()}`,
+        type: 'tips',
+        content: params.richContent.tips.join('\n'),
+        title: 'Travel Tips',
+      });
+    }
+
+    // Add includes if exists
+    if (params.richContent.includes && params.richContent.includes.length > 0 && !existingTypes.has('includes')) {
+      blocks.push({
+        id: `includes-${Date.now()}`,
+        type: 'includes',
+        content: params.richContent.includes.join('\n'),
+        title: "What's Included",
+      });
+    }
+
+    // Add excludes if exists
+    if (params.richContent.excludes && params.richContent.excludes.length > 0 && !existingTypes.has('excludes')) {
+      blocks.push({
+        id: `excludes-${Date.now()}`,
+        type: 'excludes',
+        content: params.richContent.excludes.join('\n'),
+        title: "What's Not Included",
+      });
+    }
+
+    // Add whatToBring if exists
+    if (params.richContent.whatToBring && params.richContent.whatToBring.length > 0 && !existingTypes.has('whatToBring')) {
+      blocks.push({
+        id: `whatToBring-${Date.now()}`,
+        type: 'whatToBring',
+        content: params.richContent.whatToBring.join('\n'),
+        title: 'What to Bring',
+      });
+    }
+
+    // Add existing contentBlocks
+    if (params.richContent.contentBlocks) {
+      params.richContent.contentBlocks.forEach(block => {
+        blocks.push({
+          id: block.id,
+          type: block.type,
+          content: Array.isArray(block.content) ? block.content.join('\n') : block.content,
+          title: block.title || '',
+        });
+      });
+    }
+
+    return blocks;
+  };
+
   return {
     title: params.title,
     description: params.description || '',
@@ -540,12 +626,7 @@ function convertToBackendRequest(params: CreateRecommendedRequest) {
     })),
     richContent: params.richContent ? {
       introduction: params.richContent.introduction || '',
-      contentBlocks: params.richContent.contentBlocks?.map(block => ({
-        id: block.id,
-        type: block.type,
-        content: Array.isArray(block.content) ? block.content.join('\n') : block.content,
-        title: block.title || '',
-      })) || [],
+      contentBlocks: buildContentBlocks(),
       conclusion: params.richContent.conclusion || '',
     } : null,
   };
@@ -684,14 +765,36 @@ function convertPublicDetail(raw: PublicRecommendedDetailResponseRaw): PublicRec
       const parsed = typeof raw.richContent === 'string'
         ? JSON.parse(raw.richContent)
         : raw.richContent;
+
+      // Convert contentBlocks content from string to array for list-type blocks
+      const convertedContentBlocks = (parsed.contentBlocks || []).map((block: { id: string; type: string; content: string | string[]; title?: string }) => {
+        const listTypes = ['list', 'highlights', 'tips', 'includes', 'excludes', 'whatToBring'];
+        if (listTypes.includes(block.type) && typeof block.content === 'string') {
+          return {
+            ...block,
+            content: block.content.split('\n').filter((item: string) => item.trim() !== '')
+          };
+        }
+        return block;
+      });
+
+      // Extract separate fields from contentBlocks if they exist there
+      const extractFromContentBlocks = (type: string): string[] => {
+        const block = convertedContentBlocks.find((b: { type: string }) => b.type === type);
+        if (block && Array.isArray(block.content)) {
+          return block.content;
+        }
+        return [];
+      };
+
       richContent = {
         introduction: parsed.introduction || '',
-        highlights: parsed.highlights || [],
-        tips: parsed.tips || [],
-        includes: parsed.includes || [],
-        excludes: parsed.excludes || [],
-        whatToBring: parsed.whatToBring || [],
-        contentBlocks: parsed.contentBlocks || [],
+        highlights: parsed.highlights?.length ? parsed.highlights : extractFromContentBlocks('highlights'),
+        tips: parsed.tips?.length ? parsed.tips : extractFromContentBlocks('tips'),
+        includes: parsed.includes?.length ? parsed.includes : extractFromContentBlocks('includes'),
+        excludes: parsed.excludes?.length ? parsed.excludes : extractFromContentBlocks('excludes'),
+        whatToBring: parsed.whatToBring?.length ? parsed.whatToBring : extractFromContentBlocks('whatToBring'),
+        contentBlocks: convertedContentBlocks,
       };
     } catch {
       richContent = undefined;

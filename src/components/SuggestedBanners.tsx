@@ -386,8 +386,18 @@ interface BannerData {
   startDate?: string | null;
   budget?: string;
   cities?: string[];
-  // Rich content from API (parsed JSON array)
-  richContent?: any[];
+  interests?: string[];
+  // Rich content from API (parsed JSON object or array for legacy)
+  richContent?: {
+    introduction?: string;
+    highlights?: string[];
+    tips?: string[];
+    includes?: string[];
+    excludes?: string[];
+    whatToBring?: string[];
+    contentBlocks?: any[];
+    conclusion?: string;
+  } | any[];
   // Schedule data (from API or mock)
   detailedSchedule?: any[];
 }
@@ -572,7 +582,7 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
           const detail = await getRecommendedTripDetail(banner.id);
 
           // Parse richContent if it's a JSON string
-          let parsedRichContent: any[] | undefined;
+          let parsedRichContent: BannerData['richContent'] | undefined;
           if (detail.richContent) {
             try {
               parsedRichContent = JSON.parse(detail.richContent);
@@ -636,7 +646,7 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
         const detail = await getRecommendedTripDetail(banner.id);
 
         // Parse richContent if it's a JSON string
-        let parsedRichContent: any[] | undefined;
+        let parsedRichContent: BannerData['richContent'] | undefined;
         if (detail.richContent) {
           try {
             parsedRichContent = JSON.parse(detail.richContent);

@@ -37,6 +37,7 @@ import { MyTrip } from './components/MyTrip';
 import { HeroSection } from './components/HeroSection';
 import { AuthModal } from './components/AuthModal';
 import { BannerDetailPage } from './components/BannerDetailPage';
+import { RecommendedItineraryDetailPage } from './components/RecommendedItineraryDetailPage';
 import { Button } from './components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
@@ -802,9 +803,9 @@ export default function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-        {/* Banner Detail Page - Full Screen */}
+        {/* Recommended Itinerary Detail Page - Full Screen */}
         {selectedBannerDetail ? (
-          <BannerDetailPage
+          <RecommendedItineraryDetailPage
             banner={selectedBannerDetail}
             onBack={() => setSelectedBannerDetail(null)}
             onApplyToTrip={handleDestinationSelect}
