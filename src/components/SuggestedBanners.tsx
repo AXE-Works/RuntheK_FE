@@ -596,6 +596,7 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
                 location: act.location || '',
                 description: act.description || '',
                 price: act.estimatedCost || '',
+                googleMapsUrl: act.googleMapsUrl || undefined,
                 isEvent: act.isEvent || false,
                 eventType: act.eventType || ''
               }))
@@ -658,6 +659,7 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
               location: act.location || '',
               description: act.description || '',
               price: act.estimatedCost || '',
+              googleMapsUrl: act.googleMapsUrl || undefined,
               isEvent: act.isEvent || false,
               eventType: act.eventType || ''
             }))

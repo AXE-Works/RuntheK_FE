@@ -70,6 +70,7 @@ interface ActivityResponseRaw {
   isEvent: boolean;
   eventId: string | null;
   eventType: string | null;
+  googleMapsUrl: string | null;
 }
 
 /** Backend day response */
@@ -160,6 +161,7 @@ export interface RecommendedItinerary {
   title: string;
   description: string;
   duration: string;
+  daysCount: number;
   cities: string[];
   budget: string;
   interests: string[];
@@ -215,6 +217,7 @@ function convertListItem(raw: AdminRecommendedResponseRaw): RecommendedItinerary
     title: raw.title,
     description: raw.description || '',
     duration: convertDuration(raw.duration),
+    daysCount: raw.daysCount || 0,
     cities: raw.cities || [],
     budget: convertBudget(raw.budget),
     interests: raw.interests || [],
@@ -268,11 +271,27 @@ function convertDetail(raw: AdminRecommendedDetailResponseRaw): RecommendedItine
     }
   }
 
+  const days = (raw.days || []).map(day => ({
+    day: day.dayNumber,
+    title: day.title,
+    activities: (day.activities || []).map(act => ({
+      time: act.activityTime || '',
+      activity: act.activityName,
+      location: act.location || '',
+      description: act.description || '',
+      estimatedCost: act.estimatedCost || '',
+      googleMapsUrl: act.googleMapsUrl || undefined,
+      isEvent: act.isEvent,
+      eventType: act.eventType || undefined,
+    })),
+  }));
+
   return {
     id: raw.id,
     title: raw.title,
     description: raw.description || '',
     duration: convertDuration(raw.duration),
+    daysCount: days.length,
     cities: raw.cities || [],
     budget: convertBudget(raw.budget),
     interests: raw.interests || [],
@@ -283,19 +302,7 @@ function convertDetail(raw: AdminRecommendedDetailResponseRaw): RecommendedItine
     featured: raw.isFeatured,
     seoVisible: raw.seoVisible ?? true,
     displayOrder: raw.displayOrder || 0,
-    days: (raw.days || []).map(day => ({
-      day: day.dayNumber,
-      title: day.title,
-      activities: (day.activities || []).map(act => ({
-        time: act.activityTime || '',
-        activity: act.activityName,
-        location: act.location || '',
-        description: act.description || '',
-        estimatedCost: act.estimatedCost || '',
-        isEvent: act.isEvent,
-        eventType: act.eventType || undefined,
-      })),
-    })),
+    days,
     richContent,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
@@ -640,6 +647,7 @@ interface PublicRecommendedDetailResponseRaw {
       location: string;
       description: string;
       estimatedCost: string;
+      googleMapsUrl: string | null;
     }[];
   }[];
   richContent: string | null;
@@ -712,6 +720,7 @@ function convertPublicDetail(raw: PublicRecommendedDetailResponseRaw): PublicRec
         location: act.location || '',
         description: act.description || '',
         estimatedCost: act.estimatedCost || '',
+        googleMapsUrl: act.googleMapsUrl || undefined,
       })),
     })),
     richContent,

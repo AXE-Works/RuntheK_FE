@@ -461,7 +461,7 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3 text-gray-400" />
                       <span className="text-xs text-gray-400">기간</span>
-                      <span className="font-bold">{itinerary.duration}</span>
+                      <span className="font-bold">{itinerary.daysCount || itinerary.days.length || 0} days</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <MapPin className="h-3 w-3 text-gray-400" />
@@ -518,7 +518,7 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
                       ) : (
                         <>
                           <ChevronDown className="h-4 w-4 mr-2" />
-                          일정 보기 ({parseInt(itinerary.duration) || itinerary.days.length || 0}일)
+                          일정 보기 ({itinerary.daysCount || itinerary.days.length || 0}일)
                         </>
                       )}
                     </Button>
