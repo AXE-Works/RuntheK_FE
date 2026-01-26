@@ -128,5 +128,17 @@
     "balancedDesc": "Mix of activities and downtime",
     "packedLabel": "Packed",
     "packedDesc": "Action-packed, maximize every moment"
+  },
+  "generating": {
+    "title": "Creating Your Perfect Trip",
+    "steps": {
+      "analyzing": "Analyzing your preferences...",
+      "findingDestinations": "Finding best destinations...",
+      "creatingItinerary": "Creating your personalized itinerary...",
+      "addingRecommendations": "Adding local recommendations...",
+      "finalizing": "Finalizing details..."
+    },
+    "tipPrefix": "Travel Tip",
+    "pleaseWait": "This usually takes about 30-50 seconds"
   }
 }

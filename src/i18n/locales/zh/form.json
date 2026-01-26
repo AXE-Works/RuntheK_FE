@@ -126,5 +126,17 @@
     "balancedDesc": "活动与休息的平衡搭配",
     "packedLabel": "充实",
     "packedDesc": "行程紧凑，充分利用每一刻"
+  },
+  "generating": {
+    "title": "正在创建您的完美旅程",
+    "steps": {
+      "analyzing": "正在分析您的偏好...",
+      "findingDestinations": "正在寻找最佳目的地...",
+      "creatingItinerary": "正在创建个性化行程...",
+      "addingRecommendations": "正在添加当地推荐...",
+      "finalizing": "正在完善细节..."
+    },
+    "tipPrefix": "旅行小贴士",
+    "pleaseWait": "通常需要30-50秒"
   }
 }

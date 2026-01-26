@@ -126,5 +126,17 @@
     "balancedDesc": "アクティビティと休憩のバランス",
     "packedLabel": "充実",
     "packedDesc": "盛りだくさん、毎日を最大限に活用"
+  },
+  "generating": {
+    "title": "完璧な旅行プランを作成中",
+    "steps": {
+      "analyzing": "ご希望を分析中...",
+      "findingDestinations": "最適な目的地を検索中...",
+      "creatingItinerary": "オーダーメイドの旅程を作成中...",
+      "addingRecommendations": "ローカルおすすめを追加中...",
+      "finalizing": "詳細を仕上げ中..."
+    },
+    "tipPrefix": "旅行のヒント",
+    "pleaseWait": "通常30〜50秒ほどかかります"
   }
 }

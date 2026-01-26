@@ -36,6 +36,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { MyTrip } from './components/MyTrip';
 import { HeroSection } from './components/HeroSection';
 import { AuthModal } from './components/AuthModal';
+import { GeneratingOverlay } from './components/GeneratingOverlay';
 import { BannerDetailPage } from './components/BannerDetailPage';
 import { RecommendedItineraryDetailPage } from './components/RecommendedItineraryDetailPage';
 import { Button } from './components/ui/button';
@@ -152,6 +153,7 @@ export default function App() {
   const [userStartDate, setUserStartDate] = useState<Date | undefined>(undefined);
   const [userSelectedCities, setUserSelectedCities] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStartTime, setGenerationStartTime] = useState<number | null>(null);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [activeTab, setActiveTab] = useState("plan");
   const [showHero, setShowHero] = useState(false); // Landing page disabled
@@ -274,13 +276,19 @@ export default function App() {
     }
   };
 
+  // Wrapper function to manage both isGenerating and generationStartTime
+  const handleSetIsGenerating = (generating: boolean) => {
+    setIsGenerating(generating);
+    setGenerationStartTime(generating ? Date.now() : null);
+  };
+
   const handleRegenerateItinerary = async (additionalNotes: string) => {
     if (!currentItinerary || !rawAIResponse) {
       toast.error('No itinerary to modify. Please generate an itinerary first.');
       return;
     }
 
-    setIsGenerating(true);
+    handleSetIsGenerating(true);
 
     try {
       // Call the modify API with the schedule ID and modification prompt
@@ -300,7 +308,7 @@ export default function App() {
         toast.error('Failed to regenerate itinerary. Please try again.');
       }
     } finally {
-      setIsGenerating(false);
+      handleSetIsGenerating(false);
     }
   };
 
@@ -657,7 +665,7 @@ export default function App() {
   // }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Seo {...buildHomeSeo()} />
       {/* Header */}
       <motion.header 
@@ -802,7 +810,7 @@ export default function App() {
       </motion.header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 w-full">
         {/* Recommended Itinerary Detail Page - Full Screen */}
         {selectedBannerDetail ? (
           <RecommendedItineraryDetailPage
@@ -833,7 +841,7 @@ export default function App() {
                 <TravelPlanForm
                   onItineraryGenerated={handleItineraryGenerated}
                   isGenerating={isGenerating}
-                  setIsGenerating={setIsGenerating}
+                  setIsGenerating={handleSetIsGenerating}
                   selectedDestination={selectedDestination}
                   onDestinationSelect={handleDestinationSelect}
                   currentUser={currentUser}
@@ -1019,7 +1027,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-16">
+      <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center space-y-4">
             <div className="flex justify-center space-x-6 text-sm text-gray-600">
@@ -1035,10 +1043,16 @@ export default function App() {
       </footer>
 
       {/* Auth Modal */}
-      <AuthModal 
+      <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onAuthSuccess={handleAuthSuccess}
+      />
+
+      {/* Generating Overlay */}
+      <GeneratingOverlay
+        isVisible={isGenerating}
+        startTime={generationStartTime}
       />
     </div>
   );

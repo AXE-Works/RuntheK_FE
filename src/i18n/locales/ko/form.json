@@ -128,5 +128,17 @@
     "balancedDesc": "활동과 휴식의 적절한 조화",
     "packedLabel": "알차게",
     "packedDesc": "빽빽한 일정, 매 순간을 최대한 활용"
+  },
+  "generating": {
+    "title": "완벽한 여행 계획 생성 중",
+    "steps": {
+      "analyzing": "선호도 분석 중...",
+      "findingDestinations": "최적의 여행지 탐색 중...",
+      "creatingItinerary": "맞춤 일정 생성 중...",
+      "addingRecommendations": "로컬 추천 추가 중...",
+      "finalizing": "세부 사항 마무리 중..."
+    },
+    "tipPrefix": "여행 팁",
+    "pleaseWait": "보통 30~50초 정도 소요됩니다"
   }
 }
