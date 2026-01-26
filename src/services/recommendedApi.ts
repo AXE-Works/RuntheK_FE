@@ -240,6 +240,20 @@ function convertDetail(raw: AdminRecommendedDetailResponseRaw): RecommendedItine
       const parsed = typeof raw.richContent === 'string'
         ? JSON.parse(raw.richContent)
         : raw.richContent;
+
+      // Convert contentBlocks content from string to array for list-type blocks
+      const convertedContentBlocks = (parsed.contentBlocks || []).map((block: { id: string; type: string; content: string | string[]; title?: string }) => {
+        const listTypes = ['list', 'highlights', 'tips', 'includes', 'excludes', 'whatToBring'];
+        if (listTypes.includes(block.type) && typeof block.content === 'string') {
+          // Split string by newline and filter out empty strings
+          return {
+            ...block,
+            content: block.content.split('\n').filter((item: string) => item.trim() !== '')
+          };
+        }
+        return block;
+      });
+
       richContent = {
         introduction: parsed.introduction || '',
         highlights: parsed.highlights || [],
@@ -247,7 +261,7 @@ function convertDetail(raw: AdminRecommendedDetailResponseRaw): RecommendedItine
         includes: parsed.includes || [],
         excludes: parsed.excludes || [],
         whatToBring: parsed.whatToBring || [],
-        contentBlocks: parsed.contentBlocks || [],
+        contentBlocks: convertedContentBlocks,
       };
     } catch {
       richContent = undefined;
@@ -552,9 +566,9 @@ export async function createRecommendedItinerary(
   }
 
   const result = await response.json();
-  // Response may be wrapped in { success: true, data: ... } or direct
+  // POST response only contains partial data, fetch full detail
   const data = result.data || result;
-  return convertDetail(data);
+  return getRecommendedDetail(data.id);
 }
 
 /**
@@ -579,9 +593,8 @@ export async function updateRecommendedItinerary(
     throw new Error(errorData.error?.message || `Failed to update itinerary: ${response.status}`);
   }
 
-  const result = await response.json();
-  const data = result.data || result;
-  return convertDetail(data);
+  // PUT response only contains partial data, fetch full detail
+  return getRecommendedDetail(id);
 }
 
 /**

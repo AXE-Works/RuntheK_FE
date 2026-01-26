@@ -1900,7 +1900,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                       </Button>
                     </div>
                     <ul className="space-y-2">
-                      {(block.content as string[]).map((item, idx) => (
+                      {(Array.isArray(block.content) ? block.content : []).map((item, idx) => (
                         <li key={idx} className="flex items-center justify-between p-3 border-2 border-gray-300 bg-gray-50">
                           <span className="flex items-center gap-2">
                             {block.type === 'highlights' && '✓'}
@@ -1921,7 +1921,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                         </li>
                       ))}
                     </ul>
-                    {(block.content as string[]).length === 0 && (
+                    {(Array.isArray(block.content) ? block.content : []).length === 0 && (
                       <p className="text-sm text-gray-400 text-center py-4 border-2 border-dashed border-gray-300">
                         아직 항목이 없습니다. 위에서 항목을 추가하세요.
                       </p>
@@ -2057,10 +2057,10 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                           </div>
                         )}
 
-                        {block.type === 'list' && (block.content as string[]).length > 0 && (
+                        {block.type === 'list' && (Array.isArray(block.content) ? block.content : []).length > 0 && (
                           <div className="bg-gray-50 border-2 border-black p-6">
                             <ul className="space-y-2">
-                              {(block.content as string[]).map((item, idx) => (
+                              {(Array.isArray(block.content) ? block.content : []).map((item, idx) => (
                                 <li key={idx} className="flex items-start gap-2 text-gray-800">
                                   <span className="font-bold">•</span>
                                   <span>{item}</span>
@@ -2070,14 +2070,14 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                           </div>
                         )}
 
-                        {block.type === 'highlights' && (block.content as string[]).length > 0 && (
+                        {block.type === 'highlights' && (Array.isArray(block.content) ? block.content : []).length > 0 && (
                           <div className="bg-yellow-50 border-2 border-black p-6">
                             <h3 className="text-xl font-bold mb-4 uppercase flex items-center gap-2">
                               <Star className="h-5 w-5" />
                               주요 하이라이트
                             </h3>
                             <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              {(block.content as string[]).map((highlight, idx) => (
+                              {(Array.isArray(block.content) ? block.content : []).map((highlight, idx) => (
                                 <li key={idx} className="flex items-start gap-2">
                                   <span className="text-yellow-600 font-bold">✓</span>
                                   <span className="text-gray-800">{highlight}</span>
@@ -2087,11 +2087,11 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                           </div>
                         )}
 
-                        {block.type === 'tips' && (block.content as string[]).length > 0 && (
+                        {block.type === 'tips' && (Array.isArray(block.content) ? block.content : []).length > 0 && (
                           <div className="bg-blue-50 border-2 border-black p-6">
                             <h3 className="text-xl font-bold mb-4 uppercase">💡 여행 팁</h3>
                             <ul className="space-y-2">
-                              {(block.content as string[]).map((tip, idx) => (
+                              {(Array.isArray(block.content) ? block.content : []).map((tip, idx) => (
                                 <li key={idx} className="flex items-start gap-2 text-gray-800">
                                   <span className="text-blue-600 font-bold">•</span>
                                   <span>{tip}</span>
@@ -2101,13 +2101,13 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                           </div>
                         )}
 
-                        {block.type === 'includes' && (block.content as string[]).length > 0 && (
+                        {block.type === 'includes' && (Array.isArray(block.content) ? block.content : []).length > 0 && (
                           <div className="border-2 border-black bg-green-50 p-6">
                             <h3 className="text-lg font-bold mb-4 uppercase text-green-900">
                               ✓ 포함 사항
                             </h3>
                             <ul className="space-y-2">
-                              {(block.content as string[]).map((item, idx) => (
+                              {(Array.isArray(block.content) ? block.content : []).map((item, idx) => (
                                 <li key={idx} className="flex items-start gap-2 text-sm">
                                   <span className="text-green-600 font-bold">✓</span>
                                   <span>{item}</span>
@@ -2117,13 +2117,13 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                           </div>
                         )}
 
-                        {block.type === 'excludes' && (block.content as string[]).length > 0 && (
+                        {block.type === 'excludes' && (Array.isArray(block.content) ? block.content : []).length > 0 && (
                           <div className="border-2 border-black bg-red-50 p-6">
                             <h3 className="text-lg font-bold mb-4 uppercase text-red-900">
                               ✗ 불포함 사항
                             </h3>
                             <ul className="space-y-2">
-                              {(block.content as string[]).map((item, idx) => (
+                              {(Array.isArray(block.content) ? block.content : []).map((item, idx) => (
                                 <li key={idx} className="flex items-start gap-2 text-sm">
                                   <span className="text-red-600 font-bold">✗</span>
                                   <span>{item}</span>

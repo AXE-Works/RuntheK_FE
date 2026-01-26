@@ -101,9 +101,18 @@ export function AdminItineraryManager({ currentUser }: AdminItineraryManagerProp
     setShowEditor(true);
   };
 
-  const handleEdit = (itinerary: RecommendedItinerary) => {
-    setEditingItinerary(itinerary);
-    setShowEditor(true);
+  const handleEdit = async (itinerary: RecommendedItinerary) => {
+    setLoadingDetail(itinerary.id);
+    try {
+      const detail = await getRecommendedDetail(itinerary.id);
+      setEditingItinerary(detail);
+      setShowEditor(true);
+    } catch (err) {
+      console.error('Failed to fetch itinerary detail:', err);
+      toast.error('일정 상세 정보를 불러오는데 실패했습니다');
+    } finally {
+      setLoadingDetail(null);
+    }
   };
 
   const [deleting, setDeleting] = useState<string | null>(null);
