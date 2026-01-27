@@ -100,6 +100,7 @@ export function RecommendedItineraryDetailPage({
 }: RecommendedItineraryDetailPageProps) {
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set([1])); // Day 1 expanded by default
   const [selectedDayForMap, setSelectedDayForMap] = useState<number>(1);
+  const [hoveredActivityIndex, setHoveredActivityIndex] = useState<number | null>(null);
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -622,9 +623,15 @@ export function RecommendedItineraryDetailPage({
                             {day.activities.map((activity, actIdx) => (
                               <div
                                 key={actIdx}
-                                className={`relative flex gap-4 ${
+                                className={`relative flex gap-4 transition-all duration-200 ${
                                   activity.isEvent ? 'bg-yellow-50' : ''
-                                }`}
+                                } ${hoveredActivityIndex === actIdx && selectedDayForMap === day.day ? 'ring-2 ring-black ring-offset-2' : ''}`}
+                                onMouseEnter={() => {
+                                  if (selectedDayForMap === day.day) {
+                                    setHoveredActivityIndex(actIdx);
+                                  }
+                                }}
+                                onMouseLeave={() => setHoveredActivityIndex(null)}
                               >
                                 {/* Timeline Indicator */}
                                 <div className="flex-shrink-0 flex flex-col items-center">
@@ -722,6 +729,7 @@ export function RecommendedItineraryDetailPage({
                       height="100%"
                       showRoute={true}
                       zoom={13}
+                      focusedIndex={hoveredActivityIndex}
                     />
                   </div>
                 </div>
