@@ -215,4 +215,36 @@ export async function updateProfile(data: UpdateProfileRequest): Promise<ApiResp
   return response.json();
 }
 
+/**
+ * Upload file to server (Admin only)
+ * @param file - File to upload
+ * @returns Upload result with filename and URL
+ */
+export interface FileUploadResponse {
+  filename: string;
+  url: string;
+}
+
+export async function uploadFile(file: File): Promise<ApiResponse<FileUploadResponse>> {
+  const accessToken = localStorage.getItem('accessToken');
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/admin/files/upload`, {
+    method: 'POST',
+    headers: {
+      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || 'Failed to upload file');
+  }
+
+  return response.json();
+}
+
 export { API_BASE_URL };
