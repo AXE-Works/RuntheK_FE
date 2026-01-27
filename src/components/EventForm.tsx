@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -6,9 +6,11 @@ import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Upload, Loader2 } from 'lucide-react';
+import { Upload, Loader2, ImageIcon, X } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { motion } from 'motion/react';
+import { uploadFile, API_BASE_URL } from '@/utils/api';
+import { toast } from 'sonner';
 
 interface EventFormProps {
   newEvent: any;
@@ -20,6 +22,88 @@ interface EventFormProps {
 }
 
 export function EventForm({ newEvent, setNewEvent, editingEvent, onSubmit, onCancel, isSubmitting = false }: EventFormProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Get full URL for uploaded images
+  const getImageUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    // For server-uploaded images, prepend API base URL (without /api/v1)
+    const baseUrl = API_BASE_URL.replace('/api/v1', '');
+    return `${baseUrl}${url}`;
+  };
+
+  const handleUploadFile = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('파일 크기는 10MB를 초과할 수 없습니다.');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const response = await uploadFile(file);
+      if (response.success && response.data) {
+        setNewEvent((prev: any) => ({ ...prev, imageUrl: response.data.url }));
+        toast.success('이미지가 업로드되었습니다.');
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast.error('이미지 업로드에 실패했습니다.');
+    } finally {
+      setIsUploading(false);
+    }
+  }, [setNewEvent]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleUploadFile(files[0]);
+    }
+  }, [handleUploadFile]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleUploadFile(files[0]);
+    }
+  }, [handleUploadFile]);
+
+  const handleRemoveImage = useCallback(() => {
+    setNewEvent((prev: any) => ({ ...prev, imageUrl: '' }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [setNewEvent]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -33,21 +117,33 @@ export function EventForm({ newEvent, setNewEvent, editingEvent, onSubmit, onCan
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Required fields notice */}
+          <p className="text-sm text-gray-500"><span className="text-red-500">*</span> 표시는 필수 입력 항목입니다</p>
+
           {/* Title and Type */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="title" className="text-gray-700">이벤트 제목</Label>
+              <Label htmlFor="title" className="text-gray-700">이벤트 제목 <span className="text-red-500">*</span></Label>
               <Input
                 id="title"
                 value={newEvent.title}
                 onChange={(e) => setNewEvent((prev: any) => ({ ...prev, title: e.target.value }))}
                 placeholder="예: K-Pop 콘서트 할인"
-                className="border-gray-300"
+                className={`border-gray-300 ${newEvent.title && (newEvent.title.length < 5 || newEvent.title.length > 100) ? 'border-red-500 focus:ring-red-500' : ''}`}
+                maxLength={100}
               />
+              <div className="flex justify-between text-xs">
+                <span className={newEvent.title && newEvent.title.length < 5 ? 'text-red-500' : 'text-gray-500'}>
+                  {newEvent.title && newEvent.title.length < 5 ? '최소 5자 이상 입력해주세요' : ''}
+                </span>
+                <span className={`${newEvent.title?.length > 100 ? 'text-red-500' : 'text-gray-400'}`}>
+                  {newEvent.title?.length || 0}/100
+                </span>
+              </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="type" className="text-gray-700">이벤트 유형</Label>
+              <Label htmlFor="type" className="text-gray-700">이벤트 유형 <span className="text-red-500">*</span></Label>
               <Select value={newEvent.type} onValueChange={(value) => setNewEvent((prev: any) => ({ ...prev, type: value }))}>
                 <SelectTrigger className="border-gray-300">
                   <SelectValue />
@@ -65,7 +161,7 @@ export function EventForm({ newEvent, setNewEvent, editingEvent, onSubmit, onCan
           {/* Event Period */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate" className="text-gray-700">이벤트 기간 - 시작일</Label>
+              <Label htmlFor="startDate" className="text-gray-700">이벤트 기간 - 시작일 <span className="text-red-500">*</span></Label>
               <Input
                 id="startDate"
                 type="date"
@@ -76,7 +172,7 @@ export function EventForm({ newEvent, setNewEvent, editingEvent, onSubmit, onCan
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="endDate" className="text-gray-700">이벤트 기간 - 종료일</Label>
+              <Label htmlFor="endDate" className="text-gray-700">이벤트 기간 - 종료일 <span className="text-red-500">*</span></Label>
               <Input
                 id="endDate"
                 type="date"
@@ -90,14 +186,23 @@ export function EventForm({ newEvent, setNewEvent, editingEvent, onSubmit, onCan
           {/* Location and Organizer */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="location" className="text-gray-700">장소</Label>
+              <Label htmlFor="location" className="text-gray-700">장소 <span className="text-red-500">*</span></Label>
               <Input
                 id="location"
                 value={newEvent.location}
                 onChange={(e) => setNewEvent((prev: any) => ({ ...prev, location: e.target.value }))}
                 placeholder="예: 여의도 공원"
-                className="border-gray-300"
+                className={`border-gray-300 ${newEvent.location && (newEvent.location.length < 5 || newEvent.location.length > 200) ? 'border-red-500 focus:ring-red-500' : ''}`}
+                maxLength={200}
               />
+              <div className="flex justify-between text-xs">
+                <span className={newEvent.location && newEvent.location.length < 5 ? 'text-red-500' : 'text-gray-500'}>
+                  {newEvent.location && newEvent.location.length < 5 ? '최소 5자 이상 입력해주세요' : ''}
+                </span>
+                <span className={`${newEvent.location?.length > 200 ? 'text-red-500' : 'text-gray-400'}`}>
+                  {newEvent.location?.length || 0}/200
+                </span>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -114,39 +219,132 @@ export function EventForm({ newEvent, setNewEvent, editingEvent, onSubmit, onCan
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-gray-700">이벤트 내용</Label>
+            <Label htmlFor="description" className="text-gray-700">이벤트 내용 <span className="text-red-500">*</span></Label>
             <textarea
               id="description"
               value={newEvent.description}
               onChange={(e) => setNewEvent((prev: any) => ({ ...prev, description: e.target.value }))}
-              placeholder="이벤트에 대한 상세 설명을 입력하세요..."
-              className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="이벤트에 대한 상세 설명을 입력하세요... (최소 20자)"
+              className={`w-full min-h-[100px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-black ${
+                newEvent.description && newEvent.description.length < 20 ? 'border-red-500' : 'border-gray-300'
+              }`}
               rows={4}
             />
+            <div className="flex justify-between text-xs">
+              <span className={newEvent.description && newEvent.description.length < 20 ? 'text-red-500' : 'text-gray-500'}>
+                {newEvent.description && newEvent.description.length < 20 ? '최소 20자 이상 입력해주세요' : ''}
+              </span>
+              <span className="text-gray-400">
+                {newEvent.description?.length || 0}/2000
+              </span>
+            </div>
           </div>
 
           {/* Event Image */}
           <div className="space-y-2">
-            <Label htmlFor="eventImage" className="text-gray-700">이벤트 이미지</Label>
-            <div className="flex space-x-2">
-              <Input
-                id="eventImage"
-                value={newEvent.imageUrl}
-                onChange={(e) => setNewEvent((prev: any) => ({ ...prev, imageUrl: e.target.value }))}
-                placeholder="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400"
-                className="border-gray-300 flex-1"
-              />
-              <Button variant="outline" className="border-gray-300">
-                <Upload className="h-4 w-4 mr-2" />
-                업로드
-              </Button>
-            </div>
-            {newEvent.imageUrl && (
-              <div className="mt-2 w-full h-48 rounded-lg overflow-hidden border border-gray-200">
-                <ImageWithFallback 
-                  src={newEvent.imageUrl}
+            <Label className="text-gray-700">이벤트 이미지</Label>
+
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+
+            {isUploading ? (
+              /* Upload in progress */
+              <div className="w-full h-48 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-3 bg-gray-50">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+                <p className="text-sm text-gray-600">이미지 업로드 중...</p>
+              </div>
+            ) : newEvent.imageUrl ? (
+              /* Image Preview with Remove Button */
+              <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-200 group">
+                <ImageWithFallback
+                  src={getImageUrl(newEvent.imageUrl)}
                   alt="이벤트 미리보기"
                   className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-white/90 hover:bg-white text-gray-900"
+                  >
+                    <Upload className="h-4 w-4 mr-1" />
+                    변경
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleRemoveImage}
+                    className="bg-white/90 hover:bg-white text-red-600"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    삭제
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* Drag and Drop Zone */
+              <div
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`
+                  w-full h-48 rounded-lg border-2 border-dashed cursor-pointer
+                  flex flex-col items-center justify-center gap-3
+                  transition-all duration-200
+                  ${isDragging
+                    ? 'border-black bg-gray-100 scale-[1.02]'
+                    : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                  }
+                `}
+              >
+                <div className={`
+                  p-3 rounded-full transition-colors
+                  ${isDragging ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'}
+                `}>
+                  <ImageIcon className="h-6 w-6" />
+                </div>
+                <div className="text-center">
+                  <p className={`text-sm font-medium ${isDragging ? 'text-black' : 'text-gray-700'}`}>
+                    {isDragging ? '여기에 놓으세요' : '이미지를 드래그하여 업로드'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    또는 클릭하여 파일 선택 (최대 10MB)
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* URL Input Toggle */}
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowUrlInput(!showUrlInput)}
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
+                {showUrlInput ? 'URL 입력 숨기기' : 'URL로 직접 입력'}
+              </Button>
+            </div>
+
+            {showUrlInput && (
+              <div className="flex space-x-2">
+                <Input
+                  value={newEvent.imageUrl}
+                  onChange={(e) => setNewEvent((prev: any) => ({ ...prev, imageUrl: e.target.value }))}
+                  placeholder="https://images.unsplash.com/..."
+                  className="border-gray-300 flex-1 text-sm"
                 />
               </div>
             )}
@@ -180,15 +378,22 @@ export function EventForm({ newEvent, setNewEvent, editingEvent, onSubmit, onCan
           {/* Contact Email and Website */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="contactEmail" className="text-gray-700">연락처 이메일</Label>
+              <Label htmlFor="contactEmail" className="text-gray-700">연락처 이메일 <span className="text-red-500">*</span></Label>
               <Input
                 id="contactEmail"
                 type="email"
                 value={newEvent.contactEmail}
                 onChange={(e) => setNewEvent((prev: any) => ({ ...prev, contactEmail: e.target.value }))}
                 placeholder="contact@event.com"
-                className="border-gray-300"
+                className={`${
+                  newEvent.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEvent.contactEmail)
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300'
+                }`}
               />
+              {newEvent.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEvent.contactEmail) && (
+                <p className="text-xs text-red-500">올바른 이메일 형식을 입력해주세요 (예: contact@event.com)</p>
+              )}
             </div>
 
             <div className="space-y-2">

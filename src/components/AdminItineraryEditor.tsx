@@ -38,6 +38,7 @@ import {
 import { generateSchedule, recommendPlaces, ScheduleApiError } from '../services/scheduleApi';
 import { toast } from 'sonner';
 import { TRAVEL_STYLE_OPTIONS, TRAVEL_STYLE_TO_BUDGET_API } from '../constants/travelOptions';
+import { ImageUploadField } from './ImageUploadField';
 
 interface Activity {
   time: string;
@@ -1281,15 +1282,13 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-sm font-bold text-black uppercase tracking-wide">이미지 URL (선택사항)</Label>
-                  <Input
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="비어있으면 기본 이미지 사용"
-                    className="border-2 border-gray-200 focus:border-black focus:ring-0 rounded-lg h-12"
-                  />
-                </div>
+                <ImageUploadField
+                  value={imageUrl}
+                  onChange={setImageUrl}
+                  label="이미지 (선택사항)"
+                  placeholder="비어있으면 기본 이미지 사용"
+                  height="h-40"
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex items-center justify-between p-4 bg-gray-50 border-2 border-black rounded-lg">
