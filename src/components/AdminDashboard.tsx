@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { API_BASE_URL } from '../utils/api';
 import {
   getDashboardStats,
   DashboardStats,
@@ -86,6 +87,15 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import { motion } from 'motion/react';
+
+// Helper function to transform relative image URLs to full URLs
+const getImageUrl = (url: string | null | undefined): string => {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  // For server-uploaded images, prepend API base URL (without /api/v1)
+  const baseUrl = API_BASE_URL.replace('/api/v1', '');
+  return `${baseUrl}${url}`;
+};
 
 // User demographics data
 const mockUserDemographics = {
@@ -1231,9 +1241,9 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                 <div key={event.id} className={`border-2 border-black bg-white transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] ${!event.active ? 'opacity-50 grayscale' : ''}`}>
                    {event.imageUrl && (
                      <div className="h-48 overflow-hidden border-b-2 border-black relative">
-                        <ImageWithFallback 
-                          src={event.imageUrl} 
-                          alt={event.title} 
+                        <ImageWithFallback
+                          src={getImageUrl(event.imageUrl)}
+                          alt={event.title}
                           className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                         />
                         <div className="absolute top-4 right-4">
