@@ -395,10 +395,10 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     }
   };
 
-  const handleVerifyEmail = async () => {
-    // Note: In real implementation, user clicks link in email
-    // This button is for demo/testing - actual verification happens via email link
-    setAuthError(t('auth:verification.checkInbox'));
+  const handleVerifyEmail = () => {
+    // Close modal so user can check their email
+    // Actual verification happens via email link -> /verify-email page
+    onClose();
   };
 
   if (emailSent) {
