@@ -387,7 +387,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
       packed: { low: '$50-80', mid: '$70-100', high: '$80-150' }
     };
 
-    const currentBudget = budgetRanges[budget] || budgetRanges.balanced;
+    const currentBudget = budgetRanges[travelStyle] || budgetRanges.balanced;
 
     return Array.from({ length: numDays }, (_, i) => {
       const dayActivities: Activity[] = [];
@@ -471,7 +471,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
         startDate: startDate,
         duration: duration,
         cities: citiesToUse,
-        budget: budget,
+        budget: TRAVEL_STYLE_TO_BUDGET_API[travelStyle] || 'mid-range',
         interests: interests,
         language: 'en',
       });
@@ -1986,7 +1986,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                   <div className="border-2 border-black p-3">
                     <DollarSign className="h-4 w-4 mb-2" />
                     <p className="text-xs text-gray-500 uppercase">예산</p>
-                    <p className="font-bold uppercase">{budget}</p>
+                    <p className="font-bold uppercase">{TRAVEL_STYLE_TO_BUDGET_API[travelStyle] || 'mid-range'}</p>
                   </div>
                   <div className="border-2 border-black p-3">
                     <Star className="h-4 w-4 mb-2" />
