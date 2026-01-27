@@ -678,7 +678,11 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
       }
     } catch (error) {
       console.error('이벤트 저장 실패:', error);
-      alert(error instanceof Error ? error.message : '이벤트 저장에 실패했습니다');
+      const errorMessage = error instanceof Error ? error.message : '이벤트 저장에 실패했습니다';
+      toast.error(errorMessage, {
+        duration: 5000,
+        style: { whiteSpace: 'pre-line' },  // 줄바꿈 표시
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -708,7 +712,7 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
       }
     } catch (error) {
       console.error('이벤트 상세 정보 로드 실패:', error);
-      alert('이벤트 정보를 불러오는데 실패했습니다.');
+      toast.error('이벤트 정보를 불러오는데 실패했습니다.');
     }
   };
 

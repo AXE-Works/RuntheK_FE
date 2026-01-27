@@ -18,7 +18,29 @@ export interface ApiResponse<T> {
   error?: {
     code: string;
     message: string;
+    details?: Array<{ field: string; message: string }>;
   };
+}
+
+/**
+ * API 에러 응답을 파싱하여 상세한 에러 메시지 생성
+ */
+function parseApiError(errorData: any, defaultMessage: string): string {
+  if (!errorData?.error) {
+    return defaultMessage;
+  }
+
+  const { message, details } = errorData.error;
+
+  // 필드별 유효성 검사 오류가 있는 경우
+  if (details && Array.isArray(details) && details.length > 0) {
+    const fieldErrors = details
+      .map((d: { field: string; message: string }) => `• ${d.field}: ${d.message}`)
+      .join('\n');
+    return `${message || '입력 값이 유효하지 않습니다'}\n\n${fieldErrors}`;
+  }
+
+  return message || defaultMessage;
 }
 
 // ===== Dashboard Stats Types =====
@@ -539,7 +561,7 @@ export async function createAdminEvent(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || '이벤트 생성에 실패했습니다');
+    throw new Error(parseApiError(errorData, '이벤트 생성에 실패했습니다'));
   }
 
   return response.json();
@@ -563,7 +585,7 @@ export async function updateAdminEvent(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || '이벤트 수정에 실패했습니다');
+    throw new Error(parseApiError(errorData, '이벤트 수정에 실패했습니다'));
   }
 
   return response.json();
@@ -679,7 +701,7 @@ export async function createAdminEventWithFile(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || '이벤트 생성에 실패했습니다');
+    throw new Error(parseApiError(errorData, '이벤트 생성에 실패했습니다'));
   }
 
   return response.json();
@@ -710,7 +732,7 @@ export async function updateAdminEventWithFile(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || '이벤트 수정에 실패했습니다');
+    throw new Error(parseApiError(errorData, '이벤트 수정에 실패했습니다'));
   }
 
   return response.json();
