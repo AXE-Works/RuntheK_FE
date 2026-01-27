@@ -10,360 +10,14 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { getRecommendedTrips, getRecommendedTripDetail, RecommendedTripResponse, RecommendedDayResponse } from '../services/tripApi';
+import { useTranslation } from 'react-i18next';
 
-// Mock user-generated travel course data
-const USER_GENERATED_COURSES = [
-  {
-    id: 1,
-    title: 'Seoul Modern Capital City',
-    subtitle: 'Experience the perfect blend of ancient tradition...',
-    duration: '5 days',
-    visitors: '12M+',
-    rating: 4.8,
-    highlights: ['Gyeongbokgung Palace', 'Myeongdong Shopping', 'Han River'],
-    category: 'Urban',
-    userId: 'user123',
-    createdAt: '2024-01-05',
-    detailedSchedule: [
-      {
-        day: 1,
-        title: 'Arrival & Gyeongbokgung Palace',
-        activities: [
-          { time: '09:00', name: 'Arrive at Incheon Airport', description: 'Immigration and customs' },
-          { time: '11:00', name: 'Hotel Check-in', description: 'Myeongdong area hotel' },
-          { time: '14:00', name: 'Gyeongbokgung Palace', description: 'Main royal palace of Joseon Dynasty' },
-          { time: '16:30', name: 'National Folk Museum', description: 'Inside palace grounds' },
-          { time: '18:00', name: 'Dinner at Traditional Restaurant', description: 'Korean BBQ experience' }
-        ]
-      },
-      {
-        day: 2,
-        title: 'Modern Seoul & Shopping',
-        activities: [
-          { time: '10:00', name: 'Myeongdong Shopping District', description: 'K-beauty and fashion' },
-          { time: '12:00', name: 'Lunch at Food Street', description: 'Street food and local cuisine' },
-          { time: '14:00', name: 'N Seoul Tower', description: 'Panoramic city views' },
-          { time: '17:00', name: 'Hongdae Area', description: 'Youth culture and street performances' },
-          { time: '19:00', name: 'Dinner & Nightlife', description: 'Korean fusion cuisine' }
-        ]
-      },
-      {
-        day: 3,
-        title: 'Han River & Traditional Culture',
-        activities: [
-          { time: '09:00', name: 'Bukchon Hanok Village', description: 'Traditional Korean houses' },
-          { time: '11:00', name: 'Insadong Cultural Street', description: 'Arts, crafts, and tea houses' },
-          { time: '13:00', name: 'Lunch at Traditional Restaurant', description: 'Korean set menu' },
-          { time: '15:00', name: 'Han River Park', description: 'Cycling or picnic by the river' },
-          { time: '18:00', name: 'Banpo Bridge Rainbow Fountain', description: 'Evening light show' }
-        ]
-      },
-      {
-        day: 4,
-        title: 'DMZ Tour (Optional) or Free Day',
-        activities: [
-          { time: '08:00', name: 'DMZ Tour Departure', description: 'Full day tour to Korean border' },
-          { time: '18:00', name: 'Return to Seoul', description: 'Evening at leisure' },
-          { time: '19:00', name: 'Dinner at Gangnam', description: 'Modern Seoul dining experience' }
-        ]
-      },
-      {
-        day: 5,
-        title: 'Departure Day',
-        activities: [
-          { time: '09:00', name: 'Last-minute Shopping', description: 'Souvenirs and gifts' },
-          { time: '11:00', name: 'Hotel Check-out', description: 'Prepare for departure' },
-          { time: '13:00', name: 'Airport Transfer', description: 'Head to Incheon Airport' },
-          { time: '16:00', name: 'Departure', description: 'Flight home' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: 'Jeju Natural Paradise',
-    subtitle: 'Discover pristine beaches and volcanic landscapes',
-    duration: '4 days',
-    visitors: '8M+',
-    rating: 4.9,
-    highlights: ['Hallasan Mountain', 'Beautiful Beaches', 'Seongsan Ilchulbong'],
-    category: 'Nature',
-    userId: 'user456',
-    createdAt: '2024-01-04',
-    detailedSchedule: [
-      {
-        day: 1,
-        title: 'Arrival & East Coast',
-        activities: [
-          { time: '10:00', name: 'Arrive at Jeju Airport', description: 'Pick up rental car' },
-          { time: '12:00', name: 'Lunch at Local Restaurant', description: 'Fresh seafood' },
-          { time: '14:00', name: 'Seongsan Ilchulbong', description: 'UNESCO World Heritage sunrise peak' },
-          { time: '16:00', name: 'Seongeup Folk Village', description: 'Traditional Jeju culture' },
-          { time: '18:00', name: 'Dinner & Hotel Check-in', description: 'East coast accommodation' }
-        ]
-      },
-      {
-        day: 2,
-        title: 'Hallasan Mountain Hiking',
-        activities: [
-          { time: '07:00', name: 'Early Start to Hallasan', description: 'Summit hike' },
-          { time: '15:00', name: 'Return from Hike', description: 'Rest and refresh' },
-          { time: '18:00', name: 'Black Pork BBQ Dinner', description: 'Jeju specialty cuisine' }
-        ]
-      },
-      {
-        day: 3,
-        title: 'Beaches & Waterfalls',
-        activities: [
-          { time: '09:00', name: 'Hamdeok Beach', description: 'Swimming and relaxation' },
-          { time: '12:00', name: 'Lunch at Beach Cafe', description: 'Ocean view dining' },
-          { time: '14:00', name: 'Jeongbang Waterfall', description: 'Waterfall by the sea' },
-          { time: '16:00', name: 'Cheonjiyeon Waterfall', description: 'Beautiful valley walk' },
-          { time: '18:00', name: 'Seogwipo Night Market', description: 'Local street food' }
-        ]
-      },
-      {
-        day: 4,
-        title: 'West Coast & Departure',
-        activities: [
-          { time: '09:00', name: 'O\'sulloc Tea Museum', description: 'Green tea plantation' },
-          { time: '11:00', name: 'Spirited Garden', description: 'Bonsai garden' },
-          { time: '13:00', name: 'Lunch & Shopping', description: 'Last-minute souvenirs' },
-          { time: '15:00', name: 'Airport Transfer', description: 'Return rental car' },
-          { time: '17:00', name: 'Departure', description: 'Flight home' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 3,
-    title: 'Busan Coastal Adventure',
-    subtitle: 'Korea\'s vibrant port city with stunning coastlines',
-    duration: '3 days',
-    visitors: '6M+',
-    rating: 4.7,
-    highlights: ['Haeundae Beach', 'Gamcheon Village', 'Jagalchi Market'],
-    category: 'Coastal',
-    userId: 'user789',
-    createdAt: '2024-01-03',
-    detailedSchedule: [
-      {
-        day: 1,
-        title: 'Arrival & Beach Time',
-        activities: [
-          { time: '11:00', name: 'Arrive in Busan', description: 'Train or flight arrival' },
-          { time: '13:00', name: 'Haeundae Beach', description: 'Famous beach and lunch' },
-          { time: '15:00', name: 'Dongbaek Island Walk', description: 'Coastal walking trail' },
-          { time: '17:00', name: 'The Bay 101', description: 'Modern waterfront area' },
-          { time: '19:00', name: 'Seafood Dinner', description: 'Fresh catch of the day' }
-        ]
-      },
-      {
-        day: 2,
-        title: 'Cultural Busan',
-        activities: [
-          { time: '09:00', name: 'Gamcheon Culture Village', description: 'Colorful hillside village' },
-          { time: '11:30', name: 'Jagalchi Fish Market', description: 'Korea\'s largest seafood market' },
-          { time: '13:00', name: 'Lunch at Market', description: 'Live fish and raw seafood' },
-          { time: '15:00', name: 'Haedong Yonggungsa Temple', description: 'Seaside Buddhist temple' },
-          { time: '17:00', name: 'Gwangalli Beach', description: 'Diamond Bridge views' }
-        ]
-      },
-      {
-        day: 3,
-        title: 'Shopping & Departure',
-        activities: [
-          { time: '09:00', name: 'Seomyeon Shopping District', description: 'Local shopping area' },
-          { time: '11:00', name: 'Spa or Jjimjilbang', description: 'Korean bathhouse experience' },
-          { time: '13:00', name: 'Lunch & Last Shopping', description: 'Souvenirs and snacks' },
-          { time: '15:00', name: 'Departure', description: 'Train or flight home' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 4,
-    title: 'Gyeongju Historical Journey',
-    subtitle: 'Ancient capital with UNESCO World Heritage sites',
-    duration: '3 days',
-    visitors: '4M+',
-    rating: 4.6,
-    highlights: ['Bulguksa Temple', 'Seokguram Grotto', 'Tumuli Park'],
-    category: 'Cultural',
-    userId: 'user101',
-    createdAt: '2024-01-02',
-    detailedSchedule: [
-      {
-        day: 1,
-        title: 'Arrival & Tumuli Park',
-        activities: [
-          { time: '10:00', name: 'Arrive in Gyeongju', description: 'Check into hotel' },
-          { time: '11:00', name: 'Tumuli Park', description: 'Royal burial mounds' },
-          { time: '13:00', name: 'Lunch at Traditional Restaurant', description: 'Gyeongju bread and ssambap' },
-          { time: '14:30', name: 'Cheomseongdae Observatory', description: 'Oldest astronomical observatory in Asia' },
-          { time: '16:00', name: 'Anapji Pond', description: 'Beautiful palace pond' },
-          { time: '18:00', name: 'Dinner & Night Walk', description: 'Evening stroll around pond' }
-        ]
-      },
-      {
-        day: 2,
-        title: 'UNESCO Heritage Sites',
-        activities: [
-          { time: '08:00', name: 'Bulguksa Temple', description: 'UNESCO World Heritage temple' },
-          { time: '10:30', name: 'Seokguram Grotto', description: 'Mountain-top stone Buddha' },
-          { time: '13:00', name: 'Lunch at Temple Food Restaurant', description: 'Buddhist vegetarian cuisine' },
-          { time: '15:00', name: 'Gyeongju National Museum', description: 'Ancient Silla artifacts' },
-          { time: '17:00', name: 'Hwangnidan Street', description: 'Trendy cafes and shops' }
-        ]
-      },
-      {
-        day: 3,
-        title: 'Countryside & Departure',
-        activities: [
-          { time: '09:00', name: 'Yangdong Folk Village', description: 'UNESCO traditional village' },
-          { time: '11:00', name: 'Traditional Tea House', description: 'Hanok tea experience' },
-          { time: '13:00', name: 'Lunch & Shopping', description: 'Local crafts and souvenirs' },
-          { time: '15:00', name: 'Departure', description: 'Return to Seoul or Busan' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 5,
-    title: 'Korean Culinary Experience',
-    subtitle: 'Immerse in authentic Korean food culture',
-    duration: '2 days',
-    visitors: '10M+',
-    rating: 4.8,
-    highlights: ['Gwangjang Market', 'Street Food Tours', 'Cooking Classes'],
-    category: 'Food',
-    userId: 'user202',
-    createdAt: '2024-01-01',
-    detailedSchedule: [
-      {
-        day: 1,
-        title: 'Market Tours & Street Food',
-        activities: [
-          { time: '10:00', name: 'Gwangjang Market Tour', description: 'Bindaetteok and mayak kimbap' },
-          { time: '12:00', name: 'Tteokbokki & Sundae Tasting', description: 'Street food favorites' },
-          { time: '14:00', name: 'Namdaemun Market', description: 'Kalguksu and mandu' },
-          { time: '16:00', name: 'Traditional Tea House', description: 'Korean tea and desserts' },
-          { time: '18:00', name: 'Korean BBQ Dinner', description: 'Premium hanwoo beef' }
-        ]
-      },
-      {
-        day: 2,
-        title: 'Cooking Class & Fine Dining',
-        activities: [
-          { time: '09:00', name: 'Traditional Market Visit', description: 'Ingredient shopping with chef' },
-          { time: '10:30', name: 'Korean Cooking Class', description: 'Learn to make kimchi and bulgogi' },
-          { time: '13:00', name: 'Enjoy Your Creations', description: 'Lunch of what you cooked' },
-          { time: '15:00', name: 'Korean Dessert Cafe', description: 'Bingsu and traditional sweets' },
-          { time: '18:00', name: 'Fine Dining Experience', description: 'Modern Korean cuisine' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 6,
-    title: 'Traditional Hanbok Culture',
-    subtitle: 'Experience Korea\'s traditional clothing and culture',
-    duration: '1 day',
-    visitors: '5M+',
-    rating: 4.5,
-    highlights: ['Hanbok Rental', 'Palace Photos', 'Tea Ceremony'],
-    category: 'Cultural',
-    userId: 'user303',
-    createdAt: '2023-12-30',
-    detailedSchedule: [
-      {
-        day: 1,
-        title: 'Hanbok Day Experience',
-        activities: [
-          { time: '09:00', name: 'Hanbok Rental Shop', description: 'Choose and dress in traditional hanbok' },
-          { time: '10:00', name: 'Gyeongbokgung Palace', description: 'Free entry with hanbok, photo spots' },
-          { time: '12:00', name: 'Bukchon Hanok Village', description: 'Traditional houses photoshoot' },
-          { time: '13:00', name: 'Lunch in Hanbok', description: 'Traditional Korean meal' },
-          { time: '14:30', name: 'Insadong Tea Ceremony', description: 'Traditional tea house experience' },
-          { time: '16:00', name: 'Return Hanbok & Shopping', description: 'Insadong crafts and souvenirs' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 7,
-    title: 'DMZ Historical Tour',
-    subtitle: 'Explore the Korean War history and border area',
-    duration: '1 day',
-    visitors: '3M+',
-    rating: 4.4,
-    highlights: ['Joint Security Area', 'Tunnel Tours', 'War Memorial'],
-    category: 'Historical',
-    userId: 'user404',
-    createdAt: '2023-12-29',
-    detailedSchedule: [
-      {
-        day: 1,
-        title: 'DMZ Full Day Tour',
-        activities: [
-          { time: '07:00', name: 'Pickup from Seoul', description: 'Tour bus departure' },
-          { time: '09:00', name: 'Imjingak Park', description: 'Freedom Bridge and monuments' },
-          { time: '10:30', name: 'Third Infiltration Tunnel', description: 'Underground tunnel walk' },
-          { time: '12:00', name: 'Dora Observatory', description: 'View into North Korea' },
-          { time: '13:00', name: 'Lunch at Local Restaurant', description: 'DMZ area cuisine' },
-          { time: '14:30', name: 'Dorasan Station', description: 'Northernmost station in South Korea' },
-          { time: '16:00', name: 'Return to Seoul', description: 'Tour conclusion' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 8,
-    title: 'Mountain Hiking Adventure',
-    subtitle: 'Explore Korea\'s beautiful mountain trails',
-    duration: '2 days',
-    visitors: '2M+',
-    rating: 4.6,
-    highlights: ['Seoraksan Trail', 'Mountain Temples', 'Natural Springs'],
-    category: 'Nature',
-    userId: 'user505',
-    createdAt: '2023-12-28',
-    detailedSchedule: [
-      {
-        day: 1,
-        title: 'Seoraksan National Park',
-        activities: [
-          { time: '06:00', name: 'Depart from Seoul', description: 'Bus to Seoraksan' },
-          { time: '09:00', name: 'Sinheungsa Temple', description: 'Bronze Buddha statue' },
-          { time: '10:00', name: 'Ulsanbawi Rock Hike', description: 'Challenging rock formation climb' },
-          { time: '14:00', name: 'Lunch at Park Restaurant', description: 'Mountain food specialties' },
-          { time: '15:30', name: 'Biryong Falls Trail', description: 'Scenic waterfall hike' },
-          { time: '18:00', name: 'Check-in to Mountain Lodge', description: 'Evening relaxation' }
-        ]
-      },
-      {
-        day: 2,
-        title: 'Hot Springs & Return',
-        activities: [
-          { time: '08:00', name: 'Morning Temple Visit', description: 'Peaceful mountain temple' },
-          { time: '10:00', name: 'Sokcho Hot Springs', description: 'Natural mineral baths' },
-          { time: '12:00', name: 'Lunch at Seafood Restaurant', description: 'Fresh East Sea catch' },
-          { time: '14:00', name: 'Return to Seoul', description: 'Bus journey back' }
-        ]
-      }
-    ]
-  }
-];
-
-const BANNER_IMAGES = [
-  'https://images.unsplash.com/photo-1591366152219-48d643eb3aac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzZW91bCUyMG1vZGVybiUyMGFyY2hpdGVjdHVyZSUyMHNreWxpbmV8ZW58MXx8fHwxNzU3NDYyODkxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-  'https://images.unsplash.com/photo-1674637966553-3073f47b4610?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxrb3JlYSUyMGplanUlMjBpc2xhbmQlMjB2b2xjYW5vJTIwbW91bnRhaW58ZW58MXx8fHwxNzU3NDYyODk2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-  'https://images.unsplash.com/photo-1556974060-89c066b25199?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNhbiUyMGtvcmVhJTIwY29hc3RhbCUyMGJlYWNoJTIwY29sb3JmdWwlMjBob3VzZXN8ZW58MXx8fHwxNzU3NDYyOTAyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-  'https://images.unsplash.com/photo-1704871576680-d7d8b0d07315?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxneWVvbmdqdSUyMGtvcmVhJTIwYW5jaWVudCUyMHRlbXBsZSUyMHBhZ29kYXxlbnwxfHx8fDE3NTc0NjI5MDd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-  'https://images.unsplash.com/photo-1594021113115-f1b48e63ef06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxrb3JlYSUyMGtvcmVhJTIwZm9vZCUyBtYXJrZXQlMjBzdHJlZXQlMjB0cmFkaXRpb25hbHxlbnwxfHx8fDE3NTc0NjI5MTJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-  'https://images.unsplash.com/photo-1627630228864-c323baf59f26?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxrb3JlYSUyMGhhbmJvayUyMHRyYWRpdGlvbmFsJTIwcGFsYWNlJTIwY3VsdHVyZXxlbnwxfHx8fDE3NTc0NjI5MTZ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-  'https://images.unsplash.com/photo-1742734704504-c1554ab47cab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxrb3JlYSUyMGRteiUyMGJvcmRlciUyMGhpc3RvcmljYWwlMjBzaXRlfGVufDF8fHx8MTc1NzQ2MjkyMXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-  'https://images.unsplash.com/photo-1577328284865-56f2943d785d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxrb3JlYSUyMGhpa2luZyUyMG1vdW50YWluJTIwbmF0dXJlJTIwdHJhaWx8ZW58MXx8fHwxNzU3NDYyOTI4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
+// Default banner images for API data without images
+const DEFAULT_BANNER_IMAGES = [
+  'https://images.unsplash.com/photo-1591366152219-48d643eb3aac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzZW91bCUyMG1vZGVybiUyMGFyY2hpdGVjdHVyZSUyMHNreWxpbmV8ZW58MXx8fHwxNzU3NDYyODkxfDA&ixlib=rb-4.1.0&q=80&w=1080',
+  'https://images.unsplash.com/photo-1674637966553-3073f47b4610?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxrb3JlYSUyMGplanUlMjBpc2xhbmQlMjB2b2xjYW5vJTIwbW91bnRhaW58ZW58MXx8fHwxNzU3NDYyODk2fDA&ixlib=rb-4.1.0&q=80&w=1080',
+  'https://images.unsplash.com/photo-1556974060-89c066b25199?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNhbiUyMGtvcmVhJTIwY29hc3RhbCUyMGJlYWNoJTIwY29sb3JmdWwlMjBob3VzZXN8ZW58MXx8fHwxNzU3NDYyOTAyfDA&ixlib=rb-4.1.0&q=80&w=1080',
+  'https://images.unsplash.com/photo-1704871576680-d7d8b0d07315?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxneWVvbmdqdSUyMGtvcmVhJTIwYW5jaWVudCUyMHRlbXBsZSUyMHBhZ29kYXxlbnwxfHx8fDE3NTc0NjI5MDd8MA&ixlib=rb-4.1.0&q=80&w=1080',
 ];
 
 interface SuggestedBannersProps {
@@ -404,6 +58,7 @@ interface BannerData {
 }
 
 export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: SuggestedBannersProps) {
+  const { t } = useTranslation('tours');
   const [banners, setBanners] = useState<BannerData[]>([]);
   const [editingBanner, setEditingBanner] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<BannerData>>({});
@@ -435,7 +90,7 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
             id: trip.id,
             title: trip.title,
             subtitle: trip.subtitle || trip.description || `Explore Korea's ${trip.category?.toLowerCase() || 'travel'} experiences`,
-            image: trip.image || trip.imageUrl || BANNER_IMAGES[index % BANNER_IMAGES.length],
+            image: trip.image || trip.imageUrl || DEFAULT_BANNER_IMAGES[index % DEFAULT_BANNER_IMAGES.length],
             duration: trip.duration,
             visitors: formatVisitors(trip.visitors || trip.viewCount || 0),
             rating: trip.rating || trip.averageRating || 0,
@@ -450,38 +105,21 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
           }));
           setBanners(apiBanners);
         } else {
-          // No data from API, use mock data as fallback
-          console.log('[SuggestedBanners] No API data, using mock data fallback');
-          loadMockData();
+          // No data from API - show empty state (no mock data fallback)
+          console.log('[SuggestedBanners] No recommended trips available from API');
+          setBanners([]);
         }
       } catch (err) {
-        console.error('[SuggestedBanners] Failed to fetch from API, using mock data:', err);
-        setError('Failed to load recommended trips. Showing sample data.');
-        loadMockData();
+        console.error('[SuggestedBanners] Failed to fetch from API:', err);
+        setError(t('curated.error'));
+        setBanners([]);
       } finally {
         setLoading(false);
       }
     };
 
-    const loadMockData = () => {
-      const generatedBanners = USER_GENERATED_COURSES.map((course, index) => ({
-        id: String(course.id),
-        title: course.title,
-        subtitle: course.subtitle,
-        image: BANNER_IMAGES[index % BANNER_IMAGES.length],
-        duration: course.duration,
-        visitors: course.visitors,
-        rating: course.rating,
-        highlights: course.highlights,
-        category: course.category,
-        isEditable: true,
-        detailedSchedule: course.detailedSchedule,
-      }));
-      setBanners(generatedBanners);
-    };
-
     fetchRecommendedTrips();
-  }, []);
+  }, [t]);
 
   const handleEditBanner = (banner: BannerData) => {
     setEditingBanner(banner.id);
@@ -626,14 +264,13 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
         return;
       }
 
-      // Fallback: Try to find from mock data
-      const fullCourse = USER_GENERATED_COURSES.find(c => String(c.id) === banner.id);
-      onBannerDetailView(fullCourse ? { ...banner, detailedSchedule: fullCourse.detailedSchedule } : banner);
+      // No mock data fallback - just show banner without detailed schedule
+      onBannerDetailView(banner);
       return;
     }
 
     // Fallback: Show modal dialog (for backwards compatibility)
-    // For mock data with existing schedule, use it directly
+    // For data with existing schedule, use it directly
     if (banner.detailedSchedule && banner.detailedSchedule.length > 0) {
       setDetailBanner(banner);
       return;
@@ -688,9 +325,8 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
       return;
     }
 
-    // Fallback: Try to find from mock data
-    const fullCourse = USER_GENERATED_COURSES.find(c => String(c.id) === banner.id);
-    setDetailBanner(fullCourse ? { ...banner, detailedSchedule: fullCourse.detailedSchedule } : banner);
+    // No mock data fallback - just show banner without detailed schedule
+    setDetailBanner(banner);
   };
 
   // Loading skeleton component
@@ -709,9 +345,9 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
     >
       {/* Header */}
       <div className="text-center space-y-2">
-        <h3 className="text-lg md:text-2xl font-bold text-gray-900">Curated Korea Travel Experiences</h3>
+        <h3 className="text-lg md:text-2xl font-bold text-gray-900">{t('curated.title')}</h3>
         <p className="text-xs md:text-base text-gray-600 max-w-2xl mx-auto">
-          By RunTheK — local editors based in Korea
+          {t('curated.subtitle')}
         </p>
       </div>
 
@@ -737,8 +373,8 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
         // Empty state
         <div className="text-center py-12 text-gray-500">
           <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-          <p>No recommended trips available yet.</p>
-          <p className="text-sm mt-1">Check back later for curated travel experiences!</p>
+          <p className="font-medium">{t('curated.empty.title')}</p>
+          <p className="text-sm mt-1">{t('curated.empty.description')}</p>
         </div>
       ) : (
         /* Auto-scrolling Carousel */
@@ -809,21 +445,22 @@ export function SuggestedBanners({ onBannerSelect, onBannerDetailView }: Suggest
         </div>
       )}
 
-      {/* Auto-generation Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mt-6">
-        <div className="flex items-start space-x-2 md:space-x-3">
-          <div className="bg-blue-500 rounded-full p-1 flex-shrink-0">
-            <Users className="h-3 w-3 md:h-4 md:w-4 text-white" />
-          </div>
-          <div>
-            <h4 className="text-xs md:text-sm font-medium text-blue-900 mb-1">Auto-Generated Content</h4>
-            <p className="text-[10px] md:text-xs text-blue-700">
-              These banners are automatically created from {USER_GENERATED_COURSES.length} user-generated travel courses. 
-              The system analyzes popular destinations, ratings, and travel patterns to suggest the best experiences.
-            </p>
+      {/* Auto-generation Info - Only show when there are banners */}
+      {banners.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mt-6">
+          <div className="flex items-start space-x-2 md:space-x-3">
+            <div className="bg-blue-500 rounded-full p-1 flex-shrink-0">
+              <Users className="h-3 w-3 md:h-4 md:w-4 text-white" />
+            </div>
+            <div>
+              <h4 className="text-xs md:text-sm font-medium text-blue-900 mb-1">{t('curated.autoGenerated.title')}</h4>
+              <p className="text-[10px] md:text-xs text-blue-700">
+                {t('curated.autoGenerated.description')}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Detail Dialog */}
       {detailBanner && (
