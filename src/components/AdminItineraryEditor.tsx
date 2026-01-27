@@ -99,7 +99,7 @@ interface RecommendedItinerary {
 
 interface AdminItineraryEditorProps {
   itinerary: RecommendedItinerary | null;
-  onSave: (itinerary: RecommendedItinerary) => Promise<void>;
+  onSave: (itinerary: RecommendedItinerary, imageFile?: File | null) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -172,6 +172,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
   const [travelStyle, setTravelStyle] = useState('balanced');
   const [interests, setInterests] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [rating, setRating] = useState(4.5);
   const [active, setActive] = useState(true);
   const [featured, setFeatured] = useState(false);
@@ -556,7 +557,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
 
     setIsSaving(true);
     try {
-      await onSave(savedItinerary);
+      await onSave(savedItinerary, imageFile);
     } finally {
       setIsSaving(false);
     }
@@ -1288,6 +1289,8 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                   label="이미지 (선택사항)"
                   placeholder="비어있으면 기본 이미지 사용"
                   height="h-40"
+                  deferUpload={true}
+                  onFileSelect={setImageFile}
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -652,6 +652,200 @@ export async function submitEventForm(
 }
 
 // ============================================
+// Multipart Event API (with file upload)
+// ============================================
+
+/**
+ * Create a new event with image file (multipart)
+ * POST /api/v1/admin/events (multipart/form-data)
+ */
+export async function createAdminEventWithFile(
+  request: EventCreateRequest,
+  file: File
+): Promise<ApiResponse<EventCreateResponse>> {
+  const accessToken = localStorage.getItem('accessToken');
+
+  const formData = new FormData();
+  formData.append('data', new Blob([JSON.stringify(request)], { type: 'application/json' }));
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/admin/events`, {
+    method: 'POST',
+    headers: {
+      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || '이벤트 생성에 실패했습니다');
+  }
+
+  return response.json();
+}
+
+/**
+ * Update an existing event with image file (multipart)
+ * PUT /api/v1/admin/events/:id (multipart/form-data)
+ */
+export async function updateAdminEventWithFile(
+  eventId: string,
+  request: EventUpdateRequest,
+  file: File
+): Promise<ApiResponse<EventUpdateResponse>> {
+  const accessToken = localStorage.getItem('accessToken');
+
+  const formData = new FormData();
+  formData.append('data', new Blob([JSON.stringify(request)], { type: 'application/json' }));
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/admin/events/${eventId}`, {
+    method: 'PUT',
+    headers: {
+      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || '이벤트 수정에 실패했습니다');
+  }
+
+  return response.json();
+}
+
+/**
+ * 이벤트 생성/수정 헬퍼 함수 (파일 업로드 지원)
+ * 파일이 있으면 multipart로 전송, 없으면 JSON으로 전송
+ */
+export async function submitEventFormWithFile(
+  formData: EventFormData,
+  eventId?: string,
+  imageFile?: File | null
+): Promise<ApiResponse<EventCreateResponse | EventUpdateResponse>> {
+  const request = convertFormToRequest(formData);
+
+  if (eventId) {
+    // 수정 모드
+    if (imageFile) {
+      return updateAdminEventWithFile(eventId, request, imageFile);
+    }
+    return updateAdminEvent(eventId, request);
+  } else {
+    // 생성 모드
+    if (imageFile) {
+      return createAdminEventWithFile(request, imageFile);
+    }
+    return createAdminEvent(request);
+  }
+}
+
+// ============================================
+// Recommended Itinerary Types (Admin)
+// ============================================
+
+export interface RecommendedItineraryCreateRequest {
+  title: string;
+  description: string;
+  duration: string;
+  cities: string[];
+  budget: string;
+  travelStyle: string;
+  interests: string[];
+  imageUrl?: string;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  displayOrder?: number;
+  targetAudience?: string;
+  seasonTag?: string;
+  richContent?: {
+    introduction?: string;
+    highlights?: string[];
+    tips?: string[];
+    includes?: string[];
+    excludes?: string[];
+    whatToBring?: string[];
+    contentBlocks?: { id: string; type: string; content: string | string[]; title?: string }[];
+  };
+  days: {
+    day: number;
+    title: string;
+    description?: string;
+    activities: {
+      time: string;
+      activity: string;
+      location: string;
+      description: string;
+      estimatedCost: string;
+      googleMapsUrl?: string;
+    }[];
+  }[];
+}
+
+/**
+ * Create recommended itinerary with image file (multipart)
+ * POST /api/v1/admin/recommended (multipart/form-data)
+ */
+export async function createRecommendedItineraryWithFile(
+  request: RecommendedItineraryCreateRequest,
+  file: File
+): Promise<ApiResponse<{ id: string; title: string; createdAt: string }>> {
+  const accessToken = localStorage.getItem('accessToken');
+
+  const formData = new FormData();
+  formData.append('data', new Blob([JSON.stringify(request)], { type: 'application/json' }));
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/admin/recommended`, {
+    method: 'POST',
+    headers: {
+      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || '추천 일정 생성에 실패했습니다');
+  }
+
+  return response.json();
+}
+
+/**
+ * Update recommended itinerary with image file (multipart)
+ * PUT /api/v1/admin/recommended/:id (multipart/form-data)
+ */
+export async function updateRecommendedItineraryWithFile(
+  id: string,
+  request: RecommendedItineraryCreateRequest,
+  file: File
+): Promise<ApiResponse<{ id: string; title: string; updatedAt: string }>> {
+  const accessToken = localStorage.getItem('accessToken');
+
+  const formData = new FormData();
+  formData.append('data', new Blob([JSON.stringify(request)], { type: 'application/json' }));
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/admin/recommended/${id}`, {
+    method: 'PUT',
+    headers: {
+      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || '추천 일정 수정에 실패했습니다');
+  }
+
+  return response.json();
+}
+
+// ============================================
 // System Status API
 // ============================================
 

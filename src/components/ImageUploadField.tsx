@@ -14,6 +14,10 @@ interface ImageUploadFieldProps {
   showUrlInput?: boolean;
   height?: string;
   placeholder?: string;
+  /** When true, files are not uploaded immediately. Use onFileSelect to receive the file. */
+  deferUpload?: boolean;
+  /** Callback when a file is selected (for deferred upload mode). Receives null when file is removed. */
+  onFileSelect?: (file: File | null) => void;
 }
 
 /**
@@ -26,11 +30,14 @@ export function ImageUploadField({
   label = '이미지',
   showUrlInput: initialShowUrlInput = false,
   height = 'h-48',
-  placeholder = 'https://images.unsplash.com/...'
+  placeholder = 'https://images.unsplash.com/...',
+  deferUpload = false,
+  onFileSelect
 }: ImageUploadFieldProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(initialShowUrlInput);
   const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get full URL for uploaded images
@@ -53,6 +60,16 @@ export function ImageUploadField({
       return;
     }
 
+    // Deferred upload mode: create preview and notify parent
+    if (deferUpload) {
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+      onFileSelect?.(file);
+      toast.success('이미지가 선택되었습니다. 저장 시 업로드됩니다.');
+      return;
+    }
+
+    // Immediate upload mode (default)
     setIsUploading(true);
     try {
       const response = await uploadFile(file);
@@ -66,7 +83,7 @@ export function ImageUploadField({
     } finally {
       setIsUploading(false);
     }
-  }, [onChange]);
+  }, [onChange, deferUpload, onFileSelect]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -104,11 +121,29 @@ export function ImageUploadField({
   }, [handleUploadFile]);
 
   const handleRemoveImage = useCallback(() => {
+    // Clean up object URL if in deferred mode
+    if (deferUpload && previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl('');
+      onFileSelect?.(null);
+    }
     onChange('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, [onChange]);
+  }, [onChange, deferUpload, previewUrl, onFileSelect]);
+
+  // Determine display URL: in deferred mode, prefer previewUrl over value
+  const displayUrl = deferUpload && previewUrl ? previewUrl : value;
+
+  // Cleanup object URL on unmount
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   return (
     <div className="space-y-2">
@@ -129,11 +164,11 @@ export function ImageUploadField({
           <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
           <p className="text-sm text-gray-600">이미지 업로드 중...</p>
         </div>
-      ) : value ? (
+      ) : displayUrl ? (
         /* Image Preview with Remove Button */
         <div className={`relative w-full ${height} rounded-lg overflow-hidden border border-gray-200 group`}>
           <ImageWithFallback
-            src={getImageUrl(value)}
+            src={deferUpload && previewUrl ? previewUrl : getImageUrl(displayUrl)}
             alt="미리보기"
             className="w-full h-full object-cover"
           />

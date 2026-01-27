@@ -21,6 +21,7 @@ import {
   AdminEvent,
   EventSummary,
   submitEventForm,
+  submitEventFormWithFile,
   EventFormData,
   getAdminEventDetail,
   convertDetailToForm,
@@ -265,6 +266,7 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
   const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'admin';
 
   const [showEventForm, setShowEventForm] = useState(false);
+  const [eventImageFile, setEventImageFile] = useState<File | null>(null);
   const [showItineraryDetail, setShowItineraryDetail] = useState(false);
   const [selectedItinerary, setSelectedItinerary] = useState<any>(null);
   const [showAddTripForm, setShowAddTripForm] = useState(false);
@@ -650,9 +652,11 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
 
     try {
       // API 호출하여 이벤트 생성/수정
-      const result = await submitEventForm(
+      // 이미지 파일이 있으면 multipart로 전송, 없으면 JSON으로 전송
+      const result = await submitEventFormWithFile(
         newEvent as EventFormData,
-        editingEvent?.id ? String(editingEvent.id) : undefined
+        editingEvent?.id ? String(editingEvent.id) : undefined,
+        eventImageFile
       );
 
       if (result.success) {
@@ -660,6 +664,7 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
         setEventsLoaded(false);
         setShowEventForm(false);
         setEditingEvent(null);
+        setEventImageFile(null);  // 이미지 파일 상태 초기화
 
         // 폼 초기화
         setNewEvent({
@@ -690,10 +695,21 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
     setShowDeleteConfirm(null);
   };
 
-  const handleEditEvent = (event: any) => {
-    setEditingEvent(event);
-    setNewEvent(event);
-    setShowEventForm(true);
+  const handleEditEvent = async (event: any) => {
+    try {
+      // API에서 이벤트 상세 정보 가져오기
+      const detailResponse = await getAdminEventDetail(String(event.id));
+      if (detailResponse.success && detailResponse.data) {
+        // 상세 정보를 폼 데이터로 변환
+        const formData = convertDetailToForm(detailResponse.data);
+        setEditingEvent(event);
+        setNewEvent(formData);
+        setShowEventForm(true);
+      }
+    } catch (error) {
+      console.error('이벤트 상세 정보 로드 실패:', error);
+      alert('이벤트 정보를 불러오는데 실패했습니다.');
+    }
   };
 
   const handleViewItinerary = (itinerary: any) => {
@@ -1219,8 +1235,10 @@ export function AdminDashboard({ currentUser, events, setEvents }: AdminDashboar
                    onCancel={() => {
                      setShowEventForm(false);
                      setEditingEvent(null);
+                     setEventImageFile(null);
                    }}
                    isSubmitting={isSubmitting}
+                   onImageFileSelect={setEventImageFile}
                  />
               </div>
             )}
