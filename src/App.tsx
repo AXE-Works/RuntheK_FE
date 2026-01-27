@@ -230,7 +230,7 @@ export default function App() {
       } catch (error) {
         console.log('[Session] Token expired or invalid, clearing...');
         localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        // refreshToken is in httpOnly cookie, will be cleared by backend on next logout
       } finally {
         setIsRestoringSession(false);
       }
@@ -574,25 +574,19 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    const refreshToken = localStorage.getItem('refreshToken');
-
-    // Call backend logout API to invalidate refresh token
-    if (refreshToken) {
-      try {
-        await fetchWithAuth(`${API_BASE_URL}/auth/logout`, {
-          method: 'POST',
-          body: JSON.stringify({ refreshToken }),
-        });
-        console.log('[Logout] Backend logout successful');
-      } catch (error) {
-        console.error('[Logout] API error:', error);
-        // Continue with local logout even if API fails
-      }
+    // Call backend logout API to invalidate refresh token (sent via httpOnly cookie)
+    try {
+      await fetchWithAuth(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+      });
+      console.log('[Logout] Backend logout successful');
+    } catch (error) {
+      console.error('[Logout] API error:', error);
+      // Continue with local logout even if API fails
     }
 
-    // Clear local storage
+    // Clear local storage (refreshToken is in httpOnly cookie, cleared by backend)
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
 
     // Clear user state
     setCurrentUser(null);

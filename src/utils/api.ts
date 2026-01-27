@@ -28,22 +28,16 @@ function onTokenRefreshed(newToken: string) {
 }
 
 /**
- * Refresh access token using refresh token
+ * Refresh access token using refresh token (httpOnly cookie)
  * @returns true if refresh successful, false otherwise
  */
 export async function refreshAccessToken(): Promise<boolean> {
-  const refreshToken = localStorage.getItem('refreshToken');
-  if (!refreshToken) {
-    console.log('[Auth] No refresh token available');
-    return false;
-  }
-
   try {
     console.log('[Auth] Attempting to refresh access token...');
     const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
+      credentials: 'include', // Send httpOnly cookie
     });
 
     if (!res.ok) {
@@ -53,7 +47,7 @@ export async function refreshAccessToken(): Promise<boolean> {
 
     const data = await res.json();
     localStorage.setItem('accessToken', data.data.accessToken);
-    localStorage.setItem('refreshToken', data.data.refreshToken);
+    // refreshToken is now in httpOnly cookie, not in response body
     console.log('[Auth] Token refreshed successfully');
     return true;
   } catch (error) {
@@ -81,6 +75,7 @@ export async function fetchWithAuth(
 
   const authOptions: RequestInit = {
     ...options,
+    credentials: 'include', // Send httpOnly cookies
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -104,6 +99,7 @@ export async function fetchWithAuth(
         // Retry original request with new token
         const retryOptions: RequestInit = {
           ...options,
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
             ...options.headers,
@@ -114,7 +110,7 @@ export async function fetchWithAuth(
       } else {
         // Refresh failed - trigger logout
         localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        // refreshToken is in httpOnly cookie, will be cleared by backend
         window.dispatchEvent(new CustomEvent('auth:logout'));
       }
     } else {
@@ -123,6 +119,7 @@ export async function fetchWithAuth(
         subscribeTokenRefresh(newToken => {
           const retryOptions: RequestInit = {
             ...options,
+            credentials: 'include',
             headers: {
               'Content-Type': 'application/json',
               ...options.headers,

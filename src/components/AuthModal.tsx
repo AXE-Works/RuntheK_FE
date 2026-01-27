@@ -96,6 +96,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Receive httpOnly cookie
         body: JSON.stringify({ idToken: response.credential }),
       });
 
@@ -116,9 +117,8 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
         throw new Error(errorMessage);
       }
 
-      // Store tokens
+      // Store accessToken only (refreshToken is in httpOnly cookie)
       localStorage.setItem('accessToken', data.data.token.accessToken);
-      localStorage.setItem('refreshToken', data.data.token.refreshToken);
 
       // Create user object from response
       const user = {
@@ -291,6 +291,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Receive httpOnly cookie
         body: JSON.stringify({
           email: loginForm.email,
           password: loginForm.password,
@@ -314,9 +315,8 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
         throw new Error(errorMessage);
       }
 
-      // Store tokens
+      // Store accessToken only (refreshToken is in httpOnly cookie)
       localStorage.setItem('accessToken', data.data.token.accessToken);
-      localStorage.setItem('refreshToken', data.data.token.refreshToken);
 
       const user = {
         id: data.data.user.id,
