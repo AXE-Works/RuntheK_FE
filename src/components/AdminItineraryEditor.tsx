@@ -469,11 +469,12 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
 
     try {
       // 실제 AI API 호출
+      // travelStyle을 직접 전달 (AI API의 travel_style 필드로 매핑됨)
       const result = await generateSchedule({
         startDate: startDate,
         duration: duration,
         cities: citiesToUse,
-        budget: TRAVEL_STYLE_TO_BUDGET_API[travelStyle] || 'mid-range',
+        budget: travelStyle,  // 'relaxed' | 'balanced' | 'packed'
         interests: interests,
         language: 'en',
       });
