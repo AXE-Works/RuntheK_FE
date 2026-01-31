@@ -178,6 +178,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
   const [featured, setFeatured] = useState(false);
   const [seoVisible, setSeoVisible] = useState(true);
   const [displayOrder, setDisplayOrder] = useState(0);
+  const [additionalNotes, setAdditionalNotes] = useState('');
 
   // Schedule State
   const [days, setDays] = useState<Day[]>([]);
@@ -476,6 +477,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
         cities: citiesToUse,
         budget: travelStyle,  // 'relaxed' | 'balanced' | 'packed'
         interests: interests,
+        additionalNotes: additionalNotes,
         language: 'en',
       });
 
@@ -1233,7 +1235,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
             </div>
           </motion.div>
 
-          {/* Step 4: Admin Settings */}
+          {/* Step 4: Anything we should know? */}
           <motion.div
             className="mb-8"
             initial={{ opacity: 0, y: 30 }}
@@ -1244,10 +1246,51 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
               <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
                 <h3 className="text-xl font-bold text-black flex items-center gap-3">
                   <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">4</div>
+                  Anything we should know? <span className="text-gray-500 font-normal text-sm ml-auto">Optional</span>
+                </h3>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <Label htmlFor="additionalNotes" className="text-sm font-bold text-black uppercase tracking-wide mb-3 block">
+                    Tell us more about your preferences
+                  </Label>
+                  <Textarea
+                    id="additionalNotes"
+                    value={additionalNotes}
+                    onChange={(e) => setAdditionalNotes(e.target.value)}
+                    placeholder="Share any specific preferences, dietary restrictions, accessibility needs, or special requests. For example: vegetarian restaurants, wheelchair accessible spots, photography locations, avoiding crowded places..."
+                    className="min-h-[120px] border-2 border-gray-200 focus:border-black focus:ring-0 rounded-xl p-4 text-base resize-y"
+                    maxLength={500}
+                  />
+                  <div className="flex justify-between items-center mt-2">
+                    <p className="text-xs text-gray-500 font-medium">
+                      This helps the AI create a more personalized itinerary for you
+                    </p>
+                    <span className="text-xs text-gray-400 font-mono">
+                      {additionalNotes.length}/500
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Step 5: Admin Settings */}
+          <motion.div
+            className="mb-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
+            <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl overflow-hidden">
+              <div className="bg-gray-50 border-b-2 border-black px-6 py-4">
+                <h3 className="text-xl font-bold text-black flex items-center gap-3">
+                  <div className="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center font-mono text-lg border-2 border-black">5</div>
                   Admin Settings <span className="text-gray-500 font-normal text-sm ml-auto">Optional</span>
                 </h3>
               </div>
-              
+
               <div className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -1320,7 +1363,7 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
             className="text-center pb-8"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
           >
             <Button
               onClick={handleGenerateAI}
