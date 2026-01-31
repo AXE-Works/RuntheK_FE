@@ -1889,25 +1889,13 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
 
                 {block.type === 'image' && (
                   <div className="space-y-3">
-                    <Input
+                    <ImageUploadField
                       value={block.content as string}
-                      onChange={(e) => updateContentBlock(block.id, { content: e.target.value })}
-                      placeholder="이미지 URL을 입력하세요 (https://...)"
-                      className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-black"
+                      onChange={(url) => updateContentBlock(block.id, { content: url })}
+                      showUrlInput={true}
+                      height="h-48"
+                      placeholder="https://images.unsplash.com/..."
                     />
-                    {block.content && (
-                      <div className="border-2 border-gray-300 p-2 bg-gray-50">
-                        <img
-                          src={block.content as string}
-                          alt="Preview"
-                          className="w-full h-64 object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x400?text=Invalid+Image+URL';
-                          }}
-                        />
-                        <p className="text-xs text-gray-500 mt-2">미리보기</p>
-                      </div>
-                    )}
                   </div>
                 )}
 
