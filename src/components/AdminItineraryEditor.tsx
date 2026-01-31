@@ -14,6 +14,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   Plus,
   Trash2,
   ArrowLeft,
@@ -33,7 +50,8 @@ import {
   CheckCircle2,
   XCircle,
   Package,
-  X
+  X,
+  GripVertical
 } from 'lucide-react';
 import { generateSchedule, recommendPlaces, ScheduleApiError } from '../services/scheduleApi';
 import { toast } from 'sonner';
@@ -774,6 +792,22 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
     setContentBlocks(newBlocks);
   };
 
+  // Drag and Drop: Content block reordering
+  const reorderContentBlocks = (oldIndex: number, newIndex: number) => {
+    setContentBlocks(prev => arrayMove(prev, oldIndex, newIndex));
+  };
+
+  // Handle content block drag end event
+  const handleContentBlockDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = contentBlocks.findIndex(block => block.id === active.id);
+      const newIndex = contentBlocks.findIndex(block => block.id === over.id);
+      reorderContentBlocks(oldIndex, newIndex);
+    }
+  };
+
   const addItemToBlockList = (blockId: string, item: string) => {
     if (!item.trim()) return;
     setContentBlocks(contentBlocks.map(block => {
@@ -930,6 +964,539 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
 
       return [...prev, interestId];
     });
+  };
+
+  // Drag and Drop: Activity reordering
+  const reorderActivities = (dayIdx: number, oldIndex: number, newIndex: number) => {
+    setDays(prev => prev.map((day, dIdx) => {
+      if (dIdx !== dayIdx) return day;
+      const newActivities = arrayMove(day.activities, oldIndex, newIndex);
+      return { ...day, activities: newActivities };
+    }));
+  };
+
+  // DnD sensors for better UX
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end event
+  const handleDragEnd = (event: DragEndEvent, dayIdx: number) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = parseInt(active.id.toString().split('-')[2]);
+      const newIndex = parseInt(over.id.toString().split('-')[2]);
+      reorderActivities(dayIdx, oldIndex, newIndex);
+    }
+  };
+
+  // SortableActivityCard component for drag and drop
+  interface SortableActivityCardProps {
+    id: string;
+    dayIdx: number;
+    actIdx: number;
+    activity: Activity;
+    aiSuggestionMode: { dayIdx: number; actIdx: number } | null;
+    setAiSuggestionMode: React.Dispatch<React.SetStateAction<{ dayIdx: number; actIdx: number } | null>>;
+    setAiPrompt: React.Dispatch<React.SetStateAction<string>>;
+    setAiSuggestions: React.Dispatch<React.SetStateAction<Activity[]>>;
+    updateActivity: (dayIndex: number, activityIndex: number, field: keyof Activity, value: any) => void;
+    deleteActivity: (dayIndex: number, activityIndex: number) => void;
+    aiPrompt: string;
+    aiSuggestions: Activity[];
+    isLoadingAI: boolean;
+    generateActivitySuggestions: (prompt: string, currentActivity: Activity) => Promise<void>;
+    cancelAISuggestion: () => void;
+    selectAISuggestion: (dayIdx: number, actIdx: number, suggestion: Activity) => void;
+  }
+
+  const SortableActivityCard: React.FC<SortableActivityCardProps> = ({
+    id,
+    dayIdx,
+    actIdx,
+    activity,
+    aiSuggestionMode,
+    setAiSuggestionMode,
+    setAiPrompt,
+    setAiSuggestions,
+    updateActivity,
+    deleteActivity,
+    aiPrompt,
+    aiSuggestions,
+    isLoadingAI,
+    generateActivitySuggestions,
+    cancelAISuggestion,
+    selectAISuggestion,
+  }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+      zIndex: isDragging ? 1000 : 'auto',
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style as React.CSSProperties}
+        className={`border-2 rounded-lg overflow-hidden ${
+          activity.isEvent
+            ? 'border-yellow-400 bg-yellow-50'
+            : 'border-black bg-white'
+        }`}
+      >
+        {/* Header Row: Drag Handle + Number + Time + Cost */}
+        <div className="flex items-center gap-4 p-4 border-b-2 border-gray-100">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded transition-colors"
+            title="드래그하여 순서 변경"
+          >
+            <GripVertical className="h-5 w-5 text-gray-400" />
+          </div>
+          <div className="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-base flex-shrink-0">
+            {actIdx + 1}
+          </div>
+          <Input
+            value={activity.time}
+            onChange={(e) => updateActivity(dayIdx, actIdx, 'time', e.target.value)}
+            placeholder="09:00 AM"
+            className="w-32 h-9 px-3 py-2 bg-yellow-400 border-2 border-black rounded font-bold text-sm focus:ring-0 focus:border-black"
+          />
+          {activity.isEvent && (
+            <Badge className="bg-black text-white border-2 border-black rounded px-3 py-1.5 text-xs font-bold">
+              EVENT
+            </Badge>
+          )}
+          <div className="flex-1" />
+          <Input
+            value={activity.estimatedCost}
+            onChange={(e) => updateActivity(dayIdx, actIdx, 'estimatedCost', e.target.value)}
+            placeholder="$20-50"
+            className="w-28 h-9 px-3 py-2 bg-gray-100 border-2 border-gray-300 rounded font-bold text-sm text-right focus:ring-0 focus:border-black"
+          />
+        </div>
+
+        {/* Content Body */}
+        <div className="p-4 space-y-4">
+          {/* Activity Name */}
+          <Input
+            value={activity.activity}
+            onChange={(e) => updateActivity(dayIdx, actIdx, 'activity', e.target.value)}
+            placeholder="Activity name"
+            className="font-bold text-lg border-0 border-b-2 border-gray-200 rounded-none px-0 py-2 focus:ring-0 focus:border-black"
+          />
+
+          {/* Location */}
+          <div className="flex items-center gap-2 py-1">
+            <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <Input
+              value={activity.location}
+              onChange={(e) => updateActivity(dayIdx, actIdx, 'location', e.target.value)}
+              placeholder="Location"
+              className="flex-1 text-sm text-gray-600 border-0 border-b border-gray-200 rounded-none px-0 py-1 focus:ring-0 focus:border-black"
+            />
+          </div>
+
+          {/* Description */}
+          <Textarea
+            value={activity.description}
+            onChange={(e) => updateActivity(dayIdx, actIdx, 'description', e.target.value)}
+            placeholder="Activity description"
+            rows={2}
+            className="text-sm text-gray-600 border-2 border-gray-200 rounded-lg p-3 resize-none focus:ring-0 focus:border-black"
+          />
+        </div>
+
+        {/* Footer: Action Buttons */}
+        <div className="flex items-center justify-between gap-2 px-4 py-3 bg-gray-50 border-t-2 border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={activity.isEvent || false}
+                onCheckedChange={(checked) => updateActivity(dayIdx, actIdx, 'isEvent', checked)}
+              />
+              <Label className="text-xs font-bold text-gray-600">이벤트</Label>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAiSuggestionMode({ dayIdx, actIdx });
+                setAiPrompt('');
+                setAiSuggestions([]);
+              }}
+              className="border-2 border-purple-500 text-purple-700 hover:bg-purple-50 h-9 px-3 text-xs font-bold"
+            >
+              <Wand2 className="h-3 w-3 mr-1" />
+              AI 추천
+            </Button>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => deleteActivity(dayIdx, actIdx)}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9 px-3"
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            삭제
+          </Button>
+        </div>
+
+        {/* AI Suggestion Mode */}
+        {aiSuggestionMode?.dayIdx === dayIdx && aiSuggestionMode?.actIdx === actIdx && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-4 bg-purple-50 border-t-2 border-purple-200 space-y-4"
+          >
+            {/* Category Selection */}
+            <div className="space-y-3">
+              <label style={{ color: '#581c87', fontWeight: 'bold', fontSize: '14px' }}>카테고리 선택</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {AI_RECOMMEND_CATEGORIES.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setAiPrompt(category)}
+                    disabled={isLoadingAI}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      fontWeight: aiPrompt === category ? 600 : 500,
+                      borderRadius: '16px',
+                      border: `1.5px solid ${aiPrompt === category ? '#9333ea' : '#d1d5db'}`,
+                      backgroundColor: aiPrompt === category ? '#f3e8ff' : 'white',
+                      color: aiPrompt === category ? '#7c3aed' : '#4b5563',
+                      cursor: isLoadingAI ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.15s ease',
+                      opacity: isLoadingAI ? 0.5 : 1
+                    }}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '12px' }}>
+                <button
+                  type="button"
+                  onClick={cancelAISuggestion}
+                  disabled={isLoadingAI}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    backgroundColor: 'white',
+                    height: '36px',
+                    padding: '0 16px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: isLoadingAI ? 'not-allowed' : 'pointer',
+                    opacity: isLoadingAI ? 0.5 : 1
+                  }}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={() => generateActivitySuggestions(aiPrompt, activity)}
+                  disabled={isLoadingAI || !aiPrompt.trim()}
+                  style={{
+                    backgroundColor: (isLoadingAI || !aiPrompt.trim()) ? '#a78bfa' : '#9333ea',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    padding: '0 20px',
+                    height: '36px',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '13px',
+                    border: 'none',
+                    cursor: (isLoadingAI || !aiPrompt.trim()) ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {isLoadingAI ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      생성중...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      추천받기
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* AI Suggestions */}
+            {aiSuggestions.length > 0 && (
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-purple-900">AI 추천 결과 (선택하세요)</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {aiSuggestions.map((suggestion, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="border-2 border-purple-200 bg-purple-50 rounded-lg p-4 hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer group"
+                      onClick={() => selectAISuggestion(dayIdx, actIdx, suggestion)}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-bold text-sm text-purple-900 group-hover:text-purple-700 line-clamp-2">
+                            {suggestion.activity}
+                          </h4>
+                          <Badge className="bg-purple-600 text-white text-xs shrink-0">
+                            옵션 {idx + 1}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-purple-700">
+                          <MapPin className="h-3 w-3" />
+                          <span className="line-clamp-1">{suggestion.location}</span>
+                        </div>
+                        <p className="text-xs text-gray-600 line-clamp-2">{suggestion.description}</p>
+                        <div className="flex items-center justify-between pt-2 border-t border-purple-200">
+                          <span className="text-xs font-bold text-purple-800">{suggestion.estimatedCost}</span>
+                          <Button
+                            size="sm"
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              selectAISuggestion(dayIdx, actIdx, suggestion);
+                            }}
+                            className="bg-purple-600 hover:bg-purple-700 text-white h-7 text-xs font-bold"
+                          >
+                            선택
+                          </Button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
+  // SortableContentBlock component for drag and drop
+  interface SortableContentBlockProps {
+    block: ContentBlock;
+    index: number;
+    updateContentBlock: (id: string, updates: Partial<ContentBlock>) => void;
+    deleteContentBlock: (id: string) => void;
+    moveBlockUp: (index: number) => void;
+    moveBlockDown: (index: number) => void;
+    addItemToBlockList: (blockId: string, item: string) => void;
+    removeItemFromBlockList: (blockId: string, itemIndex: number) => void;
+    totalBlocks: number;
+  }
+
+  const SortableContentBlock: React.FC<SortableContentBlockProps> = ({
+    block,
+    index,
+    updateContentBlock,
+    deleteContentBlock,
+    moveBlockUp,
+    moveBlockDown,
+    addItemToBlockList,
+    removeItemFromBlockList,
+    totalBlocks,
+  }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: block.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+      zIndex: isDragging ? 1000 : 'auto',
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style as React.CSSProperties}
+        className="bg-white border-2 border-black p-6 relative"
+      >
+        {/* Block Header */}
+        <div className="flex items-center justify-between mb-4 pb-3 border-b-2 border-gray-200">
+          <div className="flex items-center gap-3">
+            <div
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded transition-colors"
+              title="드래그하여 순서 변경"
+            >
+              <GripVertical className="h-5 w-5 text-gray-400" />
+            </div>
+            <div className="bg-black text-white w-8 h-8 flex items-center justify-center font-bold text-sm">
+              {index + 1}
+            </div>
+            <span className="font-bold uppercase text-sm">
+              {block.type === 'heading' && '📌 제목'}
+              {block.type === 'text' && '📝 텍스트'}
+              {block.type === 'image' && '🖼️ 이미지'}
+              {block.type === 'list' && '📋 리스트'}
+              {block.type === 'highlights' && '⭐ 하이라이트'}
+              {block.type === 'tips' && '💡 여행 팁'}
+              {block.type === 'includes' && '✅ 포함사항'}
+              {block.type === 'excludes' && '❌ 불포함사항'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => moveBlockUp(index)}
+              disabled={index === 0}
+              className="border-2 border-black rounded-none hover:bg-gray-100 disabled:opacity-30"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => moveBlockDown(index)}
+              disabled={index === totalBlocks - 1}
+              className="border-2 border-black rounded-none hover:bg-gray-100 disabled:opacity-30"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => deleteContentBlock(block.id)}
+              className="border-2 border-red-600 text-red-600 rounded-none hover:bg-red-600 hover:text-white"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Block Content */}
+        {block.type === 'heading' && (
+          <div>
+            <Input
+              value={block.content as string}
+              onChange={(e) => updateContentBlock(block.id, { content: e.target.value })}
+              placeholder="제목을 입력하세요"
+              className="border-2 border-black rounded-none text-2xl font-bold focus-visible:ring-0 focus-visible:border-black"
+            />
+          </div>
+        )}
+
+        {block.type === 'text' && (
+          <div>
+            <Textarea
+              value={block.content as string}
+              onChange={(e) => updateContentBlock(block.id, { content: e.target.value })}
+              placeholder="자유롭게 텍스트를 작성하세요..."
+              rows={6}
+              className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-black resize-y"
+            />
+          </div>
+        )}
+
+        {block.type === 'image' && (
+          <div className="space-y-3">
+            <ImageUploadField
+              value={block.content as string}
+              onChange={(url) => updateContentBlock(block.id, { content: url })}
+              showUrlInput={true}
+              height="h-48"
+              placeholder="https://images.unsplash.com/..."
+            />
+          </div>
+        )}
+
+        {(block.type === 'list' || block.type === 'highlights' || block.type === 'tips' ||
+          block.type === 'includes' || block.type === 'excludes') && (
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                placeholder={`항목 추가 (Enter로 추가)`}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const input = e.currentTarget;
+                    addItemToBlockList(block.id, input.value);
+                    input.value = '';
+                  }
+                }}
+                className="border-2 border-black rounded-none"
+              />
+              <Button
+                onClick={(e) => {
+                  const input = (e.currentTarget.previousSibling as HTMLInputElement);
+                  addItemToBlockList(block.id, input.value);
+                  input.value = '';
+                }}
+                className="bg-black text-white rounded-none hover:bg-gray-800"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <ul className="space-y-2">
+              {(Array.isArray(block.content) ? block.content : []).map((item, idx) => (
+                <li key={idx} className="flex items-center justify-between p-3 border-2 border-gray-300 bg-gray-50">
+                  <span className="flex items-center gap-2">
+                    {block.type === 'highlights' && '✓'}
+                    {block.type === 'tips' && '💡'}
+                    {block.type === 'includes' && '✅'}
+                    {block.type === 'excludes' && '❌'}
+                    {block.type === 'list' && '•'}
+                    <span>{item}</span>
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeItemFromBlockList(block.id, idx)}
+                    className="text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+            {(Array.isArray(block.content) ? block.content : []).length === 0 && (
+              <p className="text-sm text-gray-400 text-center py-4 border-2 border-dashed border-gray-300">
+                아직 항목이 없습니다. 위에서 항목을 추가하세요.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -1442,246 +2009,38 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
                   </div>
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
-                  {day.activities.map((activity, actIdx) => (
-                    <div
-                      key={actIdx}
-                      className={`border-2 rounded-lg overflow-hidden ${
-                        activity.isEvent
-                          ? 'border-yellow-400 bg-yellow-50'
-                          : 'border-black bg-white'
-                      }`}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={(event) => handleDragEnd(event, dayIdx)}
+                  >
+                    <SortableContext
+                      items={day.activities.map((_, idx) => `activity-${dayIdx}-${idx}`)}
+                      strategy={verticalListSortingStrategy}
                     >
-                      {/* Header Row: Number + Time + Cost */}
-                      <div className="flex items-center gap-4 p-4 border-b-2 border-gray-100">
-                        <div className="bg-black text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-base flex-shrink-0">
-                          {actIdx + 1}
-                        </div>
-                        <Input
-                          value={activity.time}
-                          onChange={(e) => updateActivity(dayIdx, actIdx, 'time', e.target.value)}
-                          placeholder="09:00 AM"
-                          className="w-32 h-9 px-3 py-2 bg-yellow-400 border-2 border-black rounded font-bold text-sm focus:ring-0 focus:border-black"
+                      {day.activities.map((activity, actIdx) => (
+                        <SortableActivityCard
+                          key={`activity-${dayIdx}-${actIdx}`}
+                          id={`activity-${dayIdx}-${actIdx}`}
+                          dayIdx={dayIdx}
+                          actIdx={actIdx}
+                          activity={activity}
+                          aiSuggestionMode={aiSuggestionMode}
+                          setAiSuggestionMode={setAiSuggestionMode}
+                          setAiPrompt={setAiPrompt}
+                          setAiSuggestions={setAiSuggestions}
+                          updateActivity={updateActivity}
+                          deleteActivity={deleteActivity}
+                          aiPrompt={aiPrompt}
+                          aiSuggestions={aiSuggestions}
+                          isLoadingAI={isLoadingAI}
+                          generateActivitySuggestions={generateActivitySuggestions}
+                          cancelAISuggestion={cancelAISuggestion}
+                          selectAISuggestion={selectAISuggestion}
                         />
-                        {activity.isEvent && (
-                          <Badge className="bg-black text-white border-2 border-black rounded px-3 py-1.5 text-xs font-bold">
-                            EVENT
-                          </Badge>
-                        )}
-                        <div className="flex-1" />
-                        <Input
-                          value={activity.estimatedCost}
-                          onChange={(e) => updateActivity(dayIdx, actIdx, 'estimatedCost', e.target.value)}
-                          placeholder="$20-50"
-                          className="w-28 h-9 px-3 py-2 bg-gray-100 border-2 border-gray-300 rounded font-bold text-sm text-right focus:ring-0 focus:border-black"
-                        />
-                      </div>
-
-                      {/* Content Body */}
-                      <div className="p-4 space-y-4">
-                        {/* Activity Name */}
-                        <Input
-                          value={activity.activity}
-                          onChange={(e) => updateActivity(dayIdx, actIdx, 'activity', e.target.value)}
-                          placeholder="Activity name"
-                          className="font-bold text-lg border-0 border-b-2 border-gray-200 rounded-none px-0 py-2 focus:ring-0 focus:border-black"
-                        />
-
-                        {/* Location */}
-                        <div className="flex items-center gap-2 py-1">
-                          <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                          <Input
-                            value={activity.location}
-                            onChange={(e) => updateActivity(dayIdx, actIdx, 'location', e.target.value)}
-                            placeholder="Location"
-                            className="flex-1 text-sm text-gray-600 border-0 border-b border-gray-200 rounded-none px-0 py-1 focus:ring-0 focus:border-black"
-                          />
-                        </div>
-
-                        {/* Description */}
-                        <Textarea
-                          value={activity.description}
-                          onChange={(e) => updateActivity(dayIdx, actIdx, 'description', e.target.value)}
-                          placeholder="Activity description"
-                          rows={2}
-                          className="text-sm text-gray-600 border-2 border-gray-200 rounded-lg p-3 resize-none focus:ring-0 focus:border-black"
-                        />
-                      </div>
-
-                      {/* Footer: Action Buttons */}
-                      <div className="flex items-center justify-between gap-2 px-4 py-3 bg-gray-50 border-t-2 border-gray-100">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={activity.isEvent || false}
-                              onCheckedChange={(checked) => updateActivity(dayIdx, actIdx, 'isEvent', checked)}
-                            />
-                            <Label className="text-xs font-bold text-gray-600">이벤트</Label>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setAiSuggestionMode({ dayIdx, actIdx });
-                              setAiPrompt('');
-                              setAiSuggestions([]);
-                            }}
-                            className="border-2 border-purple-500 text-purple-700 hover:bg-purple-50 h-9 px-3 text-xs font-bold"
-                          >
-                            <Wand2 className="h-3 w-3 mr-1" />
-                            AI 추천
-                          </Button>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteActivity(dayIdx, actIdx)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9 px-3"
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          삭제
-                        </Button>
-                      </div>
-
-                      {/* AI Suggestion Mode */}
-                      {aiSuggestionMode?.dayIdx === dayIdx && aiSuggestionMode?.actIdx === actIdx && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="px-4 py-4 bg-purple-50 border-t-2 border-purple-200 space-y-4"
-                        >
-                          {/* Category Selection */}
-                          <div className="space-y-3">
-                            <label style={{ color: '#581c87', fontWeight: 'bold', fontSize: '14px' }}>카테고리 선택</label>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                              {AI_RECOMMEND_CATEGORIES.map((category) => (
-                                <button
-                                  key={category}
-                                  type="button"
-                                  onClick={() => setAiPrompt(category)}
-                                  disabled={isLoadingAI}
-                                  style={{
-                                    padding: '6px 12px',
-                                    fontSize: '13px',
-                                    fontWeight: aiPrompt === category ? 600 : 500,
-                                    borderRadius: '16px',
-                                    border: `1.5px solid ${aiPrompt === category ? '#9333ea' : '#d1d5db'}`,
-                                    backgroundColor: aiPrompt === category ? '#f3e8ff' : 'white',
-                                    color: aiPrompt === category ? '#7c3aed' : '#4b5563',
-                                    cursor: isLoadingAI ? 'not-allowed' : 'pointer',
-                                    transition: 'all 0.15s ease',
-                                    opacity: isLoadingAI ? 0.5 : 1
-                                  }}
-                                >
-                                  {category}
-                                </button>
-                              ))}
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '12px' }}>
-                              <button
-                                type="button"
-                                onClick={cancelAISuggestion}
-                                disabled={isLoadingAI}
-                                style={{
-                                  border: '1px solid #d1d5db',
-                                  backgroundColor: 'white',
-                                  height: '36px',
-                                  padding: '0 16px',
-                                  borderRadius: '6px',
-                                  fontSize: '13px',
-                                  fontWeight: 500,
-                                  cursor: isLoadingAI ? 'not-allowed' : 'pointer',
-                                  opacity: isLoadingAI ? 0.5 : 1
-                                }}
-                              >
-                                취소
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => generateActivitySuggestions(aiPrompt, activity)}
-                                disabled={isLoadingAI || !aiPrompt.trim()}
-                                style={{
-                                  backgroundColor: (isLoadingAI || !aiPrompt.trim()) ? '#a78bfa' : '#9333ea',
-                                  color: 'white',
-                                  fontWeight: 'bold',
-                                  padding: '0 20px',
-                                  height: '36px',
-                                  borderRadius: '6px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '6px',
-                                  fontSize: '13px',
-                                  border: 'none',
-                                  cursor: (isLoadingAI || !aiPrompt.trim()) ? 'not-allowed' : 'pointer'
-                                }}
-                              >
-                                {isLoadingAI ? (
-                                  <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    생성중...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Sparkles className="h-4 w-4" />
-                                    추천받기
-                                  </>
-                                )}
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* AI Suggestions */}
-                          {aiSuggestions.length > 0 && (
-                            <div className="space-y-3">
-                              <Label className="text-sm font-bold text-purple-900">AI 추천 결과 (선택하세요)</Label>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                {aiSuggestions.map((suggestion, idx) => (
-                                  <motion.div
-                                    key={idx}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    className="border-2 border-purple-200 bg-purple-50 rounded-lg p-4 hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer group"
-                                    onClick={() => selectAISuggestion(dayIdx, actIdx, suggestion)}
-                                  >
-                                    <div className="space-y-2">
-                                      <div className="flex items-start justify-between gap-2">
-                                        <h4 className="font-bold text-sm text-purple-900 group-hover:text-purple-700 line-clamp-2">
-                                          {suggestion.activity}
-                                        </h4>
-                                        <Badge className="bg-purple-600 text-white text-xs shrink-0">
-                                          옵션 {idx + 1}
-                                        </Badge>
-                                      </div>
-                                      <div className="flex items-center gap-1 text-xs text-purple-700">
-                                        <MapPin className="h-3 w-3" />
-                                        <span className="line-clamp-1">{suggestion.location}</span>
-                                      </div>
-                                      <p className="text-xs text-gray-600 line-clamp-2">{suggestion.description}</p>
-                                      <div className="flex items-center justify-between pt-2 border-t border-purple-200">
-                                        <span className="text-xs font-bold text-purple-800">{suggestion.estimatedCost}</span>
-                                        <Button
-                                          size="sm"
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            selectAISuggestion(dayIdx, actIdx, suggestion);
-                                          }}
-                                          className="bg-purple-600 hover:bg-purple-700 text-white h-7 text-xs font-bold"
-                                        >
-                                          선택
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </motion.div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </motion.div>
-                      )}
-                    </div>
-                  ))}
+                      ))}
+                    </SortableContext>
+                  </DndContext>
 
                   <Button
                     variant="outline"
@@ -1809,153 +2168,31 @@ export function AdminItineraryEditor({ itinerary, onSave, onCancel }: AdminItine
 
           {/* Content Blocks */}
           <div className="space-y-4">
-            {contentBlocks.map((block, index) => (
-              <motion.div
-                key={block.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white border-2 border-black p-6 relative"
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleContentBlockDragEnd}
+            >
+              <SortableContext
+                items={contentBlocks.map(block => block.id)}
+                strategy={verticalListSortingStrategy}
               >
-                {/* Block Header */}
-                <div className="flex items-center justify-between mb-4 pb-3 border-b-2 border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-black text-white w-8 h-8 flex items-center justify-center font-bold text-sm">
-                      {index + 1}
-                    </div>
-                    <span className="font-bold uppercase text-sm">
-                      {block.type === 'heading' && '📌 제목'}
-                      {block.type === 'text' && '📝 텍스트'}
-                      {block.type === 'image' && '🖼️ 이미지'}
-                      {block.type === 'list' && '📋 리스트'}
-                      {block.type === 'highlights' && '⭐ 하이라이트'}
-                      {block.type === 'tips' && '💡 여행 팁'}
-                      {block.type === 'includes' && '✅ 포함사항'}
-                      {block.type === 'excludes' && '❌ 불포함사항'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => moveBlockUp(index)}
-                      disabled={index === 0}
-                      className="border-2 border-black rounded-none hover:bg-gray-100 disabled:opacity-30"
-                    >
-                      <ChevronUp className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => moveBlockDown(index)}
-                      disabled={index === contentBlocks.length - 1}
-                      className="border-2 border-black rounded-none hover:bg-gray-100 disabled:opacity-30"
-                    >
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => deleteContentBlock(block.id)}
-                      className="border-2 border-red-600 text-red-600 rounded-none hover:bg-red-600 hover:text-white"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Block Content */}
-                {block.type === 'heading' && (
-                  <div>
-                    <Input
-                      value={block.content as string}
-                      onChange={(e) => updateContentBlock(block.id, { content: e.target.value })}
-                      placeholder="제목을 입력하세요"
-                      className="border-2 border-black rounded-none text-2xl font-bold focus-visible:ring-0 focus-visible:border-black"
-                    />
-                  </div>
-                )}
-
-                {block.type === 'text' && (
-                  <div>
-                    <Textarea
-                      value={block.content as string}
-                      onChange={(e) => updateContentBlock(block.id, { content: e.target.value })}
-                      placeholder="자유롭게 텍스트를 작성하세요..."
-                      rows={6}
-                      className="border-2 border-black rounded-none focus-visible:ring-0 focus-visible:border-black resize-y"
-                    />
-                  </div>
-                )}
-
-                {block.type === 'image' && (
-                  <div className="space-y-3">
-                    <ImageUploadField
-                      value={block.content as string}
-                      onChange={(url) => updateContentBlock(block.id, { content: url })}
-                      showUrlInput={true}
-                      height="h-48"
-                      placeholder="https://images.unsplash.com/..."
-                    />
-                  </div>
-                )}
-
-                {(block.type === 'list' || block.type === 'highlights' || block.type === 'tips' || 
-                  block.type === 'includes' || block.type === 'excludes') && (
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder={`항목 추가 (Enter로 추가)`}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            const input = e.currentTarget;
-                            addItemToBlockList(block.id, input.value);
-                            input.value = '';
-                          }
-                        }}
-                        className="border-2 border-black rounded-none"
-                      />
-                      <Button
-                        onClick={(e) => {
-                          const input = (e.currentTarget.previousSibling as HTMLInputElement);
-                          addItemToBlockList(block.id, input.value);
-                          input.value = '';
-                        }}
-                        className="bg-black text-white rounded-none hover:bg-gray-800"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <ul className="space-y-2">
-                      {(Array.isArray(block.content) ? block.content : []).map((item, idx) => (
-                        <li key={idx} className="flex items-center justify-between p-3 border-2 border-gray-300 bg-gray-50">
-                          <span className="flex items-center gap-2">
-                            {block.type === 'highlights' && '✓'}
-                            {block.type === 'tips' && '💡'}
-                            {block.type === 'includes' && '✅'}
-                            {block.type === 'excludes' && '❌'}
-                            {block.type === 'list' && '•'}
-                            <span>{item}</span>
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeItemFromBlockList(block.id, idx)}
-                            className="text-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </li>
-                      ))}
-                    </ul>
-                    {(Array.isArray(block.content) ? block.content : []).length === 0 && (
-                      <p className="text-sm text-gray-400 text-center py-4 border-2 border-dashed border-gray-300">
-                        아직 항목이 없습니다. 위에서 항목을 추가하세요.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </motion.div>
-            ))}
+                {contentBlocks.map((block, index) => (
+                  <SortableContentBlock
+                    key={block.id}
+                    block={block}
+                    index={index}
+                    updateContentBlock={updateContentBlock}
+                    deleteContentBlock={deleteContentBlock}
+                    moveBlockUp={moveBlockUp}
+                    moveBlockDown={moveBlockDown}
+                    addItemToBlockList={addItemToBlockList}
+                    removeItemFromBlockList={removeItemFromBlockList}
+                    totalBlocks={contentBlocks.length}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
 
             {contentBlocks.length === 0 && (
               <div className="text-center py-16 border-2 border-dashed border-gray-300 bg-gray-50">
