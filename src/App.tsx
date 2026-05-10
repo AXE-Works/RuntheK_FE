@@ -47,9 +47,9 @@ import { motion } from 'motion/react';
 import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
 import { saveTripWithItinerary } from './services/tripApi';
 import { useAuth } from './providers/AuthProvider';
+import { useEvents } from './providers/EventsProvider';
 import { ScheduleGenerateResponse, modifySchedule, ScheduleApiError } from './services/scheduleApi';
 import { toast } from 'sonner';
-import { mockEvents, type EventItem } from '@/data/mockEvents';
 
 export interface ItineraryData {
   id: string;
@@ -118,7 +118,7 @@ export default function App({ initialTab }: AppProps = {}) {
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
   const [confirmedTrips, setConfirmedTrips] = useState<any[]>([]);
   const [myTripsDefaultTab, setMyTripsDefaultTab] = useState<string>("my-trips");
-  const [events, setEvents] = useState<EventItem[]>(mockEvents);
+  const { events, setEvents } = useEvents();
   const [language, setLanguage] = useState<'ko' | 'en' | 'ja' | 'zh'>('en');
   const [selectedBannerDetail, setSelectedBannerDetail] = useState<any>(null);
 

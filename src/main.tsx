@@ -10,13 +10,15 @@ import { PlanPage } from "./pages/PlanPage";
 import { MyTripsPage } from "./pages/MyTripsPage";
 import { AdminPage } from "./pages/AdminPage";
 import { AuthProvider } from "./providers/AuthProvider";
+import { EventsProvider } from "./providers/EventsProvider";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <HelmetProvider>
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <EventsProvider>
+          <Routes>
           {/* Phase 2 PR-2: route skeleton — root redirects to /plan */}
           <Route path="/" element={<Navigate to="/plan" replace />} />
           <Route path="/plan" element={<PlanPage />} />
@@ -39,6 +41,7 @@ createRoot(document.getElementById("root")!).render(
           {/* 임시 catch-all — 작업 7(별도 세션)에서 제거 예정 */}
           <Route path="/*" element={<App />} />
         </Routes>
+        </EventsProvider>
       </AuthProvider>
     </BrowserRouter>
   </HelmetProvider>
