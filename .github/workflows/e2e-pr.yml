@@ -1,0 +1,79 @@
+# Phase 1.5 PR-4 / spec phase-1.5-e2e.md §5.1
+#
+# Runs the Playwright golden-path scenario against the dev server with all
+# BE / AI calls fixture-stubbed (page.route()). This guarantees FE-only
+# regression coverage; BE integration is exercised by e2e-nightly.yml.
+#
+# No secrets are required here — the scenario never reaches a real backend.
+#
+# Activation policy (spec §0.2.1): the workflow file ships in Phase 1.5,
+# but main branch protection should only require it after Phase 2 PR-8
+# lands real /plan and /my-trips routes.
+
+name: E2E (PR)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - main
+      - 'Phase*'
+
+concurrency:
+  group: e2e-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Start FE dev server (fixture stubs only — no BE)
+        run: npm run dev &
+
+      - name: Wait for FE dev server
+        run: |
+          for i in {1..60}; do
+            if curl -sf http://localhost:3000 >/dev/null; then
+              echo "dev server up"; exit 0
+            fi
+            sleep 1
+          done
+          echo "dev server failed to start"; exit 1
+
+      - name: Run e2e
+        env:
+          # Reserved for spec scenarios that branch on stub vs real BE.
+          # Scenario A currently always stubs; Phase 2 follow-up will wire
+          # this flag through page.route() conditionals.
+          E2E_USE_STUB: 'true'
+        run: npm run e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-pr
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-pr
+          path: test-results/
+          retention-days: 7

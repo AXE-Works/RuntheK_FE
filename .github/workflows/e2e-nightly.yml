@@ -1,0 +1,188 @@
+# Phase 1.5 PR-4 / spec phase-1.5-e2e.md §5.2
+#
+# Nightly real-BE regression. Boots a real PostgreSQL + Redis + the BE
+# Spring Boot app, then runs the Playwright golden-path scenario against
+# the running BE. AI calls (runthek-api.onrender.com) stay stubbed in
+# every environment — see spec §1.4.
+#
+# Polyrepo adaptation (this repo is RuntheK-Travel/FE; BE lives in
+# RuntheK-Travel/BE). The spec assumed monorepo paths
+# `BE_Korea_Travel_AI_Assistant/` and `[FE]Korea Travel AI Assistant/`
+# under one tree; we cross-checkout instead.
+#
+# Required GitHub Secrets (jewook to register):
+#   - E2E_JWT_SECRET           — 32+ char string for the BE JWT signing key
+#   - E2E_GOOGLE_CLIENT_ID     — any OAuth client id; not actually invoked
+#                                 because the scenario stubs Google login
+#   - BE_REPO_TOKEN (optional) — PAT with `repo:read` on RuntheK-Travel/BE
+#                                 if that repo is private. Public repo: leave unset.
+#
+# Outstanding follow-ups for the next PR:
+#   - Scenario A (golden-path-plan.spec.ts) currently always stubs every
+#     BE endpoint via page.route(); to actually exercise real BE here it
+#     must honour `E2E_USE_STUB=false` and skip those routes.
+#   - Fixture-diff step (spec §작업 6, scripts/fixture-diff.mjs) is left
+#     commented out below until that work is bundled in.
+
+name: E2E Nightly (real BE)
+
+on:
+  schedule:
+    - cron: '0 17 * * *' # UTC 17:00 = KST 02:00 (spec §1.5)
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-nightly
+  cancel-in-progress: false
+
+jobs:
+  e2e-nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: e2e
+          POSTGRES_PASSWORD: e2e
+          POSTGRES_DB: korea_travel
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U e2e"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout FE (this repo)
+        uses: actions/checkout@v4
+        with:
+          path: fe
+
+      - name: Checkout BE (cross-repo)
+        uses: actions/checkout@v4
+        with:
+          repository: RuntheK-Travel/BE
+          # token: leave blank for a public BE; otherwise BE_REPO_TOKEN.
+          token: ${{ secrets.BE_REPO_TOKEN || github.token }}
+          path: be
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Start BE (dev profile, real bootRun)
+        working-directory: be
+        env:
+          SPRING_PROFILES_ACTIVE: dev
+          DB_HOST: localhost
+          DB_PORT: '5432'
+          DB_NAME: korea_travel
+          DB_USERNAME: e2e
+          DB_PASSWORD: e2e
+          REDIS_HOST: localhost
+          REDIS_PORT: '6379'
+          JWT_SECRET: ${{ secrets.E2E_JWT_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.E2E_GOOGLE_CLIENT_ID }}
+        run: |
+          chmod +x gradlew
+          ./gradlew bootRun --no-daemon &
+          echo "Waiting for BE on :8080..."
+          for i in {1..120}; do
+            if curl -sf http://localhost:8080/actuator/health >/dev/null; then
+              echo "BE up after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "BE failed to start within 120s"; exit 1
+
+      - name: Verify E2E seed accounts (Phase 1.5 PR-2)
+        run: |
+          curl -sS -X POST http://localhost:8080/api/v1/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"e2e-user@runthek.test","password":"Test1234!"}' \
+            | tee /tmp/login.json
+          grep -q '"success":true' /tmp/login.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: fe/package-lock.json
+
+      - name: Install FE deps + chromium
+        working-directory: fe
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Start FE dev server
+        working-directory: fe
+        env:
+          VITE_API_BASE_URL: http://localhost:8080/api/v1
+        run: |
+          npm run dev &
+          for i in {1..60}; do
+            if curl -sf http://localhost:3000 >/dev/null; then
+              echo "FE up"; exit 0
+            fi
+            sleep 1
+          done
+          echo "FE failed to start"; exit 1
+
+      - name: Run e2e against real BE
+        working-directory: fe
+        env:
+          E2E_USE_STUB: 'false'
+          E2E_BE_URL: http://localhost:8080
+        run: npm run e2e
+
+      # ── Fixture diff (spec §작업 6 — separate PR) ────────────────────────
+      # - name: Fixture diff (real BE response vs captured fixtures)
+      #   working-directory: fe
+      #   run: npm run e2e:fixture-diff
+
+      - name: Open GitHub Issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const date = new Date().toISOString().slice(0, 10);
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.issues.create({
+              ...context.repo,
+              title: `E2E Nightly failed (${date})`,
+              labels: ['e2e', 'nightly-fail'],
+              body: [
+                `Workflow run: ${runUrl}`,
+                ``,
+                `Auto-generated. Triage required: classify as fixture drift / BE regression / FE regression and assign accordingly.`,
+              ].join('\n'),
+            });
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-nightly
+          path: fe/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-nightly
+          path: fe/test-results/
+          retention-days: 14
