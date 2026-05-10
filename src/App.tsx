@@ -479,7 +479,11 @@ export default function App({ initialTab }: AppProps = {}) {
               {currentUser ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full">
+                    <Button
+                      variant="ghost"
+                      className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full"
+                      data-testid="btn-user-menu"
+                    >
                       <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                         <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
                         <AvatarFallback className="bg-gray-100 text-gray-900 text-sm">
