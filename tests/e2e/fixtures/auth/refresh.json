@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refreshed-placeholder.signature",
+    "expiresIn": 18000
+  },
+  "meta": {
+    "timestamp": "2026-05-10T00:00:00",
+    "requestId": "00000000-0000-0000-0000-000000000098"
+  }
+}

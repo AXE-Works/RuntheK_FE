@@ -1,0 +1,33 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "trip-00000000-0000-0000-0000-000000000001",
+      "title": "3 Days Korea Adventure",
+      "duration": "3 days",
+      "interests": ["food", "culture"],
+      "budget": "mid-range",
+      "status": "upcoming",
+      "startDate": "2026-06-01",
+      "endDate": "2026-06-03",
+      "confirmedAt": "2026-05-10T00:00:00",
+      "thumbnail": null,
+      "cities": ["Seoul"],
+      "daysCount": 3,
+      "activitiesCount": 4,
+      "averageRating": null
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrev": false
+  },
+  "meta": {
+    "timestamp": "2026-05-10T00:00:00",
+    "requestId": "00000000-0000-0000-0000-000000000096"
+  }
+}

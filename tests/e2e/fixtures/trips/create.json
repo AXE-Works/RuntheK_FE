@@ -1,0 +1,48 @@
+{
+  "success": true,
+  "data": {
+    "trip_id": "trip-00000000-0000-0000-0000-000000000001",
+    "itinerary_id": "itin-00000000-0000-0000-0000-000000000001",
+    "title": "3 Days Korea Adventure",
+    "status": "upcoming",
+    "start_date": "2026-06-01",
+    "confirmed_at": "2026-05-10T00:00:00",
+    "meta": {
+      "cities": ["Seoul"],
+      "interests": ["Korean Food", "Culture & History"],
+      "budget_level": "MEDIUM",
+      "duration_days": 3,
+      "generated_at": "2026-05-10T00:00:00"
+    },
+    "itinerary": [
+      {
+        "day": 1,
+        "date": "2026-06-01",
+        "day_title": "Day 1 - Royal Seoul",
+        "total_travel_time": 45,
+        "total_distance_km": 5.2,
+        "items": [
+          {
+            "place_name": "Gyeongbokgung Palace",
+            "address": "161 Sajik-ro, Jongno-gu, Seoul",
+            "time": "09:00",
+            "description": "Explore the largest of the Five Grand Palaces",
+            "rating": 4.5,
+            "review_count": 12500,
+            "opening_hours": "09:00 - 18:00",
+            "item_type": "place",
+            "transport_from_prev": null
+          }
+        ]
+      }
+    ],
+    "warnings": [],
+    "travel_tips": [
+      "Download Papago or Google Translate for language assistance"
+    ]
+  },
+  "meta": {
+    "timestamp": "2026-05-10T00:00:00",
+    "requestId": "00000000-0000-0000-0000-000000000097"
+  }
+}

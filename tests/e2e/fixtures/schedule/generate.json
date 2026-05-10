@@ -1,0 +1,116 @@
+{
+  "id": 1001,
+  "itinerary": [
+    {
+      "day": 1,
+      "date": "2026-06-01",
+      "day_title": "Day 1 - Royal Seoul",
+      "total_travel_time": 45,
+      "total_distance_km": 5.2,
+      "items": [
+        {
+          "place_name": "Gyeongbokgung Palace",
+          "address": "161 Sajik-ro, Jongno-gu, Seoul",
+          "time": "09:00 - 11:00",
+          "description": "Explore the largest of the Five Grand Palaces built during the Joseon Dynasty",
+          "recommendation_reason": "A must-see cultural landmark representing Korean history",
+          "image_url": null,
+          "rating": 4.5,
+          "review_count": 12500,
+          "google_maps_url": "https://maps.google.com/?q=37.579617,126.977041",
+          "price_range": "₩3,000",
+          "item_type": "place",
+          "opening_hours": "09:00 - 18:00",
+          "is_open_on_date": true,
+          "transport_from_prev": null
+        },
+        {
+          "place_name": "Tosokchon Samgyetang",
+          "address": "5 Jahamun-ro 5-gil, Jongno-gu, Seoul",
+          "time": "12:00 - 13:00",
+          "description": "Famous ginseng chicken soup restaurant near Gyeongbokgung",
+          "recommendation_reason": null,
+          "image_url": null,
+          "rating": 4.3,
+          "review_count": 8200,
+          "google_maps_url": "https://maps.google.com/?q=37.580246,126.971851",
+          "price_range": "₩15,000-20,000",
+          "item_type": "restaurant",
+          "opening_hours": "10:00 - 21:00",
+          "is_open_on_date": true,
+          "transport_from_prev": {
+            "from_place": "Gyeongbokgung Palace",
+            "to_place": "Tosokchon Samgyetang",
+            "duration_minutes": 10,
+            "distance_km": 0.6,
+            "transport_mode": "walking",
+            "transit_details": null,
+            "cost_estimate": null
+          }
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "date": "2026-06-02",
+      "day_title": "Day 2 - Bukchon & Insadong",
+      "total_travel_time": 30,
+      "total_distance_km": 2.5,
+      "items": [
+        {
+          "place_name": "Bukchon Hanok Village",
+          "address": "37, Gyedong-gil, Jongno-gu, Seoul",
+          "time": "10:00 - 12:00",
+          "description": "Traditional Korean village with hundreds of hanok houses",
+          "recommendation_reason": null,
+          "image_url": null,
+          "rating": 4.4,
+          "review_count": 9800,
+          "google_maps_url": "https://maps.google.com/?q=37.582604,126.985236",
+          "price_range": null,
+          "item_type": "place",
+          "opening_hours": "Open 24 hours",
+          "is_open_on_date": true,
+          "transport_from_prev": null
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "date": "2026-06-03",
+      "day_title": "Day 3 - Modern Seoul",
+      "total_travel_time": 60,
+      "total_distance_km": 8.0,
+      "items": [
+        {
+          "place_name": "Dongdaemun Design Plaza",
+          "address": "281 Eulji-ro, Jung-gu, Seoul",
+          "time": "10:00 - 13:00",
+          "description": "Iconic neofuturistic landmark for design and shopping",
+          "recommendation_reason": null,
+          "image_url": null,
+          "rating": 4.2,
+          "review_count": 15000,
+          "google_maps_url": "https://maps.google.com/?q=37.567244,127.009501",
+          "price_range": null,
+          "item_type": "place",
+          "opening_hours": "10:00 - 19:00",
+          "is_open_on_date": true,
+          "transport_from_prev": null
+        }
+      ]
+    }
+  ],
+  "warnings": [],
+  "meta": {
+    "cities": ["Seoul"],
+    "interests": ["Korean Food", "Culture & History"],
+    "budget_level": "MEDIUM",
+    "duration_days": 3,
+    "generated_at": "2026-05-10T00:00:00.000Z"
+  },
+  "travel_tips": [
+    "Download Papago or Google Translate for language assistance",
+    "Get a T-money card for convenient public transportation"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "data": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "name": "E2E User",
+    "email": "e2e-user@runthek.test",
+    "avatarUrl": null,
+    "country": null,
+    "bio": null,
+    "phoneCountryCode": null,
+    "phone": null,
+    "provider": "email",
+    "status": "active",
+    "role": "user",
+    "preferences": null,
+    "tripCount": 0,
+    "totalCountriesVisited": 0,
+    "emailVerified": true,
+    "createdAt": "2026-05-10T00:00:00"
+  },
+  "meta": {
+    "timestamp": "2026-05-10T00:00:00",
+    "requestId": "00000000-0000-0000-0000-000000000095"
+  }
+}

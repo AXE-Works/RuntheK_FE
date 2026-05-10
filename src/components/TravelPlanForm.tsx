@@ -660,6 +660,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                 return (
                   <div
                     key={interest.id}
+                    data-testid={`interest-${interest.id}`}
                     onClick={() => !isDisabled && handleInterestToggle(interest.id)}
                     className={`
                       transition-all duration-200 border-2 rounded-xl p-2 flex flex-col items-center justify-center gap-2 h-20
@@ -705,6 +706,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                 return (
                   <div
                     key={option.value}
+                    data-testid={`style-${option.value}`}
                     onClick={() => setUserInput(prev => ({ ...prev, budget: option.value }))}
                     className={`
                       cursor-pointer transition-all duration-200 border-2 rounded-xl p-6 flex flex-col items-center justify-center text-center gap-2
@@ -748,6 +750,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
                 return (
                   <div
                     key={dest.id}
+                    data-testid={`city-${dest.id}`}
                     onClick={() => handleDestinationToggle(dest.id)}
                     className={`
                       cursor-pointer px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 border-2
@@ -937,6 +940,7 @@ export function TravelPlanForm({ onItineraryGenerated, isGenerating, setIsGenera
         transition={{ duration: 0.6, delay: 0.5 }}
       >
         <Button
+          data-testid="btn-generate"
           onClick={handleGenerate}
           disabled={isGenerating || !currentUser || !userInput.duration || userInput.interests.length === 0 || !userInput.startDate}
           size="lg"

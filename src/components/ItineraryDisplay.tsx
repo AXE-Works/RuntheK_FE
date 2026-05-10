@@ -184,6 +184,7 @@ export function ItineraryDisplay({ itinerary, onEdit, onConfirm, onRegenerate, o
                 <div className="flex flex-col sm:flex-row gap-2 md:gap-3 justify-center">
                   {onConfirm && (
                     <Button
+                      data-testid="btn-save-itinerary"
                       size="lg"
                       className="bg-black text-white hover:bg-gray-800 text-sm md:text-base h-12 px-8 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all font-black uppercase tracking-wide"
                       onClick={() => setShowConfirmDialog(true)}
