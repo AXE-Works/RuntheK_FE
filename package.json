@@ -72,6 +72,8 @@
             "typecheck": "tsc --noEmit",
             "e2e": "playwright test",
             "e2e:ui": "playwright test --ui",
-            "e2e:codegen": "playwright codegen http://localhost:3000"
+            "e2e:codegen": "playwright codegen http://localhost:3000",
+            "e2e:fixture-capture": "node scripts/capture-fixtures.mjs",
+            "e2e:fixture-diff": "node scripts/fixture-diff.mjs"
       }
 }

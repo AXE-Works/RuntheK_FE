@@ -148,10 +148,11 @@ jobs:
           E2E_BE_URL: http://localhost:8080
         run: npm run e2e
 
-      # ── Fixture diff (spec §작업 6 — separate PR) ────────────────────────
-      # - name: Fixture diff (real BE response vs captured fixtures)
-      #   working-directory: fe
-      #   run: npm run e2e:fixture-diff
+      - name: Fixture diff (real BE response vs captured fixtures)
+        working-directory: fe
+        env:
+          E2E_BE_URL: http://localhost:8080
+        run: npm run e2e:fixture-diff
 
       - name: Open GitHub Issue on failure
         if: failure()
