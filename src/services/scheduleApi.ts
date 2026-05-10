@@ -456,7 +456,7 @@ export async function modifySchedule(
   const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout for modification
 
   try {
-    console.log('[Schedule API] Modifying schedule...', { scheduleId, modificationPrompt });
+    if (import.meta.env.DEV) console.log('[Schedule API] Modifying schedule...', { scheduleId, promptLength: modificationPrompt.length });
 
     const request: ModifyScheduleRequest = {
       modification_prompt: modificationPrompt,
@@ -489,7 +489,7 @@ export async function modifySchedule(
     }
 
     const data: ScheduleGenerateResponse = await response.json();
-    console.log('[Schedule API] Schedule modified successfully');
+    if (import.meta.env.DEV) console.log('[Schedule API] Schedule modified successfully');
 
     return {
       itinerary: convertToItineraryData(data),
@@ -580,7 +580,7 @@ export async function recommendPlaces(
   const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
   try {
-    console.log('[Schedule API] Requesting place recommendations...', request);
+    if (import.meta.env.DEV) console.log('[Schedule API] Requesting place recommendations...', { destination: request.destination, count: request.count ?? 3 });
 
     const response = await fetch(`${AI_API_BASE_URL}/admin/recommend-places`, {
       method: 'POST',
@@ -618,7 +618,7 @@ export async function recommendPlaces(
     }
 
     const rawData: RawRecommendPlacesResponse = await response.json();
-    console.log('[Schedule API] Place recommendations received:', rawData);
+    if (import.meta.env.DEV) console.log('[Schedule API] Place recommendations received: places=', rawData.places?.length ?? 0);
 
     // Map raw API response to expected format
     const data: RecommendPlacesResponse = {
@@ -678,7 +678,7 @@ export async function generateSchedule(
 ): Promise<GenerateScheduleResult> {
   // Use mock data for testing
   if (USE_MOCK_DATA) {
-    console.log('[Schedule API] Using mock data for testing');
+    if (import.meta.env.DEV) console.log('[Schedule API] Using mock data for testing');
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     const mockItinerary = generateMockItinerary(userInput);
@@ -740,7 +740,7 @@ export async function generateSchedule(
   const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout (1 minute)
 
   try {
-    console.log('[Schedule API] Generating schedule...', request);
+    if (import.meta.env.DEV) console.log('[Schedule API] Generating schedule... keys=', Object.keys(request));
 
     const response = await fetch(`${AI_API_BASE_URL}/schedules/generate`, {
       method: 'POST',
@@ -769,7 +769,7 @@ export async function generateSchedule(
     }
 
     const data: ScheduleGenerateResponse = await response.json();
-    console.log('[Schedule API] Schedule generated successfully');
+    if (import.meta.env.DEV) console.log('[Schedule API] Schedule generated successfully');
 
     return {
       itinerary: convertToItineraryData(data, userInput.duration),

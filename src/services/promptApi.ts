@@ -229,7 +229,7 @@ export async function createPromptVersion(name: string, content: string): Promis
 export async function getPromptHistory(name: string): Promise<PromptTemplate[]> {
   try {
     const url = `${API_BASE_URL}/admin/prompts/${encodeURIComponent(name)}/history`;
-    console.log('[promptApi] Fetching history from:', url);
+    if (import.meta.env.DEV) console.log('[promptApi] Fetching history from:', url);
 
     const response = await fetchWithAuth(url);
 
@@ -238,13 +238,13 @@ export async function getPromptHistory(name: string): Promise<PromptTemplate[]> 
     }
 
     const data = await response.json();
-    console.log('[promptApi] History response:', data);
+    if (import.meta.env.DEV) console.log('[promptApi] History response keys:', Object.keys(data));
 
     // Handle both possible response formats
     const versions = data.versions || data.prompts || (Array.isArray(data) ? data : []);
 
     if (!versions || versions.length === 0) {
-      console.log('[promptApi] No versions found in response');
+      if (import.meta.env.DEV) console.log('[promptApi] No versions found in response');
       return [];
     }
 
