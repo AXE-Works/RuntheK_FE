@@ -11,51 +11,46 @@ import { env } from '@/config/env';
 
 const API_BASE_URL = env.apiBaseUrl;
 
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+// Shared refresh promise — concurrent 401s share the same in-flight refresh.
+// Reset to null in `finally` so a future 401 can trigger a new refresh.
+let pendingRefresh: Promise<boolean> | null = null;
 
 /**
- * Subscribe to token refresh completion
- */
-function subscribeTokenRefresh(callback: (token: string) => void) {
-  refreshSubscribers.push(callback);
-}
-
-/**
- * Notify all subscribers when token is refreshed
- */
-function onTokenRefreshed(newToken: string) {
-  refreshSubscribers.forEach(callback => callback(newToken));
-  refreshSubscribers = [];
-}
-
-/**
- * Refresh access token using refresh token (httpOnly cookie)
- * @returns true if refresh successful, false otherwise
+ * Refresh access token using refresh token (httpOnly cookie).
+ * Concurrent callers receive the same Promise<boolean>, so the network
+ * round-trip happens once. On failure (`false`), each caller is responsible
+ * for triggering its own logout / retry handling.
  */
 export async function refreshAccessToken(): Promise<boolean> {
-  try {
-    console.log('[Auth] Attempting to refresh access token...');
-    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // Send httpOnly cookie
-    });
+  if (pendingRefresh) return pendingRefresh;
 
-    if (!res.ok) {
-      console.log('[Auth] Token refresh failed:', res.status);
+  pendingRefresh = (async () => {
+    try {
+      console.log('[Auth] Attempting to refresh access token...');
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Send httpOnly cookie
+      });
+
+      if (!res.ok) {
+        console.log('[Auth] Token refresh failed:', res.status);
+        return false;
+      }
+
+      const data = await res.json();
+      localStorage.setItem('accessToken', data.data.accessToken);
+      console.log('[Auth] Token refreshed successfully');
+      return true;
+    } catch (error) {
+      console.error('[Auth] Token refresh error:', error);
       return false;
+    } finally {
+      pendingRefresh = null;
     }
+  })();
 
-    const data = await res.json();
-    localStorage.setItem('accessToken', data.data.accessToken);
-    // refreshToken is now in httpOnly cookie, not in response body
-    console.log('[Auth] Token refreshed successfully');
-    return true;
-  } catch (error) {
-    console.error('[Auth] Token refresh error:', error);
-    return false;
-  }
+  return pendingRefresh;
 }
 
 /**
@@ -87,50 +82,28 @@ export async function fetchWithAuth(
 
   let response = await fetch(url, authOptions);
 
-  // Handle 401 Unauthorized - attempt token refresh
+  // Handle 401 Unauthorized — concurrent callers share one refresh.
   if (response.status === 401) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      const refreshed = await refreshAccessToken();
-      isRefreshing = false;
+    const refreshed = await refreshAccessToken();
 
-      if (refreshed) {
-        const newToken = localStorage.getItem('accessToken')!;
-        onTokenRefreshed(newToken);
-
-        // Retry original request with new token
-        const retryOptions: RequestInit = {
-          ...options,
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-            'Authorization': `Bearer ${newToken}`,
-          },
-        };
-        response = await fetch(url, retryOptions);
-      } else {
-        // Refresh failed - trigger logout
-        localStorage.removeItem('accessToken');
-        // refreshToken is in httpOnly cookie, will be cleared by backend
-        window.dispatchEvent(new CustomEvent('auth:logout'));
-      }
+    if (refreshed) {
+      const newToken = localStorage.getItem('accessToken')!;
+      const retryOptions: RequestInit = {
+        ...options,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+          'Authorization': `Bearer ${newToken}`,
+        },
+      };
+      response = await fetch(url, retryOptions);
     } else {
-      // Another refresh is in progress - wait for it
-      return new Promise(resolve => {
-        subscribeTokenRefresh(newToken => {
-          const retryOptions: RequestInit = {
-            ...options,
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-              ...options.headers,
-              'Authorization': `Bearer ${newToken}`,
-            },
-          };
-          resolve(fetch(url, retryOptions));
-        });
-      });
+      // Refresh failed — trigger logout. Every concurrent caller reaches
+      // this branch, so the dispatch is idempotent (event listeners must
+      // tolerate duplicate auth:logout events).
+      localStorage.removeItem('accessToken');
+      window.dispatchEvent(new CustomEvent('auth:logout'));
     }
   }
 
