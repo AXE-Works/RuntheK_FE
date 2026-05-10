@@ -144,10 +144,18 @@ test('비로그인 → 로그인 → 일정 생성 → 저장 → MyTrips', asyn
   await confirmDialog.getByRole('button', { name: /confirm/i }).click();
 
   // ── 6. Save success → MyTrips tab visible ────────────────────────────────
-  // App.tsx:450 emits a hardcoded toast and switches activeTab to "my-trips".
-  // URL stays `/` until Phase 2 PR-8 lands real routes.
-  await expect(page.getByText('Trip saved successfully!')).toBeVisible();
+  // App.tsx:450 calls toast.success() and switches activeTab to "my-trips",
+  // but `<Toaster />` from sonner is never mounted in this app — toasts have
+  // no DOM target, so we cannot assert on toast text. Until that's fixed
+  // (out of scope for Phase 1.5), DOM evidence of the saved trip is the
+  // proxy for save success. URL stays `/` until Phase 2 PR-8.
   await expect(
-    page.getByRole('heading', { name: /my trips/i }),
+    page.getByRole('heading', { name: /my trips/i, level: 1 }),
+  ).toBeVisible();
+  // The fixture's saved trip surfaces in the "Confirmed Trips" list. The
+  // same title also appears in "All Travel Plans" further down — first()
+  // is enough to confirm the save round-tripped to the UI.
+  await expect(
+    page.getByRole('heading', { name: /3 days korea adventure/i }).first(),
   ).toBeVisible();
 });
