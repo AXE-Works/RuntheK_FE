@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Phase | 문서 | 상태 |
 |---|---|---|
 | Phase 1 — 사전 정리 | `phase-1-cleanup.md` | ✅ DONE (`Phase1` 브랜치 9 커밋) |
-| Phase 1.5 — E2E test 셋업 | `phase-1.5-e2e.md` | 대기 |
+| Phase 1.5 — E2E test 셋업 | `phase-1.5-e2e.md` | ✅ DONE (`Phase1.5` 브랜치 4 FE + 1 BE 커밋) |
 | Phase 2 — App.tsx 분리 | `phase-2-app-split.md` | 대기 |
 | Phase 3 — Next.js 골격 + Tailwind v4 정상화 | `phase-3-scaffold.md` | 대기 |
 | Phase 4 — Client/Server 경계 + i18n 전환 | `phase-4-client-boundary.md` | 대기 |
@@ -31,6 +31,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 401 token refresh | `utils/api.ts:refreshAccessToken` | shared `pendingRefresh` promise. 동시 401은 같은 promise를 await. **별도 subscriber 패턴 도입 금지** |
 | Multipart 업로드 | `utils/api.ts:uploadWithAuth` | **`fetch` 직접 호출 금지.** 5곳(`uploadFile` + adminApi 4 with-file 함수)이 helper로 일원화됨 |
 | AI 서버 fallback | `env.scheduleApiBaseUrl` / `env.promptApiBaseUrl` | 둘 다 `runthek-api.onrender.com/api/v1`. **BE URL fallback 금지** (5-H 정정) |
+
+### Phase 1.5 결과 — E2E 회귀 안전망
+
+| 항목 | 위치 | 비고 |
+|---|---|---|
+| E2E 도구 | `@playwright/test@1.59.1` + `playwright.config.ts` (chromium only) | `npm run e2e` / `e2e:ui` / `e2e:codegen` |
+| 골든패스 시나리오 | `tests/e2e/golden-path-plan.spec.ts` | login → plan → save → my-trips. 모든 BE/AI 호출은 `page.route()` fixture stub |
+| BE/AI 응답 fixture | `tests/e2e/fixtures/{auth,users,schedule,trips}/*.json` (6개) | 실제 BE shape 기반. 변경 시 `npm run e2e:fixture-capture` 후 검토 |
+| BE 시드 계정 | `BE_Korea_Travel_AI_Assistant/.../E2eAccountInitializer.java` | `@Profile("dev")` ApplicationRunner — `e2e-user@runthek.test` / `e2e-admin@runthek.test` (둘 다 `Test1234!`) |
+| 안정 selector | TravelPlanForm/ItineraryDisplay에 `data-testid` 5건 | `interest-*` / `style-*` / `city-*` / `btn-generate` / `btn-save-itinerary` — i18n 변경/Phase 2 리팩터링에도 안정 |
+| GitHub Actions | `.github/workflows/e2e-pr.yml` (PR fixture stub) + `e2e-nightly.yml` (cron 17:00 UTC, real BE) | branch protection 등록은 Phase 2 PR-8 머지 후 |
+| Phase 1.5 backlog | sonner `<Toaster />` 미마운트 / "3 days days" 중복 텍스트 / BE/FE snake↔camel drift (`trip_id` vs `tripId`) | 별도 이슈, 마이그레이션과 무관 |
 
 ### Phase 1 종료 시점 의도적 부채 — 절대 손대지 말 것
 
@@ -57,9 +69,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm install
-npm run dev        # localhost:3000 (auto-open)
-npm run build      # Vite production build → /build
-npm run typecheck  # tsc --noEmit (인벤토리 — 누적 에러 fix는 별도 작업)
+npm run dev                  # localhost:3000 (auto-open)
+npm run build                # Vite production build → /build
+npm run typecheck            # tsc --noEmit (인벤토리 — 누적 에러 fix는 별도 작업)
+npm run e2e                  # Playwright golden path (login → plan → save → my-trips)
+npm run e2e:ui               # Playwright UI mode (interactive debugging)
+npm run e2e:codegen          # Playwright recorder against http://localhost:3000
+npm run e2e:fixture-capture  # 로컬 BE에서 응답 캡처 → tests/e2e/fixtures/ 갱신
+npm run e2e:fixture-diff     # 로컬 BE 응답 vs 캡처 fixture shape diff (Nightly용)
 ```
 
 ## Path Alias
