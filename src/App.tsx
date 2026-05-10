@@ -46,7 +46,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Badge } from './components/ui/badge';
 import { MapPin, Users, BarChart, ArrowLeft, LogIn, User, LogOut, Settings, Globe, Mail, Save, Share2, Shield } from 'lucide-react';
 import { motion } from 'motion/react';
-import logo from 'figma:asset/ade16fc310679880d8b27a51a4119372559298ac.png';
+import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
 import { fetchWithAuth, API_BASE_URL } from './utils/api';
 import { saveTripWithItinerary } from './services/tripApi';
 import { ScheduleGenerateResponse, modifySchedule, ScheduleApiError } from './services/scheduleApi';

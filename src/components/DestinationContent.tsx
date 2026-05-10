@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, ArrowRight, Star, Clock, Compass } from 'lucide-react';
 import { motion } from 'motion/react';
-import logo from 'figma:asset/ade16fc310679880d8b27a51a4119372559298ac.png';
+import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
 import { PublicItineraryDetailModal } from './PublicItineraryDetailModal';
 
 interface DestinationContentProps {

@@ -50,7 +50,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { EventForm } from './EventForm';
 import { AdminItineraryManager } from './AdminItineraryManager';
 import PromptManagement from './PromptManagement';
-import logo from 'figma:asset/2837fdead800498e4b0136649e9bfa4bce6e67ea.png';
+import logo from '@/assets/2837fdead800498e4b0136649e9bfa4bce6e67ea.png';
 import { 
   Users, 
   TrendingUp, 

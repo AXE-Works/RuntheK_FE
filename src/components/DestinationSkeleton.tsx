@@ -1,4 +1,4 @@
-import logo from 'figma:asset/ade16fc310679880d8b27a51a4119372559298ac.png';
+import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
 
 /**
  * Loading skeleton for destination pages

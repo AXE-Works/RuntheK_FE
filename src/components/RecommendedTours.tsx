@@ -7,7 +7,7 @@ import { motion } from 'motion/react';
 import { Calendar, MapPin, Users, Star } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { TourDetailModal } from './TourDetailModal';
-import exampleImage from 'figma:asset/441b7c322663b0c22bc75be1f0b9d085555f709d.png';
+import exampleImage from '@/assets/441b7c322663b0c22bc75be1f0b9d085555f709d.png';
 
 const RECOMMENDED_TOURS = [
   {

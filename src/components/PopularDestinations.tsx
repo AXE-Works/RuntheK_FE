@@ -7,7 +7,7 @@ import { motion } from 'motion/react';
 import { Star, Users, ArrowRight, Eye, Plus } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
-import bannerImage from 'figma:asset/3a1a22d8b95ada8e9dda55dbabda0c9a7fb403c6.png';
+import bannerImage from '@/assets/3a1a22d8b95ada8e9dda55dbabda0c9a7fb403c6.png';
 
 const SEOUL_DESTINATION = {
   id: 1,

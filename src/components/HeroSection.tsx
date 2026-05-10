@@ -5,9 +5,9 @@ import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
 import { Plane, MapPin, Heart, Star, Sparkles, Camera, Compass, Mountain, Map, Globe, Backpack, Train, Building2, TreePine, Waves } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import travelIcon1 from 'figma:asset/177ddc65e5d8b8b62892207d206d125838f7503f.png';
-import travelIcon2 from 'figma:asset/f22cd6caca8a6adcf9d14066d71db254d1dd3efe.png';
-import logo from 'figma:asset/ade16fc310679880d8b27a51a4119372559298ac.png';
+import travelIcon1 from '@/assets/177ddc65e5d8b8b62892207d206d125838f7503f.png';
+import travelIcon2 from '@/assets/f22cd6caca8a6adcf9d14066d71db254d1dd3efe.png';
+import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
 
 interface HeroSectionProps {
   onStartPlanning: () => void;
