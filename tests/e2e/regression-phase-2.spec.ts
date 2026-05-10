@@ -127,14 +127,36 @@ test('auth:logout 이벤트 → currentItinerary / currentUser 리셋', async ({
   await expect(page.getByTestId('btn-save-itinerary')).not.toBeVisible();
 });
 
-test('MyTrips 에서 수동 로그아웃 → console error 0 + state 리셋', async ({ page }) => {
-  // React Rules of Hooks 위반은 console.error 로 emit 된다.
-  // pageerror 는 white screen 같은 throw 를 잡는다.
+test('MyTrips 에서 수동 로그아웃 → React Hook 위반 0 + state 리셋', async ({ page }) => {
+  // 검증 의도: handleLogout 의 PR-3 우회 (동기 setter → await logout) 가 살아있는지.
+  // 이게 깨지면 MyTrip L230 의 conditional useCallback 이 Rules of Hooks 위반을
+  // 일으켜 React 가 console.error 로 "Rendered more hooks..." / "change in the
+  // order of Hooks..." 류 메시지를 emit 한다.
+  //
+  // 단순 errors=[] 비교는 인프라 노이즈를 잡는다 (CI 에서 실측):
+  //   - SuggestedBanners 의 BE recommended trips fetch 가 stub 되지 않아 ECONNREFUSED
+  //   - 테스트 환경의 invalid VITE_GOOGLE_MAPS_API_KEY 로 Maps SDK ApiProjectMapError /
+  //     Directions Service REQUEST_DENIED
+  // 위 둘은 PR-4 회귀와 무관하므로 React Hook 위반 / pageerror 만 격리해 검증한다.
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (msg) => {
     if (msg.type() === 'error') errors.push(`console.error: ${msg.text()}`);
   });
+
+  // React 가 Rules of Hooks 위반 시 emit 하는 메시지 패턴.
+  // React 18 source: `react-dom/cjs/react-dom.development.js` 의 invariant 메시지 +
+  // `react/cjs/react.development.js` 의 useHook callsite 검사.
+  const HOOK_VIOLATION_PATTERNS = [
+    /Rendered (more|fewer) hooks/i,
+    /change in the order of Hooks/i,
+    /React Hook .* (cannot|must|is) (be )?called/i,
+    /Hooks can only be called/i,
+    /Invalid hook call/i,
+  ];
+  const isHookViolation = (msg: string) =>
+    msg.startsWith('pageerror:') ||
+    HOOK_VIOLATION_PATTERNS.some((p) => p.test(msg));
 
   await setupCommonRoutes(page);
   // 추가 stub: 일정 저장 / MyTrips 목록 / 로그아웃
@@ -178,11 +200,11 @@ test('MyTrips 에서 수동 로그아웃 → console error 0 + state 리셋', as
     page.getByRole('heading', { name: /korean experience planner/i }),
   ).toBeVisible();
 
-  // PR-3 우회가 살아있다면 (handleLogout 동기 setter → await logout)
-  // MyTrip 의 Rules of Hooks 위반은 발현되지 않는다. console error 0 건이어야
-  // 한다. (Phase 1.5 backlog #1 sonner Toaster 미마운트는 console.error 를
-  // 발생시키지 않으므로 단순 [] 비교로 충분.)
-  expect(errors).toEqual([]);
+  // PR-3 우회가 살아있다면 (handleLogout 동기 setter → await logout) MyTrip 의
+  // Rules of Hooks 위반은 발현되지 않는다. 인프라 노이즈는 제외, hook 위반 +
+  // pageerror 만 검사.
+  const hookViolations = errors.filter(isHookViolation);
+  expect(hookViolations).toEqual([]);
 });
 
 test('Regenerate → applyRegenerateResult → currentItinerary 갱신', async ({ page }) => {
