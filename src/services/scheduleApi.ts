@@ -1,9 +1,10 @@
 import { format } from 'date-fns';
 import { ItineraryData } from '../App';
+import { env } from '@/config/env';
 
 // AI Schedule Generation Service (별도 서비스)
 // TODO: AI 서버에 CORS 설정 필요 - 현재 CORS 에러 발생함
-const AI_API_BASE_URL = import.meta.env.VITE_AI_API_BASE_URL || 'https://runthek-api.onrender.com/api/v1';
+const AI_API_BASE_URL = env.scheduleApiBaseUrl;
 
 // Enable mock mode for testing (set to true to use mock data)
 const USE_MOCK_DATA = false;

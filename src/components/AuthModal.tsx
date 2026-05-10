@@ -10,6 +10,7 @@ import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
 import { Mail, Lock, User, Globe, Check, AlertCircle } from 'lucide-react';
 import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
+import { env } from '@/config/env';
 
 // Google Identity Services types
 declare global {
@@ -33,8 +34,8 @@ declare global {
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const API_BASE_URL = env.apiBaseUrl;
+const GOOGLE_CLIENT_ID = env.googleClientId;
 
 interface AuthModalProps {
   isOpen: boolean;

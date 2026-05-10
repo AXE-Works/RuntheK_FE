@@ -7,6 +7,7 @@ import {
   DirectionsRenderer,
 } from '@react-google-maps/api';
 import { MapPin, DollarSign, ExternalLink, Footprints, Train, Car } from 'lucide-react';
+import { env } from '@/config/env';
 
 interface Activity {
   time: string;
@@ -35,7 +36,7 @@ interface RouteSegment {
   transportMode: 'walking' | 'transit' | 'driving';
 }
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const GOOGLE_MAPS_API_KEY = env.googleMapsApiKey;
 
 // Seoul center as default
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.9780 };

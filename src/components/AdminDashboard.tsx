@@ -3,6 +3,7 @@ import { useJsApiLoader } from '@react-google-maps/api';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { API_BASE_URL } from '../utils/api';
+import { env } from '@/config/env';
 import {
   getDashboardStats,
   DashboardStats,
@@ -157,7 +158,7 @@ const initialAPIStatus: APIServiceStatus[] = [
   { name: '데이터베이스', status: 'checking' }
 ];
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const GOOGLE_MAPS_API_KEY = env.googleMapsApiKey;
 
 // Mock popular activities
 const mockPopularActivities = [

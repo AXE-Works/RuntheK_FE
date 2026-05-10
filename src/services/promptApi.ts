@@ -2,8 +2,9 @@
 // Integrates with backend API: GET /api/v1/admin/prompts
 
 import { fetchWithAuth } from '@/utils/api';
+import { env } from '@/config/env';
 
-const API_BASE_URL = import.meta.env.VITE_AI_API_BASE_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL = env.promptApiBaseUrl;
 
 // API Response types
 export interface PromptFromApi {

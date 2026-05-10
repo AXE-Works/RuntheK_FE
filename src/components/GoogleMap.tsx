@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { GoogleMap as GoogleMapComponent, useJsApiLoader, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { Button } from './ui/button';
 import { MapPin, ExternalLink, Loader2 } from 'lucide-react';
+import { env } from '@/config/env';
 
 interface Location {
   name: string;
@@ -49,7 +50,7 @@ export function GoogleMap({
   title = 'Google Map',
   focusedIndex = null
 }: GoogleMapProps) {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+  const apiKey = env.googleMapsApiKey;
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey,
