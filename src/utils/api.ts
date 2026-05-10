@@ -111,6 +111,65 @@ export async function fetchWithAuth(
 }
 
 /**
+ * Multipart upload wrapper with automatic authentication and token refresh.
+ *
+ * Use this for any `FormData` body. The browser sets the `multipart/form-data`
+ * boundary automatically, so this helper deliberately strips any caller-supplied
+ * `Content-Type` header — letting one through breaks server-side parsing.
+ *
+ * On 401 the request is retried once after `refreshAccessToken()` succeeds.
+ * The shared refresh promise from `fetchWithAuth` is reused, so concurrent
+ * upload + JSON requests share a single refresh.
+ */
+export async function uploadWithAuth(
+  url: string,
+  formData: FormData,
+  options: Omit<RequestInit, 'body' | 'credentials'> = {}
+): Promise<Response> {
+  const accessToken = localStorage.getItem('accessToken');
+
+  const buildHeaders = (token: string | null): Record<string, string> => {
+    const merged: Record<string, string> = {
+      ...(options.headers as Record<string, string> | undefined),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+    delete merged['Content-Type'];
+    delete merged['content-type'];
+    return merged;
+  };
+
+  const baseInit: RequestInit = {
+    method: 'POST',
+    ...options,
+    credentials: 'include',
+    headers: buildHeaders(accessToken),
+    body: formData,
+  };
+
+  let response = await fetch(url, baseInit);
+
+  if (response.status === 401) {
+    const refreshed = await refreshAccessToken();
+
+    if (refreshed) {
+      const newToken = localStorage.getItem('accessToken');
+      response = await fetch(url, {
+        method: 'POST',
+        ...options,
+        credentials: 'include',
+        headers: buildHeaders(newToken),
+        body: formData,
+      });
+    } else {
+      localStorage.removeItem('accessToken');
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+    }
+  }
+
+  return response;
+}
+
+/**
  * Profile API Response Types
  */
 export interface UserProfile {
@@ -198,18 +257,10 @@ export interface FileUploadResponse {
 }
 
 export async function uploadFile(file: File): Promise<ApiResponse<FileUploadResponse>> {
-  const accessToken = localStorage.getItem('accessToken');
-
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/admin/files/upload`, {
-    method: 'POST',
-    headers: {
-      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
-    },
-    body: formData,
-  });
+  const response = await uploadWithAuth(`${API_BASE_URL}/admin/files/upload`, formData);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));

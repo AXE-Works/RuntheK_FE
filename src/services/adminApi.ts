@@ -4,7 +4,7 @@
  * Handles admin dashboard API calls including statistics and management endpoints.
  */
 
-import { fetchWithAuth, API_BASE_URL } from '../utils/api';
+import { fetchWithAuth, uploadWithAuth, API_BASE_URL } from '../utils/api';
 
 // ===== Common Types =====
 
@@ -685,19 +685,11 @@ export async function createAdminEventWithFile(
   request: EventCreateRequest,
   file: File
 ): Promise<ApiResponse<EventCreateResponse>> {
-  const accessToken = localStorage.getItem('accessToken');
-
   const formData = new FormData();
   formData.append('data', new Blob([JSON.stringify(request)], { type: 'application/json' }));
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/admin/events`, {
-    method: 'POST',
-    headers: {
-      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
-    },
-    body: formData,
-  });
+  const response = await uploadWithAuth(`${API_BASE_URL}/admin/events`, formData);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -716,19 +708,15 @@ export async function updateAdminEventWithFile(
   request: EventUpdateRequest,
   file: File
 ): Promise<ApiResponse<EventUpdateResponse>> {
-  const accessToken = localStorage.getItem('accessToken');
-
   const formData = new FormData();
   formData.append('data', new Blob([JSON.stringify(request)], { type: 'application/json' }));
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/admin/events/${eventId}`, {
-    method: 'PUT',
-    headers: {
-      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
-    },
-    body: formData,
-  });
+  const response = await uploadWithAuth(
+    `${API_BASE_URL}/admin/events/${eventId}`,
+    formData,
+    { method: 'PUT' }
+  );
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -814,19 +802,11 @@ export async function createRecommendedItineraryWithFile(
   request: RecommendedItineraryCreateRequest,
   file: File
 ): Promise<ApiResponse<{ id: string; title: string; createdAt: string }>> {
-  const accessToken = localStorage.getItem('accessToken');
-
   const formData = new FormData();
   formData.append('data', new Blob([JSON.stringify(request)], { type: 'application/json' }));
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/admin/recommended`, {
-    method: 'POST',
-    headers: {
-      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
-    },
-    body: formData,
-  });
+  const response = await uploadWithAuth(`${API_BASE_URL}/admin/recommended`, formData);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -845,19 +825,15 @@ export async function updateRecommendedItineraryWithFile(
   request: RecommendedItineraryCreateRequest,
   file: File
 ): Promise<ApiResponse<{ id: string; title: string; updatedAt: string }>> {
-  const accessToken = localStorage.getItem('accessToken');
-
   const formData = new FormData();
   formData.append('data', new Blob([JSON.stringify(request)], { type: 'application/json' }));
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/admin/recommended/${id}`, {
-    method: 'PUT',
-    headers: {
-      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
-    },
-    body: formData,
-  });
+  const response = await uploadWithAuth(
+    `${API_BASE_URL}/admin/recommended/${id}`,
+    formData,
+    { method: 'PUT' }
+  );
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
