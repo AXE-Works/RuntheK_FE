@@ -257,6 +257,11 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
       if (signupGoogleButtonRef.current) {
         signupGoogleButtonRef.current.innerHTML = '';
       }
+      // Reset form state so previous values don't persist on next open
+      setLoginForm({ email: '', password: '' });
+      setSignupForm({ name: '', email: '', password: '', confirmPassword: '', country: '' });
+      setAuthError(null);
+      setEmailSent(false);
     }
   }, [isOpen]);
 

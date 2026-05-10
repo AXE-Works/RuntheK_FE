@@ -45,8 +45,8 @@ import { Badge } from './components/ui/badge';
 import { MapPin, Users, BarChart, ArrowLeft, LogIn, User, LogOut, Settings, Globe, Mail, Save, Share2, Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
-import { fetchWithAuth, API_BASE_URL } from './utils/api';
 import { saveTripWithItinerary } from './services/tripApi';
+import { useAuth } from './providers/AuthProvider';
 import { ScheduleGenerateResponse, modifySchedule, ScheduleApiError } from './services/scheduleApi';
 import { toast } from 'sonner';
 import { mockEvents, type EventItem } from '@/data/mockEvents';
@@ -96,6 +96,15 @@ interface AppProps {
 }
 
 export default function App({ initialTab }: AppProps = {}) {
+  const {
+    currentUser,
+    isAuthModalOpen,
+    login,
+    logout,
+    updateUser,
+    openAuthModal,
+    closeAuthModal,
+  } = useAuth();
   const [currentItinerary, setCurrentItinerary] = useState<ItineraryData | null>(null);
   const [rawAIResponse, setRawAIResponse] = useState<ScheduleGenerateResponse | null>(null);
   const [userBudget, setUserBudget] = useState<string>('mid-range');
@@ -106,13 +115,10 @@ export default function App({ initialTab }: AppProps = {}) {
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(initialTab ?? "plan");
   const [showHero, setShowHero] = useState(false); // Landing page disabled
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
   const [confirmedTrips, setConfirmedTrips] = useState<any[]>([]);
   const [myTripsDefaultTab, setMyTripsDefaultTab] = useState<string>("my-trips");
   const [events, setEvents] = useState<EventItem[]>(mockEvents);
-  const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [language, setLanguage] = useState<'ko' | 'en' | 'ja' | 'zh'>('en');
   const [selectedBannerDetail, setSelectedBannerDetail] = useState<any>(null);
 
@@ -146,57 +152,14 @@ export default function App({ initialTab }: AppProps = {}) {
     i18n.changeLanguage(language);
   }, [language, i18n]);
 
-  // Restore session on app start
-  useEffect(() => {
-    const restoreSession = async () => {
-      const accessToken = localStorage.getItem('accessToken');
-
-      if (!accessToken) {
-        setIsRestoringSession(false);
-        return;
-      }
-
-      try {
-        // Use fetchWithAuth for automatic token refresh on 401
-        const res = await fetchWithAuth(`${API_BASE_URL}/users/profile`);
-
-        if (!res.ok) {
-          throw new Error('Session expired');
-        }
-
-        const data = await res.json();
-        setCurrentUser({
-          id: data.data.id,
-          name: data.data.name,
-          email: data.data.email,
-          country: data.data.country || '',
-          avatar: data.data.avatarUrl,
-          role: data.data.role,
-          provider: data.data.provider || 'email',
-        });
-        setShowHero(false); // Skip landing page for logged-in users
-        console.log('[Session] Restored user session');
-      } catch (error) {
-        console.log('[Session] Token expired or invalid, clearing...');
-        localStorage.removeItem('accessToken');
-        // refreshToken is in httpOnly cookie, will be cleared by backend on next logout
-      } finally {
-        setIsRestoringSession(false);
-      }
-    };
-
-    restoreSession();
-  }, []);
-
-  // Listen for auth:logout event (triggered when token refresh fails)
+  // Reset draft state on auth:logout (currentUser is reset by AuthProvider).
+  // PR-4 ItineraryDraftProvider 도입 시 자체 구독으로 이관 예정.
   useEffect(() => {
     const handleAuthLogout = () => {
-      setCurrentUser(null);
       setShowHero(true);
       setCurrentItinerary(null);
       setActiveTab("plan");
       setSelectedDestination(null);
-      console.log('[Auth] Session expired, logged out automatically');
     };
 
     window.addEventListener('auth:logout', handleAuthLogout);
@@ -274,7 +237,7 @@ export default function App({ initialTab }: AppProps = {}) {
   const handleConfirmItinerary = async (itinerary: ItineraryData) => {
     if (!currentUser) {
       toast.error('Please login to save your trip');
-      setShowAuthModal(true);
+      openAuthModal();
       return;
     }
 
@@ -405,36 +368,16 @@ export default function App({ initialTab }: AppProps = {}) {
     setSelectedDestination(null);
   };
 
-  const handleAuthSuccess = (user: any) => {
-    setCurrentUser(user);
-    setShowAuthModal(false);
-  };
-
   const handleLogout = async () => {
-    // Call backend logout API to invalidate refresh token (sent via httpOnly cookie)
-    try {
-      await fetchWithAuth(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-      });
-      console.log('[Logout] Backend logout successful');
-    } catch (error) {
-      console.error('[Logout] API error:', error);
-      // Continue with local logout even if API fails
-    }
-
-    // Clear local storage (refreshToken is in httpOnly cookie, cleared by backend)
-    localStorage.removeItem('accessToken');
-
-    // Clear user state
-    setCurrentUser(null);
-
-    // Redirect to landing page
+    // 페이지 전환을 먼저 수행해 my-trips/admin TabsContent를 unmount한 후 logout 호출.
+    // AuthProvider.logout()의 setCurrentUser(null) batch와 여기 setState batch가
+    // await로 분리되어, currentUser=null 중간 render에서 MyTrip의 conditional hook
+    // 위반이 노출되는 것을 회피한다. PR-4 ItineraryDraftProvider 도입 시 자체 정리로 이관 예정.
     setShowHero(true);
     setCurrentItinerary(null);
     setActiveTab("plan");
     setSelectedDestination(null);
-
-    console.log('[Logout] User logged out successfully');
+    await logout();
   };
 
   const handleDestinationSelect = (destination: any) => {
@@ -450,10 +393,6 @@ export default function App({ initialTab }: AppProps = {}) {
 
   const handleBannerDetail = (banner: any) => {
     setSelectedBannerDetail(banner);
-  };
-
-  const handleUpdateUser = (updatedUser: any) => {
-    setCurrentUser(updatedUser);
   };
 
   const handleGoToMyTrips = () => {
@@ -472,18 +411,6 @@ export default function App({ initialTab }: AppProps = {}) {
     setShowHero(false);
     setActiveTab("admin");
   };
-
-  // Show loading while restoring session
-  if (isRestoringSession) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-gray-300 border-t-black rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-500 text-sm">{t('messages.loading')}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -615,7 +542,7 @@ export default function App({ initialTab }: AppProps = {}) {
                 </DropdownMenu>
               ) : (
                 <Button
-                  onClick={() => setShowAuthModal(true)}
+                  onClick={openAuthModal}
                   variant="outline"
                   className="border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-2 sm:px-4"
                   size="sm"
@@ -828,9 +755,9 @@ export default function App({ initialTab }: AppProps = {}) {
           <TabsContent value="my-trips">
             <MyTrip
               currentUser={currentUser}
-              onUpdateUser={handleUpdateUser}
+              onUpdateUser={updateUser}
               onCreateNewTrip={handleNewPlan}
-              onOpenAuthModal={() => setShowAuthModal(true)}
+              onOpenAuthModal={openAuthModal}
               defaultTab={myTripsDefaultTab}
               onTabChange={setMyTripsDefaultTab}
             />
@@ -865,9 +792,12 @@ export default function App({ initialTab }: AppProps = {}) {
 
       {/* Auth Modal */}
       <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={handleAuthSuccess}
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        onAuthSuccess={(user) => {
+          login(user);
+          closeAuthModal();
+        }}
       />
 
       {/* Generating Overlay */}
