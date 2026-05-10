@@ -90,7 +90,12 @@ export interface UserInput {
   startDate?: Date;
 }
 
-export default function App() {
+interface AppProps {
+  // Phase 2 PR-2 임시 prop. 작업 7(별도 세션)에서 페이지 본격 분리 후 제거 예정.
+  initialTab?: 'plan' | 'my-trips' | 'admin';
+}
+
+export default function App({ initialTab }: AppProps = {}) {
   const [currentItinerary, setCurrentItinerary] = useState<ItineraryData | null>(null);
   const [rawAIResponse, setRawAIResponse] = useState<ScheduleGenerateResponse | null>(null);
   const [userBudget, setUserBudget] = useState<string>('mid-range');
@@ -99,7 +104,7 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStartTime, setGenerationStartTime] = useState<number | null>(null);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
-  const [activeTab, setActiveTab] = useState("plan");
+  const [activeTab, setActiveTab] = useState<string>(initialTab ?? "plan");
   const [showHero, setShowHero] = useState(false); // Landing page disabled
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);

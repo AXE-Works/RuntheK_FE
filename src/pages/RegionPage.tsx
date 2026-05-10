@@ -15,20 +15,20 @@ export function RegionPage() {
   // Extract region slug from pathname (e.g., "/seoul" or "/seoul/" -> "seoul")
   const regionSlug = location.pathname.replace(/^\/|\/$/g, '');
 
-  // Validate region slug - if invalid, redirect to home
+  // Validate region slug - if invalid, redirect to plan page
   if (!isValidRegionSlug(regionSlug)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/plan" replace />;
   }
 
   const region = REGION_DATA[regionSlug];
   const seoData = buildDestinationSeo(region, 'region');
 
   const handlePlanTrip = () => {
-    navigate('/', { state: { destination: region.name, fromRegion: true } });
+    navigate('/plan', { state: { destination: region.name, fromRegion: true } });
   };
 
   const handleBackToHome = () => {
-    navigate('/');
+    navigate('/plan');
   };
 
   return (

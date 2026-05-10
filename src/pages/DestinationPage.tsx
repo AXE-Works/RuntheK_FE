@@ -20,19 +20,19 @@ export function DestinationPage() {
     return <DestinationSkeleton />;
   }
 
-  // Redirect to home if destination not found or has error
+  // Redirect to plan page if destination not found or has error
   if (notFound || error || !destination) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/plan" replace />;
   }
 
   const seoData = buildDestinationSeo(destination, 'destination');
 
   const handlePlanTrip = () => {
-    navigate('/', { state: { destination: destination.name, fromDestination: true } });
+    navigate('/plan', { state: { destination: destination.name, fromDestination: true } });
   };
 
   const handleBackToHome = () => {
-    navigate('/');
+    navigate('/plan');
   };
 
   return (
