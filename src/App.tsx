@@ -34,13 +34,11 @@ import { TravelPlanForm } from './components/TravelPlanForm';
 import { ItineraryDisplay } from './components/ItineraryDisplay';
 import { AdminDashboard } from './components/AdminDashboard';
 import { MyTrip } from './components/MyTrip';
-import { HeroSection } from './components/HeroSection';
 import { AuthModal } from './components/AuthModal';
 import { GeneratingOverlay } from './components/GeneratingOverlay';
-import { BannerDetailPage } from './components/BannerDetailPage';
 import { RecommendedItineraryDetailPage } from './components/RecommendedItineraryDetailPage';
 import { Button } from './components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
+import { Tabs, TabsContent } from './components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './components/ui/dropdown-menu';
 import { Badge } from './components/ui/badge';
@@ -312,113 +310,6 @@ export default function App() {
     }
   };
 
-  // Simplified regeneration that modifies the existing itinerary based on additional notes
-  const generateModifiedItinerary = (originalItinerary: ItineraryData, additionalNotes: string, userInput: UserInput): ItineraryData => {
-    const numDays = originalItinerary.days.length;
-    
-    // Additional activities based on notes
-    const additionalActivities: { [key: string]: any[] } = {
-      food: [
-        { activity: 'Temple Food Experience', location: 'Insadong, Seoul', description: 'Experience traditional Buddhist vegetarian cuisine' },
-        { activity: 'Korean Street Food Night Market', location: 'Dongdaemun, Seoul', description: 'Late night food market with authentic Korean snacks' },
-        { activity: 'Traditional Tea House', location: 'Insadong, Seoul', description: 'Experience Korean tea culture in a traditional setting' }
-      ],
-      culture: [
-        { activity: 'Korean Traditional Music Performance', location: 'National Theater, Seoul', description: 'Traditional Korean music and dance performance' },
-        { activity: 'Hanbok Rental Experience', location: 'Bukchon, Seoul', description: 'Wear traditional Korean clothing and explore historical areas' },
-        { activity: 'Korean Calligraphy Class', location: 'Cultural Center, Seoul', description: 'Learn the art of Korean calligraphy' }
-      ],
-      accessibility: [
-        { activity: 'Barrier-Free Seoul Tour', location: 'Various, Seoul', description: 'Wheelchair accessible attractions with barrier-free facilities' },
-        { activity: 'Accessible Transportation Guide', location: 'Seoul Metro', description: 'Learn about accessible public transportation options' }
-      ],
-      photography: [
-        { activity: 'Instagram Photo Spots Tour', location: 'Hongdae, Seoul', description: 'Visit the most photogenic locations in Seoul' },
-        { activity: 'Sunrise Photography at Han River', location: 'Han River, Seoul', description: 'Capture beautiful sunrise views over Seoul' }
-      ]
-    };
-
-    // Analyze additional notes for specific requests
-    const lowerNotes = additionalNotes.toLowerCase();
-    const modifiedDays = originalItinerary.days.map((day, dayIndex) => {
-      let newActivities = [...day.activities];
-
-      // Add activities based on notes
-      if (lowerNotes.includes('food') || lowerNotes.includes('vegetarian') || lowerNotes.includes('restaurant')) {
-        if (additionalActivities.food.length > 0) {
-          const foodActivity = additionalActivities.food[dayIndex % additionalActivities.food.length];
-          newActivities.splice(3, 0, {
-            time: '05:00 PM',
-            ...foodActivity,
-            estimatedCost: userInput.budget === 'budget' ? '$15-25' : userInput.budget === 'mid-range' ? '$25-40' : '$40-80'
-          });
-        }
-      }
-
-      if (lowerNotes.includes('culture') || lowerNotes.includes('traditional') || lowerNotes.includes('history')) {
-        if (additionalActivities.culture.length > 0) {
-          const cultureActivity = additionalActivities.culture[dayIndex % additionalActivities.culture.length];
-          newActivities.splice(1, 0, {
-            time: '10:30 AM',
-            ...cultureActivity,
-            estimatedCost: userInput.budget === 'budget' ? '$10-20' : userInput.budget === 'mid-range' ? '$20-40' : '$40-80'
-          });
-        }
-      }
-
-      if (lowerNotes.includes('wheelchair') || lowerNotes.includes('accessible') || lowerNotes.includes('disability')) {
-        if (additionalActivities.accessibility.length > 0) {
-          const accessActivity = additionalActivities.accessibility[dayIndex % additionalActivities.accessibility.length];
-          newActivities.push({
-            time: '11:00 AM',
-            ...accessActivity,
-            estimatedCost: 'Free',
-            isEvent: true,
-            eventType: 'Accessible'
-          });
-        }
-      }
-
-      if (lowerNotes.includes('photo') || lowerNotes.includes('instagram') || lowerNotes.includes('picture')) {
-        if (additionalActivities.photography.length > 0) {
-          const photoActivity = additionalActivities.photography[dayIndex % additionalActivities.photography.length];
-          newActivities.push({
-            time: '06:00 AM',
-            ...photoActivity,
-            estimatedCost: userInput.budget === 'budget' ? '$5-15' : userInput.budget === 'mid-range' ? '$15-30' : '$30-60'
-          });
-        }
-      }
-
-      // Add a custom note-based activity
-      if (additionalNotes.trim()) {
-        newActivities.push({
-          time: '03:30 PM',
-          activity: '📝 Custom Request',
-          location: 'Based on your preferences',
-          description: `Special experience tailored to your request: ${additionalNotes.slice(0, 100)}${additionalNotes.length > 100 ? '...' : ''}`,
-          estimatedCost: 'Varies',
-          isEvent: true,
-          eventType: 'Custom'
-        });
-      }
-
-      return {
-        ...day,
-        title: day.title + ' (Updated)',
-        activities: newActivities.slice(0, 8) // Limit to 8 activities per day
-      };
-    });
-
-    return {
-      ...originalItinerary,
-      id: `itinerary-${Date.now()}`,
-      title: `${originalItinerary.title} (Modified)`,
-      days: modifiedDays,
-      totalEstimatedCost: originalItinerary.totalEstimatedCost // Could be recalculated based on new activities
-    };
-  };
-
   // Handle title change from ItineraryDisplay
   const handleTitleChange = (newTitle: string) => {
     if (currentItinerary) {
@@ -556,11 +447,6 @@ export default function App() {
     setSelectedDestination(null);
   };
 
-  const handleStartPlanning = () => {
-    setShowHero(false);
-    setActiveTab("plan");
-  };
-
   const handleBackToHome = () => {
     setShowHero(true);
     setCurrentItinerary(null);
@@ -647,16 +533,6 @@ export default function App() {
       </div>
     );
   }
-
-  // Landing page disabled - go directly to main app
-  // if (showHero && !currentItinerary) {
-  //   return (
-  //     <>
-  //       <Seo {...buildHomeSeo()} />
-  //       <HeroSection onStartPlanning={handleStartPlanning} />
-  //     </>
-  //   );
-  // }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
