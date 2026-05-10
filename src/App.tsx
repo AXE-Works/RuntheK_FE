@@ -48,7 +48,8 @@ import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
 import { saveTripWithItinerary } from './services/tripApi';
 import { useAuth } from './providers/AuthProvider';
 import { useEvents } from './providers/EventsProvider';
-import { ScheduleGenerateResponse, modifySchedule, ScheduleApiError } from './services/scheduleApi';
+import { useItineraryDraft } from './providers/ItineraryDraftProvider';
+import { modifySchedule, ScheduleApiError, type ScheduleGenerateResponse } from './services/scheduleApi';
 import { toast } from 'sonner';
 
 export interface ItineraryData {
@@ -105,17 +106,25 @@ export default function App({ initialTab }: AppProps = {}) {
     openAuthModal,
     closeAuthModal,
   } = useAuth();
-  const [currentItinerary, setCurrentItinerary] = useState<ItineraryData | null>(null);
-  const [rawAIResponse, setRawAIResponse] = useState<ScheduleGenerateResponse | null>(null);
-  const [userBudget, setUserBudget] = useState<string>('mid-range');
-  const [userStartDate, setUserStartDate] = useState<Date | undefined>(undefined);
-  const [userSelectedCities, setUserSelectedCities] = useState<string[]>([]);
+  const {
+    currentItinerary,
+    rawAIResponse,
+    userBudget,
+    userStartDate,
+    userSelectedCities,
+    selectedDestination,
+    setItinerary,
+    applyRegenerateResult,
+    updateTitle,
+    selectDestination,
+    clearRawResponse,
+    resetDraft,
+  } = useItineraryDraft();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStartTime, setGenerationStartTime] = useState<number | null>(null);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(initialTab ?? "plan");
   const [showHero, setShowHero] = useState(false); // Landing page disabled
-  const [selectedDestination, setSelectedDestination] = useState<any>(null);
   const [confirmedTrips, setConfirmedTrips] = useState<any[]>([]);
   const [myTripsDefaultTab, setMyTripsDefaultTab] = useState<string>("my-trips");
   const { events, setEvents } = useEvents();
@@ -140,26 +149,24 @@ export default function App({ initialTab }: AppProps = {}) {
       setShowHero(false);
       setActiveTab('plan');
       if (location.state.destination) {
-        setSelectedDestination({ name: location.state.destination });
+        selectDestination({ name: location.state.destination });
       }
       // Clear state to prevent re-trigger on refresh
       window.history.replaceState({}, document.title);
     }
-  }, [location.state]);
+  }, [location.state, selectDestination]);
 
   // Sync language state with i18n
   useEffect(() => {
     i18n.changeLanguage(language);
   }, [language, i18n]);
 
-  // Reset draft state on auth:logout (currentUser is reset by AuthProvider).
-  // PR-4 ItineraryDraftProvider 도입 시 자체 구독으로 이관 예정.
+  // auth:logout 시 페이지 전환 (showHero/activeTab) 만 처리.
+  // currentItinerary/selectedDestination 리셋은 ItineraryDraftProvider 가 자체 구독.
   useEffect(() => {
     const handleAuthLogout = () => {
       setShowHero(true);
-      setCurrentItinerary(null);
       setActiveTab("plan");
-      setSelectedDestination(null);
     };
 
     window.addEventListener('auth:logout', handleAuthLogout);
@@ -171,21 +178,9 @@ export default function App({ initialTab }: AppProps = {}) {
     rawResponse?: ScheduleGenerateResponse,
     budget?: string,
     startDate?: Date,
-    cities?: string[]
+    cities?: string[],
   ) => {
-    setCurrentItinerary(itinerary);
-    if (rawResponse) {
-      setRawAIResponse(rawResponse);
-    }
-    if (budget) {
-      setUserBudget(budget);
-    }
-    if (startDate) {
-      setUserStartDate(startDate);
-    }
-    if (cities) {
-      setUserSelectedCities(cities);
-    }
+    setItinerary(itinerary, rawResponse, budget, startDate, cities);
   };
 
   // Wrapper function to manage both isGenerating and generationStartTime
@@ -207,8 +202,7 @@ export default function App({ initialTab }: AppProps = {}) {
       const result = await modifySchedule(rawAIResponse.id, additionalNotes);
 
       // Update the itinerary with the modified result
-      setCurrentItinerary(result.itinerary);
-      setRawAIResponse(result.rawAIResponse);
+      applyRegenerateResult(result.itinerary, result.rawAIResponse);
 
       toast.success('Itinerary has been regenerated with your changes!');
     } catch (error) {
@@ -226,12 +220,7 @@ export default function App({ initialTab }: AppProps = {}) {
 
   // Handle title change from ItineraryDisplay
   const handleTitleChange = (newTitle: string) => {
-    if (currentItinerary) {
-      setCurrentItinerary({
-        ...currentItinerary,
-        title: newTitle,
-      });
-    }
+    updateTitle(newTitle);
   };
 
   const handleConfirmItinerary = async (itinerary: ItineraryData) => {
@@ -283,7 +272,7 @@ export default function App({ initialTab }: AppProps = {}) {
         localStorage.setItem('confirmedTrips', JSON.stringify(existingTrips));
 
         // Clear the raw response after saving
-        setRawAIResponse(null);
+        clearRawResponse();
 
         // Navigate to My Trips
         setActiveTab("my-trips");
@@ -355,38 +344,32 @@ export default function App({ initialTab }: AppProps = {}) {
   };
 
   const handleNewPlan = () => {
-    setCurrentItinerary(null);
-    setActiveTab("plan");
     setShowHero(false);
-    setSelectedDestination(null);
+    setActiveTab("plan");
+    resetDraft();
   };
 
   const handleBackToHome = () => {
     setShowHero(true);
-    setCurrentItinerary(null);
     setActiveTab("plan");
-    setSelectedDestination(null);
+    resetDraft();
   };
 
   const handleLogout = async () => {
-    // 페이지 전환을 먼저 수행해 my-trips/admin TabsContent를 unmount한 후 logout 호출.
-    // AuthProvider.logout()의 setCurrentUser(null) batch와 여기 setState batch가
-    // await로 분리되어, currentUser=null 중간 render에서 MyTrip의 conditional hook
-    // 위반이 노출되는 것을 회피한다. PR-4 ItineraryDraftProvider 도입 시 자체 정리로 이관 예정.
+    // 페이지 전환 + draft 리셋을 await 전에 동기 실행해 my-trips/admin TabsContent를
+    // unmount한 후 logout 호출. AuthProvider.logout()의 setCurrentUser(null) batch와
+    // 여기 setState batch가 await로 분리되어, currentUser=null 중간 render에서
+    // MyTrip의 conditional hook 위반이 노출되는 것을 회피한다.
     setShowHero(true);
-    setCurrentItinerary(null);
     setActiveTab("plan");
-    setSelectedDestination(null);
+    resetDraft();
     await logout();
   };
 
   const handleDestinationSelect = (destination: any) => {
-    setSelectedDestination(destination);
     setShowHero(false);
     setActiveTab("plan");
-
-    // Clear any existing itinerary
-    setCurrentItinerary(null);
+    selectDestination(destination);
     // Clear banner detail page if open
     setSelectedBannerDetail(null);
   };
