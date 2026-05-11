@@ -37,17 +37,12 @@ import { TravelPlanForm } from './components/TravelPlanForm';
 import { ItineraryDisplay } from './components/ItineraryDisplay';
 import { AdminDashboard } from './components/AdminDashboard';
 import { MyTrip } from './components/MyTrip';
-import { AuthModal } from './components/AuthModal';
 import { GeneratingOverlay } from './components/GeneratingOverlay';
 import { RecommendedItineraryDetailPage } from './components/RecommendedItineraryDetailPage';
 import { Button } from './components/ui/button';
 import { Tabs, TabsContent } from './components/ui/tabs';
-import { Badge } from './components/ui/badge';
-import { MapPin, Users, BarChart, ArrowLeft, Mail, Save, Share2 } from 'lucide-react';
+import { Mail, Save, Share2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
-import { LanguageSelector } from './components/header/LanguageSelector';
-import { UserMenu } from './components/header/UserMenu';
 import { useAuth } from './providers/AuthProvider';
 import { useEvents } from './providers/EventsProvider';
 import { useItineraryDraft } from './providers/ItineraryDraftProvider';
@@ -100,12 +95,8 @@ interface AppProps {
 export default function App({ initialTab }: AppProps = {}) {
   const {
     currentUser,
-    isAuthModalOpen,
-    login,
-    logout,
     updateUser,
     openAuthModal,
-    closeAuthModal,
   } = useAuth();
   const {
     currentItinerary,
@@ -123,21 +114,14 @@ export default function App({ initialTab }: AppProps = {}) {
   const [showHero, setShowHero] = useState(false); // Landing page disabled
   const [myTripsDefaultTab, setMyTripsDefaultTab] = useState<string>("my-trips");
   const { events, setEvents } = useEvents();
-  const [language, setLanguage] = useState<'ko' | 'en' | 'ja' | 'zh'>('en');
   const [selectedBannerDetail, setSelectedBannerDetail] = useState<any>(null);
 
-  const languageOptions = [
-    { code: 'ko' as const, label: '한국어', flag: '🇰🇷' },
-    { code: 'en' as const, label: 'English', flag: '🇺🇸' },
-    { code: 'ja' as const, label: '日本語', flag: '🇯🇵' },
-    { code: 'zh' as const, label: '中文', flag: '🇨🇳' },
-  ];
-
   const { t, i18n } = useTranslation();
+  // TravelPlanForm 의 language prop 은 'ko'|'en'|'ja'|'zh' 형식을 기대.
+  // i18next 가 'ko-KR' 같은 region 코드를 반환할 수 있으므로 short code 로 변환.
+  const language = (i18n.language.split('-')[0] || 'en') as 'ko' | 'en' | 'ja' | 'zh';
   const location = useLocation();
   const navigate = useNavigate();
-
-  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'admin';
 
   // Handle navigation from RegionPage or DestinationPage
   useEffect(() => {
@@ -161,11 +145,6 @@ export default function App({ initialTab }: AppProps = {}) {
       setMyTripsDefaultTab(tab === 'profile' ? 'profile' : 'my-trips');
     }
   }, [location.pathname, location.search]);
-
-  // Sync language state with i18n
-  useEffect(() => {
-    i18n.changeLanguage(language);
-  }, [language, i18n]);
 
   // auth:logout 시 페이지 전환 (showHero/activeTab) 만 처리.
   // currentItinerary/selectedDestination 리셋은 ItineraryDraftProvider 가 자체 구독.
@@ -222,23 +201,6 @@ export default function App({ initialTab }: AppProps = {}) {
     resetDraft();
   };
 
-  const handleBackToHome = () => {
-    setShowHero(true);
-    setActiveTab("plan");
-    resetDraft();
-  };
-
-  const handleLogout = async () => {
-    // 페이지 전환 + draft 리셋을 await 전에 동기 실행해 my-trips/admin TabsContent를
-    // unmount한 후 logout 호출. AuthProvider.logout()의 setCurrentUser(null) batch와
-    // 여기 setState batch가 await로 분리되어, currentUser=null 중간 render에서
-    // MyTrip의 conditional hook 위반이 노출되는 것을 회피한다.
-    setShowHero(true);
-    setActiveTab("plan");
-    resetDraft();
-    await logout();
-  };
-
   const handleDestinationSelect = (destination: any) => {
     setShowHero(false);
     setActiveTab("plan");
@@ -249,23 +211,6 @@ export default function App({ initialTab }: AppProps = {}) {
 
   const handleBannerDetail = (banner: any) => {
     setSelectedBannerDetail(banner);
-  };
-
-  const handleGoToMyTrips = () => {
-    setShowHero(false);
-    setActiveTab("my-trips");
-    setMyTripsDefaultTab("my-trips");
-  };
-
-  const handleGoToProfile = () => {
-    setShowHero(false);
-    setActiveTab("my-trips");
-    setMyTripsDefaultTab("profile");
-  };
-
-  const handleGoToAdmin = () => {
-    setShowHero(false);
-    setActiveTab("admin");
   };
 
   return (

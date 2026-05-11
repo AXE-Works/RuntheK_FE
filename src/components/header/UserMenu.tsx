@@ -14,25 +14,7 @@ import {
 import { useAuth } from '@/providers/AuthProvider';
 import { useItineraryDraft } from '@/providers/ItineraryDraftProvider';
 
-interface UserMenuProps {
-  /**
-   * 외부 logout 핸들러. 주입되면 자체 navigate+logout 대신 이것을 호출.
-   *
-   * 사용 이유: PR-7 C1 시점에는 UserMenu가 App.tsx 헤더에 mount되며,
-   * 라우트 변경 시 App.tsx 인스턴스 자체가 unmount/remount된다. 자체
-   * navigate('/plan')는 PlanPage/MyTripsPage가 서로 다른 컴포넌트라
-   * 즉시 commit되지 않을 수 있어, await logout 내 setCurrentUser(null) 사이에
-   * my-trips MyTrip이 currentUser=null 상태로 render되어 conditional hook이
-   * 위반된다. App.tsx의 setActiveTab/setShowHero 동기 호출은 같은 App
-   * 인스턴스 안에서 즉시 TabsContent를 unmount하므로 race가 없다.
-   *
-   * PR-7 C2에서 UserMenu가 AppLayout으로 이동하면 AppLayout 자체는 라우트
-   * 변경에도 mount 유지되므로 onLogout 없이 자체 navigate 처리만으로 안전하다.
-   */
-  onLogout?: () => void | Promise<void>;
-}
-
-export function UserMenu({ onLogout }: UserMenuProps = {}) {
+export function UserMenu() {
   const { currentUser, openAuthModal, logout } = useAuth();
   const { resetDraft } = useItineraryDraft();
   const navigate = useNavigate();
@@ -53,19 +35,15 @@ export function UserMenu({ onLogout }: UserMenuProps = {}) {
     navigate('/my-trips');
   };
 
+  // MyTrip L230의 `if (!currentUser) return ...` 뒤에 L249의 useCallback이 정의되어 있어,
+  // setCurrentUser(null)가 MyTrip mount 상태에서 트리거되면 "Rendered fewer hooks"
+  // Rules of Hooks 위반이 폭발한다. await logout 전에 MyTripsPage가 unmount되어야 한다.
+  //
+  // navigate('/plan') 후 macrotask 양보(setTimeout 0)로 React가 라우트 변경의 commit
+  // (MyTripsPage unmount + PlanPage mount)을 마치도록 보장한 뒤 logout()을 호출한다.
+  // 이 패턴은 일정 저장 후 /my-trips로 URL이 실제로 이동했을 때만 효과가 있다 —
+  // useConfirmItinerary 의 onSaveSuccess가 navigate('/my-trips')를 호출하도록 보장.
   const handleLogout = async () => {
-    if (onLogout) {
-      await onLogout();
-      return;
-    }
-    // MyTrip L230의 `if (!currentUser) return ...` 뒤에 L249의 useCallback이 정의되어 있어,
-    // setCurrentUser(null)가 MyTrip mount 상태에서 트리거되면 "Rendered fewer hooks"
-    // Rules of Hooks 위반이 폭발한다. await logout 전에 MyTripsPage가 unmount되어야 한다.
-    //
-    // navigate('/plan') 후 macrotask 양보(setTimeout 0)로 React가 라우트 변경의 commit
-    // (MyTripsPage unmount + PlanPage mount)을 마치도록 보장한 뒤 logout()을 호출한다.
-    // 이 패턴은 일정 저장 후 /my-trips로 URL이 실제로 이동했을 때만 효과가 있다 —
-    // useConfirmItinerary 의 onSaveSuccess가 navigate('/my-trips')를 호출하도록 보장.
     navigate('/plan');
     resetDraft();
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
