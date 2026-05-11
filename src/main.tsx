@@ -2,7 +2,6 @@ import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./i18n"; // Initialize i18n before App
-import App from "./App.tsx";
 import { RegionPage } from "./pages/RegionPage.tsx";
 import { DestinationPage } from "./pages/DestinationPage.tsx";
 import { EmailVerificationPage } from "./pages/EmailVerificationPage.tsx";
@@ -31,8 +30,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/plan" element={<PlanPage />} />
             <Route path="/my-trips" element={<MyTripsPage />} />
             <Route path="/admin" element={<AdminPage />} />
-            {/* 임시 catch-all — 작업 7(별도 세션)에서 제거 예정 */}
-            <Route path="/*" element={<App />} />
+            <Route path="*" element={<Navigate to="/plan" replace />} />
           </Route>
 
           {/* Static region pages (existing URLs for SEO) — DestinationContent가 자체 헤더/푸터 보유 */}

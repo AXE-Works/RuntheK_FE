@@ -21,9 +21,10 @@ const json = (body: unknown, status = 200) => ({
 /**
  * Phase 1.5 PR-3 — Golden path scenario A.
  *
- * Adapts spec phase-1.5-e2e.md §작업 2 to the current Vite catch-all SPA:
- *   - main.tsx mounts a single `path="/*"` route, so the URL stays `/`
- *     throughout. We assert DOM state instead of `toHaveURL()`.
+ * Adapts spec phase-1.5-e2e.md §작업 2 to the current Vite SPA:
+ *   - main.tsx redirects `/` → `/plan` via <Navigate>; saves navigate to
+ *     `/my-trips`. We assert DOM state to stay resilient to layout/copy
+ *     changes rather than coupling to `toHaveURL()`.
  *   - TravelPlanForm gates Generate behind `currentUser`; clicking it while
  *     logged out only shows a toast, so we open AuthModal via the header
  *     "Sign in" button before filling the form.
