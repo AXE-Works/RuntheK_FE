@@ -31,6 +31,7 @@ import { useTranslation } from 'react-i18next';
 import { Seo } from './components/seo/Seo';
 import { buildHomeSeo } from './lib/seo/buildDestinationSeo';
 import { downloadItineraryPdf } from './lib/itinerary/downloadItineraryPdf';
+import { appendConfirmedTrip, type ConfirmedTrip } from './lib/trips/tripStorage';
 import { TravelPlanForm } from './components/TravelPlanForm';
 import { ItineraryDisplay } from './components/ItineraryDisplay';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -126,7 +127,6 @@ export default function App({ initialTab }: AppProps = {}) {
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(initialTab ?? "plan");
   const [showHero, setShowHero] = useState(false); // Landing page disabled
-  const [confirmedTrips, setConfirmedTrips] = useState<any[]>([]);
   const [myTripsDefaultTab, setMyTripsDefaultTab] = useState<string>("my-trips");
   const { events, setEvents } = useEvents();
   const [language, setLanguage] = useState<'ko' | 'en' | 'ja' | 'zh'>('en');
@@ -245,7 +245,7 @@ export default function App({ initialTab }: AppProps = {}) {
         toast.success('Trip saved successfully!');
 
         // Create local trip record with BE response data
-        const confirmedTrip = {
+        const confirmedTrip: ConfirmedTrip = {
           id: response.data.tripId,
           tripId: response.data.tripId,
           itineraryId: response.data.itineraryId,
@@ -265,12 +265,7 @@ export default function App({ initialTab }: AppProps = {}) {
           confirmed: true
         };
 
-        setConfirmedTrips(prev => [...prev, confirmedTrip]);
-
-        // Also save to localStorage for offline access
-        const existingTrips = JSON.parse(localStorage.getItem('confirmedTrips') || '[]');
-        existingTrips.push(confirmedTrip);
-        localStorage.setItem('confirmedTrips', JSON.stringify(existingTrips));
+        appendConfirmedTrip(confirmedTrip);
 
         // Clear the raw response after saving
         clearRawResponse();
@@ -282,7 +277,7 @@ export default function App({ initialTab }: AppProps = {}) {
         toast.error(error instanceof Error ? error.message : 'Failed to save trip. Please try again.');
 
         // Fallback: Save locally only
-        const confirmedTrip = {
+        const confirmedTrip: ConfirmedTrip = {
           id: Date.now(),
           userId: currentUser.id,
           userName: currentUser.name,
@@ -301,10 +296,7 @@ export default function App({ initialTab }: AppProps = {}) {
           savedLocally: true // Flag for local-only trips
         };
 
-        setConfirmedTrips(prev => [...prev, confirmedTrip]);
-        const existingTrips = JSON.parse(localStorage.getItem('confirmedTrips') || '[]');
-        existingTrips.push(confirmedTrip);
-        localStorage.setItem('confirmedTrips', JSON.stringify(existingTrips));
+        appendConfirmedTrip(confirmedTrip);
 
         toast.info('Trip saved locally. Will sync when online.');
         setActiveTab("my-trips");
@@ -313,7 +305,7 @@ export default function App({ initialTab }: AppProps = {}) {
       }
     } else {
       // Fallback for regenerated itineraries or when raw response is not available
-      const confirmedTrip = {
+      const confirmedTrip: ConfirmedTrip = {
         id: Date.now(),
         userId: currentUser.id,
         userName: currentUser.name,
@@ -331,13 +323,8 @@ export default function App({ initialTab }: AppProps = {}) {
         confirmed: true
       };
 
-      setConfirmedTrips(prev => [...prev, confirmedTrip]);
+      appendConfirmedTrip(confirmedTrip);
       console.log('Confirmed trip saved locally:', confirmedTrip);
-
-      // Save to localStorage for persistence
-      const existingTrips = JSON.parse(localStorage.getItem('confirmedTrips') || '[]');
-      existingTrips.push(confirmedTrip);
-      localStorage.setItem('confirmedTrips', JSON.stringify(existingTrips));
 
       // Navigate to My Trips
       setActiveTab("my-trips");
