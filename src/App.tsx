@@ -32,6 +32,7 @@ import { Seo } from './components/seo/Seo';
 import { buildHomeSeo } from './lib/seo/buildDestinationSeo';
 import { downloadItineraryPdf } from './lib/itinerary/downloadItineraryPdf';
 import { useConfirmItinerary } from './hooks/useConfirmItinerary';
+import { useRegenerateItinerary } from './hooks/useRegenerateItinerary';
 import { TravelPlanForm } from './components/TravelPlanForm';
 import { ItineraryDisplay } from './components/ItineraryDisplay';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -50,8 +51,7 @@ import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
 import { useAuth } from './providers/AuthProvider';
 import { useEvents } from './providers/EventsProvider';
 import { useItineraryDraft } from './providers/ItineraryDraftProvider';
-import { modifySchedule, ScheduleApiError, type ScheduleGenerateResponse } from './services/scheduleApi';
-import { toast } from 'sonner';
+import type { ScheduleGenerateResponse } from './services/scheduleApi';
 
 export interface ItineraryData {
   id: string;
@@ -109,12 +109,10 @@ export default function App({ initialTab }: AppProps = {}) {
   } = useAuth();
   const {
     currentItinerary,
-    rawAIResponse,
     userStartDate,
     userSelectedCities,
     selectedDestination,
     setItinerary,
-    applyRegenerateResult,
     updateTitle,
     selectDestination,
     resetDraft,
@@ -186,34 +184,9 @@ export default function App({ initialTab }: AppProps = {}) {
     setGenerationStartTime(generating ? Date.now() : null);
   };
 
-  const handleRegenerateItinerary = async (additionalNotes: string) => {
-    if (!currentItinerary || !rawAIResponse) {
-      toast.error('No itinerary to modify. Please generate an itinerary first.');
-      return;
-    }
-
-    handleSetIsGenerating(true);
-
-    try {
-      // Call the modify API with the schedule ID and modification prompt
-      const result = await modifySchedule(rawAIResponse.id, additionalNotes);
-
-      // Update the itinerary with the modified result
-      applyRegenerateResult(result.itinerary, result.rawAIResponse);
-
-      toast.success('Itinerary has been regenerated with your changes!');
-    } catch (error) {
-      console.error('[App] Failed to modify itinerary:', error);
-
-      if (error instanceof ScheduleApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error('Failed to regenerate itinerary. Please try again.');
-      }
-    } finally {
-      handleSetIsGenerating(false);
-    }
-  };
+  const { regenerate: handleRegenerateItinerary } = useRegenerateItinerary({
+    setIsGenerating: handleSetIsGenerating,
+  });
 
   // Handle title change from ItineraryDisplay
   const handleTitleChange = (newTitle: string) => {
