@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { MapPin, Clock, Star, ExternalLink, CheckCircle, Edit2, RotateCcw, Info, MessageSquare, Sparkles, Footprints, Train, Car } from 'lucide-react';
-import { ItineraryData } from '../App';
+import { ItineraryData } from '@/types/itinerary';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ItineraryMap } from './ItineraryMap';

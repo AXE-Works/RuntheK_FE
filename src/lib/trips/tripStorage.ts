@@ -1,4 +1,4 @@
-import type { ItineraryData } from '@/App';
+import type { ItineraryData } from '@/types/itinerary';
 
 export interface ConfirmedTrip {
   id: string | number;

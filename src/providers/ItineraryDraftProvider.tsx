@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { ItineraryData } from '@/App';
+import type { ItineraryData } from '@/types/itinerary';
 import type { ScheduleGenerateResponse } from '@/services/scheduleApi';
 
 interface ItineraryDraftState {

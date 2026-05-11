@@ -7,7 +7,7 @@ import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { MapPin, Clock, DollarSign, Calendar, Star, ExternalLink, ArrowLeft, ThumbsUp, ThumbsDown, MessageSquare, Info, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
-import { ItineraryData } from '../App';
+import { ItineraryData } from '@/types/itinerary';
 import { ItineraryMap } from './ItineraryMap';
 
 interface TripDetailViewProps {

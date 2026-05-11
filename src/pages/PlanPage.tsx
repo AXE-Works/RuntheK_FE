@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/providers/AuthProvider';
 import { useEvents } from '@/providers/EventsProvider';
 import { useItineraryDraft } from '@/providers/ItineraryDraftProvider';
-import type { ItineraryData } from '@/App';
+import type { ItineraryData } from '@/types/itinerary';
 import type { ScheduleGenerateResponse } from '@/services/scheduleApi';
 
 export function PlanPage() {

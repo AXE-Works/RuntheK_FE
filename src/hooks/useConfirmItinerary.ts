@@ -4,7 +4,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useItineraryDraft } from '@/providers/ItineraryDraftProvider';
 import { appendConfirmedTrip, type ConfirmedTrip } from '@/lib/trips/tripStorage';
 import { saveTripWithItinerary } from '@/services/tripApi';
-import type { ItineraryData } from '@/App';
+import type { ItineraryData } from '@/types/itinerary';
 
 export interface UseConfirmItineraryOptions {
   /**

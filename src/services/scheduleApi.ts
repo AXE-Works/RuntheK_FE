@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { ItineraryData } from '../App';
+import { ItineraryData } from '@/types/itinerary';
 import { env } from '@/config/env';
 
 // AI Schedule Generation Service (별도 서비스)

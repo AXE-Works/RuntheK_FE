@@ -11,7 +11,7 @@ import { Textarea } from './ui/textarea';
 import { Calendar as CalendarIcon, MapPin, Heart, DollarSign, Sparkles, MessageSquare, Edit2, Eye, Save, X } from 'lucide-react';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { UserInput, ItineraryData } from '../App';
+import { UserInput, ItineraryData } from '@/types/itinerary';
 import { motion } from 'motion/react';
 import { SuggestedBanners } from './SuggestedBanners';
 import { TravelGuideAccordion } from './TravelGuideAccordion';
