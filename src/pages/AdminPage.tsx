@@ -1,8 +1,20 @@
-import App from '@/App';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '@/providers/AuthProvider';
+import { useEvents } from '@/providers/EventsProvider';
+import { AdminDashboard } from '@/components/AdminDashboard';
 
-// Phase 2 PR-2: route skeleton wrapper. 작업 6(별도 세션)에서
-// App.tsx의 admin 탭 본문을 이 컴포넌트로 이전하면서 권한 가드(Navigate to /plan)도 추가한다.
-// 현재는 AdminDashboard 내부의 거부 UI(L811)가 비관리자 접근을 차단한다.
 export function AdminPage() {
-  return <App initialTab="admin" />;
+  const { currentUser } = useAuth();
+  const { events, setEvents } = useEvents();
+
+  // 페이지 레벨 권한 가드. AdminDashboard 내부 거부 UI (L813) 는 보조 안전망.
+  // AuthProvider 의 isRestoringSession=true 일 때 children 미 mount → 가드 race-free.
+  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'admin';
+  if (!isAdmin) return <Navigate to="/plan" replace />;
+
+  return (
+    <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 w-full">
+      <AdminDashboard currentUser={currentUser} events={events} setEvents={setEvents} />
+    </main>
+  );
 }
