@@ -42,12 +42,12 @@ import { GeneratingOverlay } from './components/GeneratingOverlay';
 import { RecommendedItineraryDetailPage } from './components/RecommendedItineraryDetailPage';
 import { Button } from './components/ui/button';
 import { Tabs, TabsContent } from './components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './components/ui/dropdown-menu';
 import { Badge } from './components/ui/badge';
-import { MapPin, Users, BarChart, ArrowLeft, LogIn, User, LogOut, Settings, Globe, Mail, Save, Share2, Shield } from 'lucide-react';
+import { MapPin, Users, BarChart, ArrowLeft, Mail, Save, Share2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
+import { LanguageSelector } from './components/header/LanguageSelector';
+import { UserMenu } from './components/header/UserMenu';
 import { useAuth } from './providers/AuthProvider';
 import { useEvents } from './providers/EventsProvider';
 import { useItineraryDraft } from './providers/ItineraryDraftProvider';
@@ -287,31 +287,7 @@ export default function App({ initialTab }: AppProps = {}) {
               </Badge>
 
               {/* Language Selector */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 px-2 sm:px-3 hover:bg-gray-100">
-                    <Globe className="h-4 w-4 mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline text-sm">
-                      {languageOptions.find(l => l.code === language)?.flag}
-                    </span>
-                    <span className="sm:hidden text-sm">
-                      {languageOptions.find(l => l.code === language)?.flag}
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  {languageOptions.map((option) => (
-                    <DropdownMenuItem
-                      key={option.code}
-                      onClick={() => setLanguage(option.code)}
-                      className={language === option.code ? 'bg-gray-100' : ''}
-                    >
-                      <span className="mr-2">{option.flag}</span>
-                      {option.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <LanguageSelector />
 
               {currentItinerary && (
                 <Button
@@ -330,69 +306,9 @@ export default function App({ initialTab }: AppProps = {}) {
               </div>
 
               {/* User Menu */}
-              {currentUser ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full"
-                      data-testid="btn-user-menu"
-                    >
-                      <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                        <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                        <AvatarFallback className="bg-gray-100 text-gray-900 text-sm">
-                          {currentUser.name?.charAt(0) || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end">
-                    <div className="flex items-center justify-start gap-2 p-2">
-                      <div className="flex flex-col space-y-1 leading-none">
-                        <p className="font-medium">{currentUser.name}</p>
-                        <p className="w-[200px] truncate text-sm text-gray-600">
-                          {currentUser.email}
-                        </p>
-                        <Badge variant="outline" className="w-fit text-xs">
-                          {currentUser.country}
-                        </Badge>
-                      </div>
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleGoToProfile}>
-                      <User className="mr-2 h-4 w-4" />
-                      {t('nav.profile')}
-                    </DropdownMenuItem>
-                    {isAdmin ? (
-                      <DropdownMenuItem onClick={handleGoToAdmin}>
-                        <Shield className="mr-2 h-4 w-4" />
-                        {t('nav.admin')}
-                      </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem onClick={handleGoToMyTrips}>
-                        <Settings className="mr-2 h-4 w-4" />
-                        {t('nav.myTrips')}
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      {t('nav.logout')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button
-                  onClick={openAuthModal}
-                  variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-2 sm:px-4"
-                  size="sm"
-                >
-                  <LogIn className="h-4 w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">{t('nav.login')}</span>
-                  <span className="sm:hidden">{t('nav.login')}</span>
-                </Button>
-              )}
+              {/* PR-7 C1 임시: onLogout prop으로 App.tsx의 handleLogout(동기 setter→await) 주입.
+                  PR-7 C2에서 UserMenu가 AppLayout으로 이동하면 onLogout 없이 자체 navigate 처리. */}
+              <UserMenu onLogout={handleLogout} />
             </div>
           </div>
         </div>
