@@ -31,7 +31,7 @@ import { useTranslation } from 'react-i18next';
 import { Seo } from './components/seo/Seo';
 import { buildHomeSeo } from './lib/seo/buildDestinationSeo';
 import { downloadItineraryPdf } from './lib/itinerary/downloadItineraryPdf';
-import { appendConfirmedTrip, type ConfirmedTrip } from './lib/trips/tripStorage';
+import { useConfirmItinerary } from './hooks/useConfirmItinerary';
 import { TravelPlanForm } from './components/TravelPlanForm';
 import { ItineraryDisplay } from './components/ItineraryDisplay';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -47,7 +47,6 @@ import { Badge } from './components/ui/badge';
 import { MapPin, Users, BarChart, ArrowLeft, LogIn, User, LogOut, Settings, Globe, Mail, Save, Share2, Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
-import { saveTripWithItinerary } from './services/tripApi';
 import { useAuth } from './providers/AuthProvider';
 import { useEvents } from './providers/EventsProvider';
 import { useItineraryDraft } from './providers/ItineraryDraftProvider';
@@ -111,7 +110,6 @@ export default function App({ initialTab }: AppProps = {}) {
   const {
     currentItinerary,
     rawAIResponse,
-    userBudget,
     userStartDate,
     userSelectedCities,
     selectedDestination,
@@ -119,12 +117,10 @@ export default function App({ initialTab }: AppProps = {}) {
     applyRegenerateResult,
     updateTitle,
     selectDestination,
-    clearRawResponse,
     resetDraft,
   } = useItineraryDraft();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStartTime, setGenerationStartTime] = useState<number | null>(null);
-  const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(initialTab ?? "plan");
   const [showHero, setShowHero] = useState(false); // Landing page disabled
   const [myTripsDefaultTab, setMyTripsDefaultTab] = useState<string>("my-trips");
@@ -224,112 +220,9 @@ export default function App({ initialTab }: AppProps = {}) {
     updateTitle(newTitle);
   };
 
-  const handleConfirmItinerary = async (itinerary: ItineraryData) => {
-    if (!currentUser) {
-      toast.error('Please login to save your trip');
-      openAuthModal();
-      return;
-    }
-
-    // If we have the raw AI response, save to BE
-    if (rawAIResponse) {
-      setIsSavingTrip(true);
-      try {
-        const response = await saveTripWithItinerary(
-          rawAIResponse,
-          userBudget,
-          itinerary.title
-        );
-
-        console.log('Trip saved to BE:', response);
-        toast.success('Trip saved successfully!');
-
-        // Create local trip record with BE response data
-        const confirmedTrip: ConfirmedTrip = {
-          id: response.data.tripId,
-          tripId: response.data.tripId,
-          itineraryId: response.data.itineraryId,
-          userId: currentUser.id,
-          userName: currentUser.name,
-          userEmail: currentUser.email,
-          userCountry: currentUser.country,
-          title: response.data.title || itinerary.title,
-          duration: itinerary.duration,
-          interests: itinerary.interests,
-          budget: itinerary.budget,
-          cities: response.data.cities || [],
-          createdAt: response.data.createdAt || new Date().toISOString().split('T')[0],
-          status: response.data.status || 'UPCOMING',
-          totalCost: itinerary.totalEstimatedCost,
-          itineraryData: itinerary,
-          confirmed: true
-        };
-
-        appendConfirmedTrip(confirmedTrip);
-
-        // Clear the raw response after saving
-        clearRawResponse();
-
-        // Navigate to My Trips
-        setActiveTab("my-trips");
-      } catch (error) {
-        console.error('Failed to save trip to BE:', error);
-        toast.error(error instanceof Error ? error.message : 'Failed to save trip. Please try again.');
-
-        // Fallback: Save locally only
-        const confirmedTrip: ConfirmedTrip = {
-          id: Date.now(),
-          userId: currentUser.id,
-          userName: currentUser.name,
-          userEmail: currentUser.email,
-          userCountry: currentUser.country,
-          title: itinerary.title,
-          duration: itinerary.duration,
-          interests: itinerary.interests,
-          budget: itinerary.budget,
-          cities: [],
-          createdAt: new Date().toISOString().split('T')[0],
-          status: 'UPCOMING',
-          totalCost: itinerary.totalEstimatedCost,
-          itineraryData: itinerary,
-          confirmed: true,
-          savedLocally: true // Flag for local-only trips
-        };
-
-        appendConfirmedTrip(confirmedTrip);
-
-        toast.info('Trip saved locally. Will sync when online.');
-        setActiveTab("my-trips");
-      } finally {
-        setIsSavingTrip(false);
-      }
-    } else {
-      // Fallback for regenerated itineraries or when raw response is not available
-      const confirmedTrip: ConfirmedTrip = {
-        id: Date.now(),
-        userId: currentUser.id,
-        userName: currentUser.name,
-        userEmail: currentUser.email,
-        userCountry: currentUser.country,
-        title: itinerary.title,
-        duration: itinerary.duration,
-        interests: itinerary.interests,
-        budget: itinerary.budget,
-        cities: [],
-        createdAt: new Date().toISOString().split('T')[0],
-        status: 'UPCOMING',
-        totalCost: itinerary.totalEstimatedCost,
-        itineraryData: itinerary,
-        confirmed: true
-      };
-
-      appendConfirmedTrip(confirmedTrip);
-      console.log('Confirmed trip saved locally:', confirmedTrip);
-
-      // Navigate to My Trips
-      setActiveTab("my-trips");
-    }
-  };
+  const { confirm: handleConfirmItinerary } = useConfirmItinerary({
+    onSaveSuccess: () => setActiveTab('my-trips'),
+  });
 
   const handleNewPlan = () => {
     setShowHero(false);
