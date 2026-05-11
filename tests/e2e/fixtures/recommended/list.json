@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "rec-001",
+      "title": "Royal Seoul Cultural Tour",
+      "subtitle": "Palaces, hanok villages, and modern Korean culture",
+      "description": "A curated 5-day journey through Seoul's royal heritage",
+      "imageUrl": null,
+      "duration": "5 days",
+      "viewCount": 1234,
+      "averageRating": 4.7,
+      "interests": ["culture", "food"],
+      "category": "Cultural",
+      "cities": ["Seoul"],
+      "budget": "mid-range",
+      "startDate": null
+    }
+  ],
+  "pagination": { "page": 1, "size": 8, "total": 1 },
+  "meta": {
+    "timestamp": "2026-05-10T00:00:00",
+    "requestId": "00000000-0000-0000-0000-000000000097"
+  }
+}
