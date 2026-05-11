@@ -9,6 +9,7 @@ import { EmailVerificationPage } from "./pages/EmailVerificationPage.tsx";
 import { PlanPage } from "./pages/PlanPage";
 import { MyTripsPage } from "./pages/MyTripsPage";
 import { AdminPage } from "./pages/AdminPage";
+import { AppLayout } from "./layouts/AppLayout";
 import { AuthProvider } from "./providers/AuthProvider";
 import { ItineraryDraftProvider } from "./providers/ItineraryDraftProvider";
 import { EventsProvider } from "./providers/EventsProvider";
@@ -23,25 +24,29 @@ createRoot(document.getElementById("root")!).render(
             <Routes>
           {/* Phase 2 PR-2: route skeleton — root redirects to /plan */}
           <Route path="/" element={<Navigate to="/plan" replace />} />
-          <Route path="/plan" element={<PlanPage />} />
-          <Route path="/my-trips" element={<MyTripsPage />} />
-          <Route path="/admin" element={<AdminPage />} />
 
-          {/* Static region pages (existing URLs for SEO) */}
+          {/* Phase 2 PR-7: AppLayout (Header + Footer + AuthModal) wraps main app routes.
+              DestinationContent / EmailVerificationPage는 자체 헤더/푸터를 보유하므로 외부에 둔다. */}
+          <Route element={<AppLayout />}>
+            <Route path="/plan" element={<PlanPage />} />
+            <Route path="/my-trips" element={<MyTripsPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            {/* 임시 catch-all — 작업 7(별도 세션)에서 제거 예정 */}
+            <Route path="/*" element={<App />} />
+          </Route>
+
+          {/* Static region pages (existing URLs for SEO) — DestinationContent가 자체 헤더/푸터 보유 */}
           <Route path="/seoul" element={<RegionPage />} />
           <Route path="/busan" element={<RegionPage />} />
           <Route path="/gyeongju" element={<RegionPage />} />
           <Route path="/jeonju" element={<RegionPage />} />
           <Route path="/jeju" element={<RegionPage />} />
 
-          {/* Dynamic destination pages (new admin-created destinations) */}
+          {/* Dynamic destination pages — DestinationContent가 자체 헤더/푸터 보유 */}
           <Route path="/destination/:slug" element={<DestinationPage />} />
 
-          {/* Email verification page */}
+          {/* Email verification page — 자체 풀스크린 레이아웃 */}
           <Route path="/verify-email" element={<EmailVerificationPage />} />
-
-          {/* 임시 catch-all — 작업 7(별도 세션)에서 제거 예정 */}
-          <Route path="/*" element={<App />} />
         </Routes>
           </EventsProvider>
         </ItineraryDraftProvider>

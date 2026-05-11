@@ -26,7 +26,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Seo } from './components/seo/Seo';
 import { buildHomeSeo } from './lib/seo/buildDestinationSeo';
@@ -135,6 +135,7 @@ export default function App({ initialTab }: AppProps = {}) {
 
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'admin';
 
@@ -150,6 +151,16 @@ export default function App({ initialTab }: AppProps = {}) {
       window.history.replaceState({}, document.title);
     }
   }, [location.state, selectDestination]);
+
+  // PR-7 C2 임시 가교: AppLayout 의 UserMenu 가 navigate('/my-trips?tab=profile') 로 진입할 때
+  // App.tsx 의 myTripsDefaultTab state를 동기화한다. PR-8 에서 MyTripsPage 가 직접
+  // search param 을 읽으면 이 useEffect 는 제거된다.
+  useEffect(() => {
+    if (location.pathname === '/my-trips') {
+      const tab = new URLSearchParams(location.search).get('tab');
+      setMyTripsDefaultTab(tab === 'profile' ? 'profile' : 'my-trips');
+    }
+  }, [location.pathname, location.search]);
 
   // Sync language state with i18n
   useEffect(() => {
@@ -194,7 +205,15 @@ export default function App({ initialTab }: AppProps = {}) {
   };
 
   const { confirm: handleConfirmItinerary } = useConfirmItinerary({
-    onSaveSuccess: () => setActiveTab('my-trips'),
+    // PR-7 C2: navigate('/my-trips')도 함께 호출해 URL을 동기화한다. setActiveTab만
+    // 변경할 경우 URL은 /plan 그대로라 UserMenu의 navigate('/plan') 기반 logout이
+    // no-op이 되어 MyTrip이 unmount되지 않은 채 setCurrentUser(null)가 호출되고
+    // MyTrip L230 conditional early return으로 Rules of Hooks 위반이 폭발한다.
+    // setActiveTab 호출은 PR-9 까지 URL/state 양쪽 동기화를 위해 잔류.
+    onSaveSuccess: () => {
+      setActiveTab('my-trips');
+      navigate('/my-trips');
+    },
   });
 
   const handleNewPlan = () => {
@@ -250,69 +269,8 @@ export default function App({ initialTab }: AppProps = {}) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <>
       <Seo {...buildHomeSeo()} />
-      {/* Header */}
-      <motion.header 
-        className="bg-white shadow-sm border-b border-gray-200"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBackToHome}
-                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full"
-              >
-                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-              <div className="flex items-center cursor-pointer" onClick={handleBackToHome}>
-                <img 
-                  src={logo} 
-                  alt="RuntheK - Your Personal Korea Travel Assistant" 
-                  className="h-5 sm:h-6 w-auto object-contain"
-                />
-                <span className="ml-2 text-xl sm:text-2xl font-semibold text-gray-900">Travel</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-1 sm:space-x-4">
-              {/* Version Badge - Hidden on mobile */}
-              <Badge variant="outline" className="hidden sm:inline-flex text-xs border-gray-300 text-gray-600">
-                v1.0.0
-              </Badge>
-
-              {/* Language Selector */}
-              <LanguageSelector />
-
-              {currentItinerary && (
-                <Button
-                  variant="outline"
-                  onClick={handleNewPlan}
-                  className="hidden sm:flex border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  {t('nav.newPlan')}
-                </Button>
-              )}
-              
-              {/* Travelers count - Hidden on mobile */}
-              <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
-                <Users className="h-4 w-4" />
-                <span>{t('stats.travelersHelped', { count: '5,234' })}</span>
-              </div>
-
-              {/* User Menu */}
-              {/* PR-7 C1 임시: onLogout prop으로 App.tsx의 handleLogout(동기 setter→await) 주입.
-                  PR-7 C2에서 UserMenu가 AppLayout으로 이동하면 onLogout 없이 자체 navigate 처리. */}
-              <UserMenu onLogout={handleLogout} />
-            </div>
-          </div>
-        </div>
-      </motion.header>
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 w-full">
@@ -430,37 +388,11 @@ export default function App({ initialTab }: AppProps = {}) {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center space-y-4">
-            <div className="flex justify-center space-x-6 text-sm text-gray-600">
-              <span className="text-[11px]">• {t('footer.poweredByAI')}</span>
-              <span className="text-[11px]">• {t('footer.realTimeUpdates')}</span>
-              <span className="text-[11px]">• {t('footer.support')}</span>
-            </div>
-            <p className="text-sm text-gray-500">
-              {t('footer.copyright')} - {t('footer.tagline')}
-            </p>
-          </div>
-        </div>
-      </footer>
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={closeAuthModal}
-        onAuthSuccess={(user) => {
-          login(user);
-          closeAuthModal();
-        }}
-      />
-
-      {/* Generating Overlay */}
+      {/* Generating Overlay — PR-8에서 PlanPage 로 이동 예정 */}
       <GeneratingOverlay
         isVisible={isGenerating}
         startTime={generationStartTime}
       />
-    </div>
+    </>
   );
 }
