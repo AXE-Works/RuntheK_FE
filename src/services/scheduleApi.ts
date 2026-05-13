@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { ItineraryData } from '@/types/itinerary';
 import { env } from '@/config/env';
+import { createAiTimeoutSignal } from '@/services/aiHttp';
 
 // AI Schedule Generation Service (별도 서비스)
 // TODO: AI 서버에 CORS 설정 필요 - 현재 CORS 에러 발생함
@@ -451,9 +452,7 @@ export async function modifySchedule(
   scheduleId: number | string,
   modificationPrompt: string
 ): Promise<ModifyScheduleResult> {
-  // Create AbortController for timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout for modification
+  const { signal, clear } = createAiTimeoutSignal(120000);
 
   try {
     if (import.meta.env.DEV) console.log('[Schedule API] Modifying schedule...', { scheduleId, promptLength: modificationPrompt.length });
@@ -468,10 +467,10 @@ export async function modifySchedule(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
-      signal: controller.signal,
+      signal,
     });
 
-    clearTimeout(timeoutId);
+    clear();
 
     if (!response.ok) {
       let errorData: ApiError;
@@ -496,7 +495,7 @@ export async function modifySchedule(
       rawAIResponse: data,
     };
   } catch (error) {
-    clearTimeout(timeoutId);
+    clear();
 
     if (error instanceof ScheduleApiError) {
       throw error;
@@ -575,9 +574,7 @@ interface RawRecommendPlacesResponse {
 export async function recommendPlaces(
   request: RecommendPlacesRequest
 ): Promise<RecommendPlacesResponse> {
-  // Create AbortController for timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+  const { signal, clear } = createAiTimeoutSignal(120000);
 
   try {
     if (import.meta.env.DEV) console.log('[Schedule API] Requesting place recommendations...', { destination: request.destination, count: request.count ?? 3 });
@@ -594,10 +591,10 @@ export async function recommendPlaces(
         budget: request.budget,
         count: request.count || 3,
       }),
-      signal: controller.signal,
+      signal,
     });
 
-    clearTimeout(timeoutId);
+    clear();
 
     if (!response.ok) {
       let errorData: ApiError;
@@ -633,7 +630,7 @@ export async function recommendPlaces(
 
     return data;
   } catch (error) {
-    clearTimeout(timeoutId);
+    clear();
 
     if (error instanceof ScheduleApiError) {
       throw error;
@@ -735,9 +732,7 @@ export async function generateSchedule(
 
   const request = convertToApiRequest(userInput);
 
-  // Create AbortController for timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout (1 minute)
+  const { signal, clear } = createAiTimeoutSignal(120000);
 
   try {
     if (import.meta.env.DEV) console.log('[Schedule API] Generating schedule... keys=', Object.keys(request));
@@ -748,10 +743,10 @@ export async function generateSchedule(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
-      signal: controller.signal,
+      signal,
     });
 
-    clearTimeout(timeoutId);
+    clear();
 
     if (!response.ok) {
       let errorData: ApiError;
@@ -777,7 +772,7 @@ export async function generateSchedule(
       userBudget: userInput.budget,
     };
   } catch (error) {
-    clearTimeout(timeoutId);
+    clear();
 
     if (error instanceof ScheduleApiError) {
       throw error;

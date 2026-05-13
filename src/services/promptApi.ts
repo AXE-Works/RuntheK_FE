@@ -3,8 +3,16 @@
 
 import { fetchWithAuth } from '@/utils/api';
 import { env } from '@/config/env';
+import { createAiTimeoutSignal } from '@/services/aiHttp';
 
 const API_BASE_URL = env.promptApiBaseUrl;
+
+export class PromptApiError extends Error {
+  constructor(public code: string, message: string) {
+    super(message);
+    this.name = 'PromptApiError';
+  }
+}
 
 // API Response types
 export interface PromptFromApi {
@@ -67,8 +75,9 @@ function transformPrompt(apiPrompt: PromptFromApi): PromptTemplate {
  * Get all prompts from the backend
  */
 export async function getPrompts(): Promise<PromptTemplate[]> {
+  const { signal, clear } = createAiTimeoutSignal(120000);
   try {
-    const response = await fetchWithAuth(`${API_BASE_URL}/admin/prompts`);
+    const response = await fetchWithAuth(`${API_BASE_URL}/admin/prompts`, { signal });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch prompts: ${response.status}`);
@@ -89,8 +98,13 @@ export async function getPrompts(): Promise<PromptTemplate[]> {
 
     return prompts;
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new PromptApiError('TIMEOUT', 'AI request timeout (2min)');
+    }
     console.error('[promptApi] Failed to fetch prompts:', error);
     throw error;
+  } finally {
+    clear();
   }
 }
 
@@ -98,8 +112,9 @@ export async function getPrompts(): Promise<PromptTemplate[]> {
  * Get a single prompt by ID
  */
 export async function getPromptById(id: string): Promise<PromptTemplate | null> {
+  const { signal, clear } = createAiTimeoutSignal(120000);
   try {
-    const response = await fetchWithAuth(`${API_BASE_URL}/admin/prompts/${id}`);
+    const response = await fetchWithAuth(`${API_BASE_URL}/admin/prompts/${id}`, { signal });
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -111,8 +126,13 @@ export async function getPromptById(id: string): Promise<PromptTemplate | null> 
     const data: PromptFromApi = await response.json();
     return transformPrompt(data);
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new PromptApiError('TIMEOUT', 'AI request timeout (2min)');
+    }
     console.error('[promptApi] Failed to fetch prompt by ID:', error);
     throw error;
+  } finally {
+    clear();
   }
 }
 
@@ -133,6 +153,7 @@ export async function getActivePrompt(): Promise<PromptTemplate | null> {
  * Create a new prompt
  */
 export async function createPrompt(request: CreatePromptRequest): Promise<PromptTemplate> {
+  const { signal, clear } = createAiTimeoutSignal(120000);
   try {
     const response = await fetchWithAuth(`${API_BASE_URL}/admin/prompts`, {
       method: 'POST',
@@ -140,6 +161,7 @@ export async function createPrompt(request: CreatePromptRequest): Promise<Prompt
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
+      signal,
     });
 
     if (!response.ok) {
@@ -149,8 +171,13 @@ export async function createPrompt(request: CreatePromptRequest): Promise<Prompt
     const data: PromptFromApi = await response.json();
     return transformPrompt(data);
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new PromptApiError('TIMEOUT', 'AI request timeout (2min)');
+    }
     console.error('[promptApi] Failed to create prompt:', error);
     throw error;
+  } finally {
+    clear();
   }
 }
 
@@ -158,6 +185,7 @@ export async function createPrompt(request: CreatePromptRequest): Promise<Prompt
  * Update an existing prompt (creates new version)
  */
 export async function updatePrompt(id: string, request: UpdatePromptRequest): Promise<PromptTemplate> {
+  const { signal, clear } = createAiTimeoutSignal(120000);
   try {
     const response = await fetchWithAuth(`${API_BASE_URL}/admin/prompts/${id}`, {
       method: 'PUT',
@@ -165,6 +193,7 @@ export async function updatePrompt(id: string, request: UpdatePromptRequest): Pr
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
+      signal,
     });
 
     if (!response.ok) {
@@ -174,8 +203,13 @@ export async function updatePrompt(id: string, request: UpdatePromptRequest): Pr
     const data: PromptFromApi = await response.json();
     return transformPrompt(data);
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new PromptApiError('TIMEOUT', 'AI request timeout (2min)');
+    }
     console.error('[promptApi] Failed to update prompt:', error);
     throw error;
+  } finally {
+    clear();
   }
 }
 
@@ -183,9 +217,11 @@ export async function updatePrompt(id: string, request: UpdatePromptRequest): Pr
  * Delete a prompt
  */
 export async function deletePrompt(id: string): Promise<void> {
+  const { signal, clear } = createAiTimeoutSignal(120000);
   try {
     const response = await fetchWithAuth(`${API_BASE_URL}/admin/prompts/${id}`, {
       method: 'DELETE',
+      signal,
     });
 
     if (!response.ok) {
@@ -193,8 +229,13 @@ export async function deletePrompt(id: string): Promise<void> {
       throw new Error(errorData.message || `Failed to delete prompt: ${response.status}`);
     }
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new PromptApiError('TIMEOUT', 'AI request timeout (2min)');
+    }
     console.error('[promptApi] Failed to delete prompt:', error);
     throw error;
+  } finally {
+    clear();
   }
 }
 
@@ -202,6 +243,7 @@ export async function deletePrompt(id: string): Promise<void> {
  * Create a new version of an existing prompt
  */
 export async function createPromptVersion(name: string, content: string): Promise<PromptTemplate> {
+  const { signal, clear } = createAiTimeoutSignal(120000);
   try {
     const response = await fetchWithAuth(`${API_BASE_URL}/admin/prompts/${encodeURIComponent(name)}/versions`, {
       method: 'POST',
@@ -209,6 +251,7 @@ export async function createPromptVersion(name: string, content: string): Promis
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ content }),
+      signal,
     });
 
     if (!response.ok) {
@@ -218,8 +261,13 @@ export async function createPromptVersion(name: string, content: string): Promis
     const data: PromptFromApi = await response.json();
     return transformPrompt(data);
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new PromptApiError('TIMEOUT', 'AI request timeout (2min)');
+    }
     console.error('[promptApi] Failed to create prompt version:', error);
     throw error;
+  } finally {
+    clear();
   }
 }
 
@@ -227,11 +275,12 @@ export async function createPromptVersion(name: string, content: string): Promis
  * Get prompt history (all versions) by name
  */
 export async function getPromptHistory(name: string): Promise<PromptTemplate[]> {
+  const { signal, clear } = createAiTimeoutSignal(120000);
   try {
     const url = `${API_BASE_URL}/admin/prompts/${encodeURIComponent(name)}/history`;
     if (import.meta.env.DEV) console.log('[promptApi] Fetching history from:', url);
 
-    const response = await fetchWithAuth(url);
+    const response = await fetchWithAuth(url, { signal });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch prompt history: ${response.status}`);
@@ -254,7 +303,12 @@ export async function getPromptHistory(name: string): Promise<PromptTemplate[]> 
 
     return transformed;
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new PromptApiError('TIMEOUT', 'AI request timeout (2min)');
+    }
     console.error('[promptApi] Failed to fetch prompt history:', error);
     throw error;
+  } finally {
+    clear();
   }
 }
