@@ -8,6 +8,12 @@
  */
 
 import { env } from '@/config/env';
+import {
+  emitAuthLogout,
+  getAccessToken,
+  removeAccessToken,
+  setAccessToken,
+} from '@/lib/auth/accessTokenStorage';
 
 const API_BASE_URL = env.apiBaseUrl;
 
@@ -39,7 +45,7 @@ export async function refreshAccessToken(): Promise<boolean> {
       }
 
       const data = await res.json();
-      localStorage.setItem('accessToken', data.data.accessToken);
+      setAccessToken(data.data.accessToken);
       console.log('[Auth] Token refreshed successfully');
       return true;
     } catch (error) {
@@ -68,7 +74,7 @@ export async function fetchWithAuth(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const accessToken = localStorage.getItem('accessToken');
+  const accessToken = getAccessToken();
 
   const authOptions: RequestInit = {
     ...options,
@@ -87,7 +93,7 @@ export async function fetchWithAuth(
     const refreshed = await refreshAccessToken();
 
     if (refreshed) {
-      const newToken = localStorage.getItem('accessToken')!;
+      const newToken = getAccessToken()!;
       const retryOptions: RequestInit = {
         ...options,
         credentials: 'include',
@@ -102,8 +108,8 @@ export async function fetchWithAuth(
       // Refresh failed — trigger logout. Every concurrent caller reaches
       // this branch, so the dispatch is idempotent (event listeners must
       // tolerate duplicate auth:logout events).
-      localStorage.removeItem('accessToken');
-      window.dispatchEvent(new CustomEvent('auth:logout'));
+      removeAccessToken();
+      emitAuthLogout();
     }
   }
 
@@ -126,7 +132,7 @@ export async function uploadWithAuth(
   formData: FormData,
   options: Omit<RequestInit, 'body' | 'credentials'> = {}
 ): Promise<Response> {
-  const accessToken = localStorage.getItem('accessToken');
+  const accessToken = getAccessToken();
 
   const buildHeaders = (token: string | null): Record<string, string> => {
     const merged: Record<string, string> = {
@@ -152,7 +158,7 @@ export async function uploadWithAuth(
     const refreshed = await refreshAccessToken();
 
     if (refreshed) {
-      const newToken = localStorage.getItem('accessToken');
+      const newToken = getAccessToken();
       response = await fetch(url, {
         method: 'POST',
         ...options,
@@ -161,8 +167,8 @@ export async function uploadWithAuth(
         body: formData,
       });
     } else {
-      localStorage.removeItem('accessToken');
-      window.dispatchEvent(new CustomEvent('auth:logout'));
+      removeAccessToken();
+      emitAuthLogout();
     }
   }
 

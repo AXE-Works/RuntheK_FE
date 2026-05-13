@@ -11,6 +11,7 @@ import { motion } from 'motion/react';
 import { Mail, Lock, User, Globe, Check, AlertCircle } from 'lucide-react';
 import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
 import { env } from '@/config/env';
+import { setAccessToken } from '@/lib/auth/accessTokenStorage';
 
 // Google Identity Services types
 declare global {
@@ -119,7 +120,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
       }
 
       // Store accessToken only (refreshToken is in httpOnly cookie)
-      localStorage.setItem('accessToken', data.data.token.accessToken);
+      setAccessToken(data.data.token.accessToken);
 
       // Create user object from response
       const user = {
@@ -322,7 +323,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
       }
 
       // Store accessToken only (refreshToken is in httpOnly cookie)
-      localStorage.setItem('accessToken', data.data.token.accessToken);
+      setAccessToken(data.data.token.accessToken);
 
       const user = {
         id: data.data.user.id,

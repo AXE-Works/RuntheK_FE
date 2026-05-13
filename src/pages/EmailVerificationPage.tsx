@@ -6,6 +6,7 @@ import { Check, X, Loader2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import logo from '@/assets/ade16fc310679880d8b27a51a4119372559298ac.png';
 import { env } from '@/config/env';
+import { setAccessToken } from '@/lib/auth/accessTokenStorage';
 
 const API_BASE_URL = env.apiBaseUrl;
 
@@ -60,7 +61,7 @@ export function EmailVerificationPage() {
 
         // Store accessToken (refreshToken is in httpOnly cookie)
         if (data.data?.token?.accessToken) {
-          localStorage.setItem('accessToken', data.data.token.accessToken);
+          setAccessToken(data.data.token.accessToken);
         }
 
         setStatus('success');

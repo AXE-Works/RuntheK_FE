@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fetchWithAuth, API_BASE_URL } from '@/utils/api';
+import { getAccessToken, removeAccessToken } from '@/lib/auth/accessTokenStorage';
 
 export interface User {
   id: string;
@@ -40,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const restoreSession = async () => {
-      const accessToken = localStorage.getItem('accessToken');
+      const accessToken = getAccessToken();
       if (!accessToken) {
         setIsRestoringSession(false);
         return;
@@ -61,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('[Session] Restored user session');
       } catch {
         console.log('[Session] Token expired or invalid, clearing...');
-        localStorage.removeItem('accessToken');
+        removeAccessToken();
       } finally {
         setIsRestoringSession(false);
       }
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('[Logout] API error:', error);
     }
-    localStorage.removeItem('accessToken');
+    removeAccessToken();
     setCurrentUser(null);
     console.log('[Logout] User logged out successfully');
   }, []);
