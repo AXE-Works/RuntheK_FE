@@ -2,24 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Status — React + Vite → Next.js 마이그레이션 진행 중
+## Project Status — React + Vite → Next.js 마이그레이션 완료 (2026-05-22, Phase 7 PR-10)
 
-이 프론트엔드는 **React + Vite에서 Next.js로 마이그레이션 중**입니다. 모든 비-trivial 변경 전에 `../docs/NextJS_Migration_Plan/` 문서를 먼저 읽고, 자신이 진행할 phase의 명세 범위를 벗어나지 마세요.
+이 `[FE]/` 디렉토리는 **Legacy baseline** 입니다. 마이그레이션은 `[FE_Next]/` 트리에서 완료되었고, prod (`www.runthek.world`) 는 `[FE_Next]/` 가 호스팅합니다. 본 디렉토리 폐기/승격 결정은 **Phase 8 으로 이연** (사용자 결정 옵션 3 — 둘 다 유지). 신규 작업은 `[FE_Next]/` 에서 진행하세요.
 
-### 마이그레이션 단계
+### 마이그레이션 단계 — 전부 완료
 
 | Phase | 문서 | 상태 |
 |---|---|---|
 | Phase 1 — 사전 정리 | `phase-1-cleanup.md` | ✅ DONE (`Phase1` 브랜치 9 커밋) |
 | Phase 1.5 — E2E test 셋업 | `phase-1.5-e2e.md` | ✅ DONE (`Phase1.5` 브랜치 4 FE + 1 BE 커밋) |
-| Phase 2 — App.tsx 분리 | `phase-2-app-split.md` | 대기 |
-| Phase 3 — Next.js 골격 + Tailwind v4 정상화 | `phase-3-scaffold.md` | 대기 |
-| Phase 4 — Client/Server 경계 + i18n 전환 | `phase-4-client-boundary.md` | 대기 |
-| Phase 5 — Infra (토큰/인증/refresh) | `phase-5-infra.md` | 대기 (5-K는 Phase 1 PR-6c로 선행 완료) |
-| Phase 6 — Maps SDK 전환 | `phase-6-maps.md` | 대기 |
-| Phase 7 — Deploy + cookie auth | `phase-7-deploy.md` | 대기 |
+| Phase 2 — App.tsx 분리 | `phase-2-app-split.md` | ✅ DONE (`[FE_Next]/` 에서 진행) |
+| Phase 3 — Next.js 골격 + Tailwind v4 정상화 | `phase-3-scaffold.md` | ✅ DONE (`[FE_Next]/` 에서 진행) |
+| Phase 4 — Client/Server 경계 + i18n 전환 | `phase-4-client-boundary.md` | ✅ DONE (`[FE_Next]/` 에서 진행, next-intl 4.11.2) |
+| Phase 5 — Infra (토큰/인증/refresh) | `phase-5-infra.md` | ✅ DONE (5-K는 Phase 1 PR-6c 선행 + Phase 5 PR-0/PR-4 완료) |
+| Phase 6 — Maps SDK 전환 | `phase-6-maps.md` | (별도 트랙 — 본 마이그레이션과 독립, 미진행) |
+| Phase 7 — Deploy + cookie auth | `phase-7-deploy.md` | ✅ DONE (2026-05-22, PR-1~PR-9 + Phase A + PR-10 마이그레이션 종료 선언) |
 
-> 단일 진실 공급원: `../docs/NextJS_Migration_Plan/nextjs-migration-overview.md` §0 Canonical Decisions
+> 단일 진실 공급원: `../docs/NextJS_Migration_Plan/nextjs-migration-overview.md` §0 Canonical Decisions + `../docs/NextJS_Migration_Plan/phase-7-deploy.md` §3 PR 테이블 + §9 DoD
 
 ### Phase 1 결과 — 진입 시 이미 적용된 가정
 
